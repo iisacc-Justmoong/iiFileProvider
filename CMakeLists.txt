@@ -25,17 +25,17 @@ if(NOT TARGET SQLite3::SQLite3)
     add_library(SQLite3::SQLite3 ALIAS SQLite::SQLite3)
 endif()
 
-add_library(iiFileProvider SHARED iiFileProvider.h iiFileProvider.cpp
-    Export.h AuthenticationToken.h AuthenticationToken.cpp FileAuthor.h FileAuthor.cpp JsonContract.h
-    Authorship.h Authorship.cpp FileLink.h FileLink.cpp File.h File.cpp AtomicFileCommit.cpp
-    Database.h Database.cpp StagedFile.h StagedFile.cpp)
+add_library(iiFileProvider SHARED src/iiFileProvider.h src/iiFileProvider.cpp
+    src/Export.h src/AuthenticationToken.h src/AuthenticationToken.cpp src/FileAuthor.h src/FileAuthor.cpp src/JsonContract.h
+    src/Authorship.h src/Authorship.cpp src/FileLink.h src/FileLink.cpp src/File.h src/File.cpp src/AtomicFileCommit.cpp
+    src/Database.h src/Database.cpp src/StagedFile.h src/StagedFile.cpp)
 add_library(iiFileProvider::iiFileProvider ALIAS iiFileProvider)
 target_compile_features(iiFileProvider PUBLIC cxx_std_20)
 target_compile_definitions(iiFileProvider PRIVATE IIFILEPROVIDER_BUILDING_LIBRARY)
 target_link_libraries(iiFileProvider PUBLIC Qt6::Core)
 target_link_libraries(iiFileProvider PRIVATE SQLite3::SQLite3)
 target_include_directories(iiFileProvider PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 set_target_properties(iiFileProvider PROPERTIES
@@ -95,7 +95,7 @@ install(TARGETS iiFileProvider EXPORT iiFileProviderTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES iiFileProvider.h Export.h AuthenticationToken.h FileAuthor.h Authorship.h FileLink.h File.h Database.h StagedFile.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES src/iiFileProvider.h src/Export.h src/AuthenticationToken.h src/FileAuthor.h src/Authorship.h src/FileLink.h src/File.h src/Database.h src/StagedFile.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT iiFileProviderTargets NAMESPACE iiFileProvider:: DESTINATION "${_package_dir}")
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderConfig.cmake"

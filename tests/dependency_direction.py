@@ -27,13 +27,13 @@ def visit(name):
 for name in sorted(graph):
     visit(name)
 provider = projects["iiFileProvider"]
-for file in [*provider.glob("*.h"), *provider.glob("*.cpp")]:
+for file in [*provider.glob("src/**/*.h"), *provider.glob("src/**/*.cpp")]:
     includes = re.findall(r'#include\s*[<"](ii\w+)', file.read_text())
     assert all(name == "iiFileProvider" for name in includes), f"upward include: {file}"
 for relative in [
     "iiSharedCanvas/src/File/DocumentFile.cpp", "iiSharedCanvas/tools/IiscInput.cpp",
-    "iiSharedCanvas/src/Media/MediaIo.cpp", "iiCSMIDI/MidiDocument.cpp",
-    "iiPaintEngine/BitmapFile/BitmapFile.cpp", "iiXml/Src/Input/GetFile.cpp",
+    "iiSharedCanvas/src/Media/MediaIo.cpp", "iiCSMIDI/src/MidiDocument.cpp",
+    "iiPaintEngine/src/BitmapFile/BitmapFile.cpp", "iiXml/Src/Input/GetFile.cpp",
     "iiXml/Src/Parser/FileParser.cpp", "iiGeneralDocument/src/Pdf/PdfDocumentReader.cpp",
     "iiGeneralDocument/src/Pdf/PdfDocumentWriter.cpp",
 ]:

@@ -6,7 +6,7 @@ C++20과 Qt 6.8.3 Core를 사용하는 버전 0.5.0의 동적 라이브러리이
 
 ## 공개 API
 
-`<iiFileProvider.h>` 하나로 작성자 모델·파일 링크·인증 토큰을 사용할 수 있다. 공개 헤더는 `FileAuthor.h`, `AuthenticationToken.h`, `Authorship.h`, `FileLink.h`이다. `Authorship`은 최초 편집자·참여자 구분, 작성자별 최초·최근 기여 시각, 파일 링크와 변경 번호를 보관하며 변경 직후 JSON 덤프를 갱신한다. 클래스는 QObject가 아닌 C++ 값 객체이며 Qt Network나 계정 매니저의 수명에 의존하지 않는다.
+`<src/iiFileProvider.h>` 하나로 작성자 모델·파일 링크·인증 토큰을 사용할 수 있다. 공개 헤더는 `src/FileAuthor.h`, `src/AuthenticationToken.h`, `src/Authorship.h`, `src/FileLink.h`이다. `Authorship`은 최초 편집자·참여자 구분, 작성자별 최초·최근 기여 시각, 파일 링크와 변경 번호를 보관하며 변경 직후 JSON 덤프를 갱신한다. 클래스는 QObject가 아닌 C++ 값 객체이며 Qt Network나 계정 매니저의 수명에 의존하지 않는다.
 
 ```cpp
 #include <iiFileProvider.h>
@@ -118,7 +118,7 @@ ctest --test-dir build/consumer/build -C Release --output-on-failure
 
 ## 설치 결과와 소비
 
-기본 설치 경로에 `include/`의 umbrella·작성자·파일 링크·인증 토큰·export 헤더, `lib/`의 공유 라이브러리, `lib/cmake/iiFileProvider/`의 CMake 패키지, `share/iiFileProvider/`의 README와 계약 문서가 생성된다. 비공개 `JsonContract.h`는 설치하지 않는다. Windows 공유 라이브러리 실행 파일은 `bin/`에 설치된다. 소비자에게 C++20 및 `Qt6::Core` 링크 요구 사항을 전달한다. Qt를 묶어서 복사하지 않으며 설치된 Qt 런타임이 필요하다. 공유 라이브러리의 설치 RPATH는 링크에 사용한 외부 라이브러리 경로를 포함한다.
+기본 설치 경로에 `include/`의 umbrella·작성자·파일 링크·인증 토큰·export 헤더, `lib/`의 공유 라이브러리, `lib/cmake/iiFileProvider/`의 CMake 패키지, `share/iiFileProvider/`의 README와 계약 문서가 생성된다. 비공개 `src/JsonContract.h`는 설치하지 않는다. Windows 공유 라이브러리 실행 파일은 `bin/`에 설치된다. 소비자에게 C++20 및 `Qt6::Core` 링크 요구 사항을 전달한다. Qt를 묶어서 복사하지 않으며 설치된 Qt 런타임이 필요하다. 공유 라이브러리의 설치 RPATH는 링크에 사용한 외부 라이브러리 경로를 포함한다.
 
 ```cmake
 find_package(iiFileProvider 0.5.0 CONFIG REQUIRED)
@@ -154,3 +154,7 @@ const auto update = author->toIisaccProfileUpdate();
 ## 파일 CRUD
 
 0.5부터 파일 생성·읽기·갱신·삭제와 SQLite 저장 트랜잭션은 이 SDK가 소유한다. 다른 iisacc SDK를 참조하지 않으며 바이트, 스트림, 스키마를 입력으로 받는다. [전체 계약](docs/FILE_CRUD.md)을 따른다. 기존 0.4 값 타입의 ABI는 유지한다.
+
+## Source layout
+
+Implementation files and their headers live together under `src/`. Existing feature and platform subdirectories retain their responsibilities. Build configuration, tests, documentation, resources, and maintenance scripts remain at the project root. Configure and build using the repository-local `build/` directory.
