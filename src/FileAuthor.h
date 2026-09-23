@@ -116,8 +116,8 @@ public:
     [[nodiscard]] QString displayLabel() const;
     // Schema v1 contains no credentials, session registry IDs or authentication claims.
     [[nodiscard]] QJsonObject toJson() const;
-    // Editable account fields only, for PATCH /Account/Profile/Author. This is an
-    // explicit payload export; it does not authenticate, upload or alter any file.
+    // Editable account fields for updateAccountAuthor's GraphQL variables.input.
+    // This explicit payload export does not authenticate, upload or alter any file.
     [[nodiscard]] QJsonObject toIisaccProfileUpdate() const;
     [[nodiscard]] const std::optional<AuthorLoginSession>& loginSession() const noexcept;
     [[nodiscard]] const std::optional<AuthenticationToken>& authenticationToken() const noexcept;

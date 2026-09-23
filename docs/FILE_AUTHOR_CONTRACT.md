@@ -13,7 +13,7 @@
 | `backend/app/services/accounts/society_cloud_membership.rb` | 멤버십 값은 정확히 `Free`, `Plus`, `Pro`, `Enterprise` |
 | `backend/app/services/accounts/login_session_service.rb` | 세션 관리 ID, 앱 디바이스, 생성·최근 접속·만료 시각. registry 비밀값은 43자리 base64url, Redis에는 SHA-256만 저장 |
 | `backend/app/services/auth/service.rb`, `issue_session`, `resolve_session` | Cognito ID/refresh 쿠키와 registry 쿠키를 함께 사용. registry 만료·해제는 유효한 Cognito 토큰만으로 복구하지 않음 |
-| `src/routes/Account/Session/App/+server.js` | 코드 검증·refresh 성공의 JSON은 `{account, session, limits}`이며 인증 원문은 JSON에 없음 |
+| `POST /Account/GraphQL`, `appSession` mutation | 코드 검증·refresh 성공의 JSON은 `{account, session, limits}`이며 인증 원문은 JSON에 없음 |
 
 파일의 작성자 귀속은 멤버십·제품 소유권·라이선스·로그인 허용과 별개이다. `sub`를 email이나 User ID로 대체하지 않는다. 서버가 이메일을 검증한다는 사실만으로 로컬에서 입력받은 JSON에 인증 성공 상태를 부여하지 않는다.
 
@@ -54,7 +54,7 @@
 ## 명시적 입력 어댑터
 
 - `fromIisaccAccount(account, serviceOrigin, capturedAt)`는 공개 account 객체를 읽는다. `sub`·email이 없는 부분 프로필은 거절하고, 내부 필드와 알 수 없는 추가 필드는 복사하지 않는다. `account.authorDetails`를 `metadata().details`로 검증해 읽는다. 오래된 account에서 누락된 선택 필드는 빈 값/Free/null로 구성한다. 명시적인 null/잘못된 authorDetails는 거절한다.
-- `toIisaccProfileUpdate()`는 `{displayName, authorDetails}`를 반환한다. 서버 `PATCH /Account/Profile/Author`에 보낼 명시적 payload이며, 신원·멤버십·파일 귀속·디바이스·세션·인증 토큰을 내보내지 않는다. 실제 HTTP 전송과 인증은 호스트가 담당한다.
+- `toIisaccProfileUpdate()`는 `{displayName, authorDetails}`를 반환한다. 서버 `POST /Account/GraphQL`의 `updateAccountAuthor(input: $input)` mutation에 `variables.input`으로 보낼 명시적 payload이며, 신원·멤버십·파일 귀속·디바이스·세션·인증 토큰을 내보내지 않는다. 실제 HTTP 전송과 인증은 호스트가 담당한다.
 - `fromIisaccAppSession(response, serviceOrigin, capturedAt)`는 account에 더해 `session.id`, `client: app`, `current: true`, 모든 device 필드와 세 시각을 요구한다. `createdAt <= lastSeenAt <= capturedAt < expiresAt`를 검사하고 디바이스를 작성 환경으로 복사한다. 세션 생성 시각을 파일 작성 시각으로 사용하지 않는다.
 - `fromJson(metadata)`는 아래의 schemaVersion 1 파일 메타데이터만 읽는다. 이때 토큰과 로그인 세션은 항상 비어 있다.
 
@@ -162,3 +162,5 @@ SDK 샘플은 `tests/fixtures/iisacc-account.json`이다. 필드명·길이·타
 정규화·부분 수정·토큰 제외·왕복 검증을 같이 갱신한다. 서버에서 빠진 작성자 필드는 기존 값 유지,
 빈 문자열/배열은 명시적 제거이다. SDK export는 모든 편집 필드를 담으므로 전체 프로필 갱신에 해당한다.
 계정 업데이트가 기존 파일이나 활성 작성자를 자동으로 덮어쓰지 않으며, 호스트가 새 스냅샷을 적용한다.
+
+GraphQL 응답의 `data.appSession` 또는 `data.accountSession`을 호출 측에서 먼저 해제한다. 이 라이브러리는 HTTP 호출을 수행하지 않으며 기존 `{account, session, ...}` 도메인 JSON을 읽는다.

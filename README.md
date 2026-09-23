@@ -145,7 +145,7 @@ Qt를 포함한 외부 라이브러리와 별도 고지가 있는 서드파티 �
 
 ```cpp
 const auto update = author->toIisaccProfileUpdate();
-// The host authenticates and sends update to PATCH /Account/Profile/Author.
+// The host authenticates and sends update as variables.input of the updateAccountAuthor GraphQL mutation.
 ```
 
 계정 측 모델과 API는 서비스의 `docs/ACCOUNT_AUTHORS.md`, 파일 모델은
