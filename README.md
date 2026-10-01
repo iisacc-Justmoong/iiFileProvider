@@ -1,5 +1,13 @@
 # iiFileProvider
 
+## C++23 Society object store
+
+`iiFileProvider::Objects` provides a Qt-independent transactional object package:
+stable object/index keys, directory-path projections, SHA-256, attribution,
+versioned binary diffs, mutation journals and work sessions. See
+[the object-store contract and integration boundaries](docs/OBJECT_STORE.md).
+The existing Qt APIs below are preserved; this new target does not depend on them.
+
 C++20과 Qt 6.8.3 Core를 사용하는 버전 0.5.0의 동적 라이브러리이다. `File`이 형식에 독립적인 파일 CRUD를, `Database`가 SQLite 저장 트랜잭션을 담당한다. iisacc.com 계정 모델을 확장한 `FileAuthor`가 파일 작성자의 신원·상세 프로필·기여 정보·작성 디바이스를 기록하고, `Authorship`이 최초 편집자 한 명과 이후 편집 참여자 명단을 영구 메타데이터로 보관한다. `FileLink`는 이름·URL 쌍의 선택적인 파일 링크를 표현하며, `AuthenticationToken`은 별도의 런타임 인증 토큰을 보유한다. 메타데이터 값 객체는 파일 I/O를 직접 수행하지 않는다. 로그인 HTTP 요청과 JWT 서명 검증은 이 SDK의 역할에 포함되지 않는다.
 
 공개 저장소는 [iisacc-Justmoong/iiFileProvider](https://github.com/iisacc-Justmoong/iiFileProvider)이다. 2026-09-07에 헤더·네임스페이스·CMake 패키지·공유 라이브러리·설치 경로의 SDK 식별자를 `iiFileProvider`로 통일했다. 소비자는 아래의 새 헤더와 CMake 타깃을 사용하고 기존 빌드 캐시를 다시 구성해야 한다.
