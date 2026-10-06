@@ -1,3 +1,4 @@
+#include "native_symlink.h"
 #include "ObjectBatchRead.h"
 #include <chrono>
 #include <fstream>
@@ -54,7 +55,7 @@ int main(){try{
     rejects([&]{detail::readObjectBatch({{root/"large","Files/a",{}},{root/"large","Files/b",{}}},4);});
     std::vector<ObjectImport> tooMany(ObjectStore::maximumBatchFiles+1,files[0]);
     rejects([&]{detail::readObjectBatch(tooMany,4);});
-    fs::create_symlink(files[1].source,root/"redirect");
+    test_support::create_symlink(files[1].source,root/"redirect");
     rejects([&]{detail::readObjectBatch({{root/"redirect","Files/link",{}}},4);});
     fs::remove_all(root);
     std::cout<<"Bounded serial/parallel object reads passed\n";return 0;

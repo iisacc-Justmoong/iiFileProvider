@@ -24,7 +24,23 @@ namespace {
 namespace fs=std::filesystem;
 [[noreturn]] void error(const char *message) {throw std::runtime_error(message);}
 std::string utf8(const fs::path &p){const auto value=p.u8string();return {reinterpret_cast<const char *>(value.data()),value.size()};}
-fs::path direct(const fs::path &p){const auto absolute=fs::absolute(p).lexically_normal();if(fs::canonical(absolute)!=absolute)error("redirected object source");return absolute;}
+fs::path direct(const fs::path &p){
+    const auto absolute=fs::absolute(p).lexically_normal();
+#ifdef _WIN32
+    // MinGW's canonical() does not resolve Windows directory reparse points.
+    // Check every component, including ancestors of an ordinary source file.
+    auto prefix=absolute.root_path();
+    for(const auto &part:absolute.relative_path()){
+        prefix/=part;
+        const auto attributes=GetFileAttributesW(prefix.c_str());
+        if(attributes==INVALID_FILE_ATTRIBUTES)error("unavailable object source");
+        if(attributes&FILE_ATTRIBUTE_REPARSE_POINT)error("redirected object source");
+    }
+#else
+    if(fs::canonical(absolute)!=absolute)error("redirected object source");
+#endif
+    return absolute;
+}
 #ifdef _WIN32
 struct Handle {
     HANDLE value=INVALID_HANDLE_VALUE;

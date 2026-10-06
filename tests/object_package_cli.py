@@ -1,6 +1,7 @@
 """Real-process crash/resume and complete source/payload audit contract."""
 import json
 import hashlib
+from contextlib import closing
 import pathlib
 import shutil
 import sqlite3
@@ -90,7 +91,7 @@ try:
     assert changed["sha256"] == hashlib.sha256(b"changed source").hexdigest(), changed
     assert changed["indexKey"] == committed["indexKey"] and changed["validationKey"] != committed["validationKey"], changed
     assert (tree / first_name).read_bytes() == b"changed source"
-    with sqlite3.connect(package / "objects.sqlite3") as db:
+    with closing(sqlite3.connect(package / "objects.sqlite3")) as db:
         assert db.execute("PRAGMA integrity_check").fetchone() == ("ok",)
         assert db.execute("SELECT count(*) FROM revisions").fetchone() == (batch_count + 2,)
     print(f"Process kill/resume preserves all {batch_count} committed batch objects; source, revision identity and audit passed")

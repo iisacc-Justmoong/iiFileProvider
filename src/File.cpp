@@ -1,4 +1,5 @@
 #include "File.h"
+#include "StagedFile.h"
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -115,12 +116,12 @@ void File::write(const QString &path, const QByteArray &bytes) {
 }
 void File::create(const QString &path, const QByteArray &bytes) {
     const auto target = destination(path);
-    QTemporaryFile temporary(QFileInfo(target).dir().filePath(".iifile-XXXXXX"));
-    if (!temporary.open() || temporary.write(bytes) != bytes.size() || !temporary.flush())
+    StagedFile staged(target);
+    QFile temporary(staged.path());
+    if (!temporary.open(QIODevice::WriteOnly) || temporary.write(bytes) != bytes.size() || !temporary.flush())
         fail(FileCode::IoError, temporary.errorString());
     temporary.close();
-    const auto result = publish(std::filesystem::path(temporary.fileName().toStdU16String()),
-                                std::filesystem::path(target.toStdU16String()), false);
+    const auto result = staged.publish(false);
     if (!result.succeeded) throw FileError(QFileInfo::exists(target) ? FileCode::AlreadyExists : FileCode::IoError, result.message);
 }
 void File::update(const QString &path, const QByteArray &expected, const QByteArray &replacement) {
@@ -155,13 +156,13 @@ void File::copy(const QString &source, const QString &target, bool overwrite) {
         return;
     }
     const auto absolute = destination(target);
-    QTemporaryFile temporary(QFileInfo(absolute).dir().filePath(".iifile-XXXXXX"));
-    if (!temporary.open()) fail(FileCode::IoError, temporary.errorString());
+    StagedFile staged(absolute);
+    QFile temporary(staged.path());
+    if (!temporary.open(QIODevice::WriteOnly)) fail(FileCode::IoError, temporary.errorString());
     transfer(*input, temporary);
     if (!temporary.flush()) fail(FileCode::IoError, temporary.errorString());
     temporary.close();
-    const auto result = publish(std::filesystem::path(temporary.fileName().toStdU16String()),
-                                std::filesystem::path(absolute.toStdU16String()), false);
+    const auto result = staged.publish(false);
     if (!result.succeeded) throw FileError(QFileInfo::exists(absolute) ? FileCode::AlreadyExists : FileCode::IoError, result.message);
 }
 void File::createDirectories(const QString &path) {

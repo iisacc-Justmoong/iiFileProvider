@@ -1,3 +1,4 @@
+#include "native_symlink.h"
 #include "ObjectSnapshotBatch.h"
 #include <chrono>
 #include <fstream>
@@ -47,7 +48,7 @@ int main(){try{
     rejects([&]{detail::ObjectSnapshotBatch batch(invalid,root/"stage",{},1);});
     rejects([&]{detail::ObjectSnapshotBatch batch(invalid,root/"stage",{},4);});
     check(fs::is_empty(root/"stage"),"failed acquisition leaves no owned staging");
-    fs::create_symlink(requests[0].source,root/"link");invalid=requests;invalid[6].source=root/"link";
+    test_support::create_symlink(requests[0].source,root/"link");invalid=requests;invalid[6].source=root/"link";
     rejects([&]{detail::ObjectSnapshotBatch batch(invalid,root/"stage",{},4);});
     check(fs::is_empty(root/"stage"),"redirected acquisition cleans successful workers");
     write(root/"stage/unrelated","preserve");

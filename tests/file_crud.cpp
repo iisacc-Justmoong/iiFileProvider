@@ -22,6 +22,15 @@ int main(int argc, char **argv) {
     QTemporaryDir directory;
     require(directory.isValid(), "temporary directory");
     const auto path = directory.filePath(QString::fromUtf8("문서.unknown"));
+    QString abandonedStage;
+    {
+        StagedFile staged(path);
+        abandonedStage = staged.path();
+        const auto moved = abandonedStage + ".moved";
+        require(QFile::rename(abandonedStage, moved), "stage releases native file handle");
+        require(QFile::rename(moved, abandonedStage), "restore stage for cleanup");
+    }
+    require(!QFile::exists(abandonedStage), "unpublished stage is removed");
     const QByteArray initial("\0payload\xff", 9);
     File::create(path, initial);
     require(File::read(path) == initial, "opaque bytes round trip");

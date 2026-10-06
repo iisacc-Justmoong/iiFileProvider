@@ -1,3 +1,4 @@
+#include "native_symlink.h"
 #include "ObjectPackager.h"
 #include <chrono>
 #include <fstream>
@@ -22,8 +23,10 @@ int main(){try{
         check(read(snapshot.path())=="before" && ObjectSource::inspect(root/"tree/sub/a.txt")!=identity,"snapshot independent of later source edit");
     }
     check(fs::is_empty(root/"stage"),"owned staging cleaned");
-    fs::create_directory_symlink(root/"tree",root/"redirect");
+    test_support::create_symlink(root/"tree",root/"redirect", true);
     rejects([&]{ObjectSource::inspect(root/"redirect/sub/a.txt");});
+    test_support::create_symlink(root/"tree/sub/a.txt",root/"redirect-file");
+    rejects([&]{ObjectSource::inspect(root/"redirect-file");});
     write(root/"tree/b.txt","b");
     fs::create_directory(root/"tree/ignored");write(root/"tree/ignored/private","not included by explicit policy");
     const std::vector<ObjectTreeMapping> maps{{"Files",root/"tree",{"ignored"}}};
@@ -100,7 +103,7 @@ int main(){try{
         check(retried.imported==2 && retried.issues.empty() && bulk.count()==21,"fresh inventory retries complete rejected batch");
         bulk.endSession(bulkSession.key);
     }
-    fs::create_symlink(root/"tree/b.txt",root/"tree/unsafe");
+    test_support::create_symlink(root/"tree/b.txt",root/"tree/unsafe");
     auto bad=ObjectPackager::inventory(maps);check(bad.issues.size()==1,"symlink reported");
     auto declined=packager.package(bad,session.key);check(declined.imported==0 && !declined.issues.empty(),"incomplete inventory cannot claim migration");
     rejects([&]{ObjectPackager::inventory({maps[0],maps[0]});});

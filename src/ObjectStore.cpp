@@ -13,6 +13,9 @@
 #include <utility>
 #ifdef _WIN32
 #include <io.h>
+#include <fcntl.h>
+#include <share.h>
+#include <sys/stat.h>
 #else
 #include <unistd.h>
 #endif
@@ -146,7 +149,14 @@ fs::path directPath(const fs::path &input,bool existing) {
 }
 FILE *exclusiveFile(const fs::path &path) {
 #ifdef _WIN32
-    return _wfopen(path.c_str(),L"wbx");
+    int descriptor = -1;
+    if (_wsopen_s(&descriptor, path.c_str(), _O_WRONLY | _O_CREAT | _O_EXCL | _O_BINARY,
+                  _SH_DENYRW, _S_IREAD | _S_IWRITE) != 0)
+        return nullptr;
+    FILE *file = _wfdopen(descriptor, L"wb");
+    if (!file)
+        _close(descriptor);
+    return file;
 #else
     return std::fopen(path.c_str(),"wbx");
 #endif
@@ -326,7 +336,8 @@ ObjectStore::ObjectStore(const fs::path &directory,std::string container,Access 
         FILE *file=exclusiveFile(path);if(!file)fail("object package creation conflict");std::fclose(file);privatePermissions(path);fresh=true;
     }
     for(const char *suffix:{"-wal","-shm","-journal"}) {
-        const fs::path sidecar=path.string()+suffix;
+        fs::path sidecar=path;
+        sidecar+=suffix;
         if(fs::is_symlink(fs::symlink_status(sidecar)))fail("redirected object database sidecar");
     }
     const auto utf8=path.u8string();

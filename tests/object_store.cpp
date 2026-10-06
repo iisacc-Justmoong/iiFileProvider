@@ -1,3 +1,4 @@
+#include "native_symlink.h"
 #include "ObjectStore.h"
 #include "ObjectHash.h"
 #include <filesystem>
@@ -21,6 +22,17 @@ int main() {try {
     require(million.finish()=="cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0","streaming SHA256");
     const auto root=fs::current_path()/ ("object-store-test-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::create_directory(root);
+    {
+        const auto unicodePackage = root / fs::path(u8"한글-package.sobj");
+        ObjectStore created(unicodePackage, "unicode-container", true);
+        require(fs::exists(unicodePackage), "Unicode package created");
+        require(fs::file_size(unicodePackage / "objects.sqlite3")>0, "Unicode database initialized");
+        const auto unknown = root / "unknown-package";
+        fs::create_directory(unknown);
+        write(unknown / "objects.sqlite3", "existing bytes");
+        rejected([&]{ ObjectStore duplicate(unknown, "unicode-container", true); });
+        require(read(unknown / "objects.sqlite3")=="existing bytes", "creation preserves unknown database");
+    }
     const auto source=root/"original.bin";
     std::string original(ObjectStore::chunkBytes+17,'x');
     original[ObjectStore::chunkBytes-1]='A';original[ObjectStore::chunkBytes]='B';original.back()='C';
@@ -36,7 +48,7 @@ int main() {try {
         require(store.lookupPath("Files/文書.bin")->key==key,"path mapping");
         rejected([&]{store.importFile(source,"Files/文書.bin",session.key);});
         rejected([&]{store.importFile(source,"../escape",session.key);});
-        fs::create_symlink(source,root/"redirect");rejected([&]{store.importFile(root/"redirect","Files/redirect",session.key);});
+        test_support::create_symlink(source,root/"redirect");rejected([&]{store.importFile(root/"redirect","Files/redirect",session.key);});
         require(store.count()==1,"failed import rollback");
         auto changed=original;changed[5]='y';write(source,changed);
         rejected([&]{store.reviseFile(key,source,0,session.key);});
