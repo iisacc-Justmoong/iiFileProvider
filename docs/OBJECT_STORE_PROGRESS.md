@@ -1,885 +1,284 @@
-# Object-storage goal ledger
+<a id="object-storage-goal-ledger"></a>
 
-The goal remains active. This ledger is not a declaration of completed Society
-drive migration. Existing file-loading/pairing changes in other repositories
-were preserved.
+# 객체 스토리지 목표 원장
 
-## Current authoritative handoff — 2026-09-29 resumed goal
+목표는 활성 상태로 유지됩니다. 이 원장은 Society 드라이브 마이그레이션이 완료되었음을 선언하는 것이 아닙니다. 다른 저장소의 기존 파일 로드/페어링 변경 사항은 유지되었습니다.
 
-### Actual-package read-only index measurement
+<a id="current-authoritative-handoff--2026-09-29-resumed-goal"></a>
 
-- After the new read-only path passed functional and installed-consumer checks,
-  opened the actual package once with that path while keeping sole writer **563**
-  running. This supersedes the earlier blanket avoidance of opening diagnostic
-  connections: do not use a writer-opening constructor/CLI for live inspection.
-  Read-only access bypasses migration, journal-mode changes and writer checkpoint
-  configuration; the concurrent-write regression passed before this measurement.
-- Command: build CLI `--package '/Volumes/Society Data/.society-objects'
-  --container 41e92f9a-7836-4cca-aba6-409752c56296 --index`. Handle **88645** is
-  terminal, exit 0. All three runs enumerated **10,279 current index rows**.
-  First traversal: **50,119.5 ms**; subsequent traversals: **5.86175 ms** and
-  **5.77892 ms**. Total process: **52.03 s** (0.02 user / 0.01 system).
-- Evidence: `build/object-package-live-readonly-index-20260929.jsonl` and
-  `.stderr` (the latter contains timing, not an application error). First scan
-  here means this process's first scan under ongoing packaging I/O, not an
-  experimentally controlled cold-cache benchmark. Warm traversal is fast; the
-  first-access delay is not acceptable evidence of uniformly fast startup.
-- The reader exited naturally and did not replace/restart the writer. These
-  results cover currently committed objects only. The final post-package index
-  stage, full fresh-source audit and SQLite integrity checks remain mandatory;
-  do not use this partial population measurement as full-drive completion.
-- Subsequent live check at writer elapsed **1:25:23** confirmed another commit:
-  `Models/LoRA/harustyle_v1.5.safetensors`, **228,587,776 bytes**, index **10,280**.
-  Writer **563** and pipeline handle **91090** remain live; stderr is empty and
-  no terminal package summary exists. WAL was 976,176,352 bytes. Keep the same
-  pipeline and do not confuse the earlier 10,279-row measurement with final
-  whole-drive results. The remaining mapped large models include hidden import
-  and rejected-import files; the original all-file scope has not been reduced.
+## 현재 권한 있는 핸드오프 — 2026-09-29 재개된 목표
 
-### Latest increment — reader/writer access boundary (functional checks passed)
+<a id="actual-package-read-only-index-measurement"></a>
 
-- Added `ObjectStore::Access::{ReadOnly,ReadWrite,Create}` while retaining both
-  boolean constructor symbols. Read-only mode uses SQLite READONLY/query_only,
-  validates identity, requires schema 3 and bypasses migration/checkpoint setup.
-  CLI `--index` and `--audit` now choose this mode; source-audit staging is still
-  filesystem work, not a claim of zero auxiliary I/O. This prepares a consumer
-  boundary but does not yet integrate Society's native browsers or mutations.
-- Added `object_read_only` regression for concurrent WAL writer/read access,
-  every nonempty mutation entry point, missing-package non-creation, committed
-  state visibility, schema-2 rejection and explicit-writer migration. TDD red
-  showed the expected missing constructor symbol. Library, CLI and regression
-  targets built successfully. First Make invocation regenerated the build files
-  but did not recognize the new target until the subsequent successful invocation.
-- CTest handle **9966** is terminal, exit 8, **1/4 passed** in 836.07 seconds.
-  **Read-only timed out at 181.60 s; index at 305.94 s; store at 63.47 s.** These
-  bounded-gate failures remain recorded. The updated CLI crash/resume/audit/index
-  regression **passed in 280.50 s**, including the new read-only inspection path.
-- Isolated read-only test, handle **39234**, passed all phase checks and exited 0
-  in **158.65 s** (0.00 user / 0.01 system). Full log:
-  `build/readonly-isolated-20260929.log`. No durability setting, assertion or test
-  scope was removed; this run observed actual completion without CTest's timeout.
-- Sequential isolated remainder, execution handle **24182**, is terminal, exit 0. Store contract
-  test passed in **247.69 s** (0.04 user / 0.06 system), recorded in
-  `build/object-store-isolated-20260929.log`. Full index regression passed in
-  **188.54 s** (0.01 user / 0.06 system). Staged installed-only consumer CTest
-  passed **1/1**, test time **127.36 s**, total **134.23 s**, under
-  `set -euo pipefail`. Logs: `build/object-index-isolated-20260929.log` and
-  `build/readonly-consumer-20260929.log`. These complete functional runs do not
-  erase the earlier bounded CTest failures or establish real-drive performance.
-- Timed-out read-only fixture is
-  `build/object-read-only-524696949399208`. A later read-only inspection found
-  schema 3, one object, and a nonzero ended-session timestamp. This is partial
-  evidence only. Added/flushed phase messages and rebuilt the read-only test for
-  the next isolated run so a repeated timeout can be located precisely.
-- `build/object-index-test-io.sample` observed the existing boolean constructor
-  in SQLite commit `unixSync`/`fcntl`, not waiting on a reader's SQL writer lock.
-  System memory pressure reported 78% available. Actual volume is mounted,
-  writable APFS with about 2.59 TB free and reported SMART Verified; this does
-  not exclude transient I/O trouble. Do not weaken durability or cancel the
-  actual writer to turn the tests green.
-- Staged installation and installed-only consumer configure/build passed,
-  handle **69697** terminal 0. Stage: `build/readonly-stage`; consumer:
-  `build/objects-consumer-readonly`, with explicit staged package config path.
-  Consumer runtime verification passed as recorded above. Its compile includes
-  and static link path point only to this staged object SDK, not repository
-  headers or the build archive. Staged header/CLI byte comparisons passed;
-  `otool -L` lists only SQLite, libc++ and libSystem. Canonical SDK/app/device
-  installs were not changed. The consumer exercises old and new constructors.
-- Actual pipeline remains handle **91090**, writer **563**, confirmed live at
-  1:15:39 elapsed. Another 168,120,878-byte model committed as index **10,279**.
-  Final package/audit/index/integrity results are still outstanding.
+### 실제 패키지 읽기 전용 지수 측정
 
-- The user resumed the full goal after the earlier process-close request. The
-  former writer and inspection process were confirmed absent before resuming.
-- Read-only preflight exited successfully: schema 3, container
-  `41e92f9a-7836-4cca-aba6-409752c56296`, 10,228 objects, 10,228 compact index
-  rows, zero open sessions. This is not a full SQLite integrity check.
-- Execution handle **91090**, parent shell PID **561**, package writer PID
-  **563**. Check the handle and current process state before taking action;
-  process identity here is a checkpoint, not proof that it remains live later.
-- Sole resumed writer uses the tested build with
-  `--wal-autocheckpoint-pages 262144`, all nine original namespaces, and only
-  the original two Files OS-directory exclusions. Work session:
-  `session-b67c9e2d9a4805a9a6259e59655ee5c7`.
-- Fresh inventory: **10,295 files / 152,727,550,345 bytes / zero issues**.
-  Source inventory changed since the cancelled run; require the fresh complete
-  source audit rather than interpreting previous counts as current completion.
-- Runtime logs (all in `build/`):
-  - `object-package-checkpoint-resume-20260929.jsonl` and `.stderr`;
-  - `object-package-checkpoint-audit-20260929.jsonl` and `.stderr`;
-  - `object-package-checkpoint-index-20260929.jsonl` and `.stderr`;
+- 새로운 읽기 전용 경로가 기능 테스트 및 설치된 소비자 검사를 통과한 후, 해당 경로로 실제 패키지를 한 번 열면서 유일한 작성자 **563** 를 계속 실행합니다. 이전 진단 연결의 광범위한 회피를 대체합니다: 라이브 점검을 위해 작성자 열기 생성자/ CLI 를 사용하지 마십시오. 읽기 전용 접근은 마이그레이션, 저널 모드 변경 및 작성자 체크포인트 구성을 우회하며, 이 측정 전에 동시 작성 회귀 를 전달합니다.
+- 명령: build CLI `--package '/Volumes/Society Data/.society-objects' --container 41e92f9a-7836-4cca-aba6-409752c56296 --index` . Handle **88645** 는 터미널이며 0로 종료합니다. 모든 3 가 열거된 **10,279 현재 인덱스 행**입니다. 첫 번째 탐색: **50,119.5 ms**; 이후 탐색: **5.86175 ms** 와 **5.77892 ms**입니다. 전체 처리: **52.03 s** ( 0.02 사용자 / 0.01 시스템).
+- 증거: `build/object-package-live-readonly-index-20260929.jsonl` 와 `.stderr` (후자는 타이밍을 포함하며 애플리케이션 오류가 아님). 여기서 첫 번째 스캔은 이 프로세스의 지속 중인 패키징 I/O 하의 첫 번째 스캔을 의미하며, 실험적으로 제어된 콜드 캐시 벤치마크가 아님. 웜 탐색은 빠르지만 첫 번째 액세스 지연은 균일하게 빠른 시작의 증거로 받아들이기에는 허용할 수 없음.
+- 리더는 자연스럽게 종료되었으며 작성자를 대체/재시작하지 않았습니다. 이 결과는 현재 커밋된 객체만 포함합니다. 최종 포스트 패키지 인덱스 단계, 전체 새 소스 감사 및 SQLite 무결성 확인은 여전히 필수이며, 이 부분적 인구 측정치를 전체 드라이브 완료로 사용하지 마십시오.
+- 이후 작성 프로세스의 경과 시간 **1:25:23** 시점의 실행 중 검사에서 추가 커밋을 확인했다. `Models/LoRA/harustyle_v1.5.safetensors`, **228,587,776바이트**, 인덱스 **10,280**이다. 작성 프로세스 **563**와 파이프라인 핸들 **91090**은 계속 실행 중이며, stderr는 비어 있고 종료 패키지 요약은 없다. WAL는 976,176,352바이트였다. 같은 파이프라인을 유지하고 이전 10,279행 측정을 최종 전체 드라이브 결과와 혼동해서는 안 된다. 남은 매핑 대상 대형 모델에는 숨겨진 가져오기와 거부된 가져오기 파일도 포함되며, 원래의 전체 파일 범위는 줄이지 않았다.
+
+<a id="latest-increment--readerwriter-access-boundary-functional-checks-passed"></a>
+
+### 최신 증분 - 리더/라이터 액세스 경계(기능 검사 통과)
+
+- boolean 생성자 기호를 모두 유지하면서 `ObjectStore::Access::{ReadOnly,ReadWrite,Create}` 를 추가했습니다. 읽기 전용 모드는 SQLite READONLY / query_only 를 사용하며, 동일성을 검증하고 3 스키마를 요구하며 마이그레이션/체크포인트 설정을 우회합니다. CLI `--index` 및 `--audit` 는 이제 이 모드를 선택하며, 소스 감사 스테이지는 0 보조 I/O 에 대한 주장이 아닌 파일 시스템 작업으로 여전히 남아 있습니다. 이는 소비자 경계를 준비하지만 Society 의 네이티브 브라우저나 변형을 아직 통합하지 않았습니다.
+- 동시 WAL 작성자/읽기 접근, 모든 비어 있지 않은 변경 진입점, 누락된 패키지를 생성하지 않음, 커밋된 상태의 가시성, 스키마2 거부와 명시적 작성자 마이그레이션을 검사하는 `object_read_only` 회귀를 추가하였다. TDD의 red 단계에서 예상한 생성자 심벌 누락이 나타났다. 라이브러리, CLI 및 회귀 타깃은 성공적으로 빌드하였다. 첫 Make 호출은 빌드 파일을 재생성했지만 새 타깃을 인식하지 못했고 다음 호출은 성공하였다.
+- CTest 핸들 **9966**은 종료 상태이며 종료 코드는 8이다. 836.07초에 **1/4가 통과하였다**. **읽기 전용는 181.60초, index는 305.94초, store는 63.47초에 시간 초과되었다.** 이 한계가 설정된 검사 실패 기록은 유지한다. 갱신한 CLI의 crash/resume/audit/index 회귀는 새 읽기 전용 검사 경로를 포함하여 **280.50초에 통과하였다**.
+- 격리된 읽기 전용 테스트, **39234**를 처리하고, 모든 단계 검사를 통과했으며 0를 **158.65 s** (0.00 사용자 / 0.01 시스템)에서 종료되었습니다. 전체 로그: `build/readonly-isolated-20260929.log`. 내구성 설정, 주장 또는 테스트 범위가 제거되지 않았으며, 이번 실행은 CTest의 타임아웃 없이 실제 완료를 관찰했습니다.
+- 순차적 격리된 나머지, 실행 핸들 **24182**는 종단 상태이며 0로 종료됩니다. 스토어 계약 테스트는 **247.69 초** ( 0.04 사용자 / 0.06 시스템) 에서 통과했으며, `build/object-store-isolated-20260929.log` 에 기록되었습니다. 전체 인덱스 회귀 가 **188.54 초** ( 0.01 사용자 / 0.06 시스템) 에서 통과했습니다. 단계를 거친 설치 전용 소비자 CTest 가 **1/1**에서 통과했으며, 테스트 시간은 **127.36 초**, 총 시간은 **134.23 초**, `set -euo pipefail` 이하입니다. 로그: `build/object-index-isolated-20260929.log` 와 `build/readonly-consumer-20260929.log` 입니다. 이 완전한 기능 실행은 이전 한계가 설정된 CTest 실패를 지우거나 실제 드라이브 성능을 확립하지 않습니다.
+- 시간 초과된 읽기 전용 픽스처는 `build/object-read-only-524696949399208`입니다. 후속 읽기 전용 검사에서 스키마 3와 하나의 객체, 그리고 0이 아닌 종료 세션 타임스탬프가 발견되었습니다. 이는 부분적인 증거에 불과합니다. 단계 메시지를 추가/플러시하고 다음 격리 실행을 위해 읽기 전용 테스트를 재구성하여 반복되는 타임아웃을 정확히 찾을 수 있도록 했습니다.
+- `build/object-index-test-io.sample` 는 SQLite 커밋 `unixSync` / `fcntl` 에 기존 불리언 생성자를 관찰했으며, 독자의 SQL 작성자 잠금에 대기하지 않았습니다. 시스템 메모리 압력은 78% 가 사용 가능하다고 보고되었습니다. 실제 볼륨은 마운트되어 APFS 약 2.59 TB 가 사용 가능하다고 보고되었으며 SMART 확인되었습니다; 이는 일시적인 I/O 문제를 배제하지 않습니다. 내구성을 약화시키거나 실제 작성자를 취소하여 테스트를 녹색으로 만들지 마십시오.
+- 단계를 거친 설치와 설치 전용 소비자가 구성/빌드가 통과했으며, **69697** 터미널 0를 처리합니다. 단계: `build/readonly-stage` ; 소비자: `build/objects-consumer-readonly` , 명시적인 단계별 패키지 구성 경로와 함께입니다. 소비자 런타임 검증이 위와 같이 기록된 대로 통과했습니다. 그 컴파일 포함 및 정적 링크 경로는 이 단계별 객체 SDK 에만 가리키며, 저장소 헤더나 빌드 아카이브에는 가리키지 않습니다. 정규식 CLI 바이트 비교가 통과했으며; `otool -L` 목록은 SQLite , libc++ 와 libSystem 만 포함합니다. 정규식 SDK /app/device 설치는 변경되지 않았습니다. 소비자는 오래된 생성자와 새로운 생성자를 모두 실행합니다.
+- 실제 파이프라인은 핸들 **91090**, 작성자 **563**, 1:15:39 경과 후 확인된 라이브 상태로 유지됩니다. 168,120,878바이트 모델이 **10,279**인덱스로 커밋되었습니다. 최종 패키지/감사/인덱스/무결성 결과는 여전히 미결입니다.
+
+- 사용자는 이전 프로세스 종료 요청 후에 전체 목표를 재개했습니다. 전 작가와 검사 과정은 재가하기 전에 결석이 확인되었습니다.
+- 읽기 전용 사전 검사가 성공적으로 종료되었습니다: 스키마 3, 컨테이너 `41e92f9a-7836-4cca-aba6-409752c56296`, 10,228 개체, 10,228 콤팩트 인덱스 행, 0 열린 세션입니다. 이는 전체 SQLite 무결성 검사가 아닙니다.
+- 실행 핸들 **91090**, 부모 셸 PID **561**, 패키지 작성자 PID **563**입니다. 조치를 취하기 전에 핸들과 현재 프로세스 상태를 확인하세요; 여기의 프로세스 식별자는 나중에 라이브로 유지된다는 증거가 아닌 체크포인트입니다.
+- Sole 재개된 라이터는 테스트된 빌드인 `--wal-autocheckpoint-pages 262144`와 모든 9 원본 네임스페이스를 사용하고, 원본 2 파일 OS -디렉터리 제외 항목만 사용합니다. 작업 세션: `session-b67c9e2d9a4805a9a6259e59655ee5c7` .
+- 새로운 재고: **10,295 파일 / 152,727,550,345 바이트 / 0 발행**. 취소된 실행 이후 소스 인벤토리가 변경되었습니다; 이전 계산을 현재 완료로 해석하기보다 새로운 완전한 소스 감사를 요구하십시오.
+- 런타임 로그(모두 `build/`에 있음):
+  - `object-package-checkpoint-resume-20260929.jsonl` 및 `.stderr`;
+  - `object-package-checkpoint-audit-20260929.jsonl` 및 `.stderr`;
+  - `object-package-checkpoint-index-20260929.jsonl` 및 `.stderr`;
   - `object-package-checkpoint-integrity-20260929.log`.
-  The parent runs package, audit, index and SQLite checks sequentially under
-  `set -e`; a failed stage stops the pipeline. Later logs need not exist until
-  their stage begins. Inspect the actual outputs, not only the pipeline exit.
-- The final SQLite checkpoint may outlive the CLI summary. Wait for actual
-  process exit before opening the DB or starting another writer. Do not cancel
-  or restart merely because an observation window expires. Full real-drive
-  completion, audit, integrity and complete-index timing remain outstanding.
-- At 7:08 writer elapsed, the resumed JSONL contained 10,227 skips, 45 imports
-  and 1 revision, with zero error events and empty stderr. These cover
-  1,706,421,892 visited source bytes; most of the 152.73 GB payload is still
-  outstanding. The writer was confirmed live at PID 563, not inferred from logs.
-- SDK delivery before the CLI-options extraction below: rebuilt
-  `iiFileProviderObjects` and `iiFileProviderObjectPackage`
-  successfully, then installed the current API, static library, CLI and docs to
-  `/Users/ymy/.local/SDK/iiFileProvider`. Installed header and CLI match the source
-  header/build CLI; all eight archive member payloads match the build archive
-  (the install-time archive symbol-table timestamp differs).
-- Updated installed-only consumer regression writes through the configurable
-  constructor and reopens with the original constructor. Fresh configure/build
-  and `ctest --test-dir build/objects-consumer-current --output-on-failure`
-  passed **1/1 in 12.64 seconds**, using the canonical installed CMake package.
-  `otool -L` lists only SQLite, libc++ and libSystem. Documentation also now
-  explains why the last connection's checkpoint can outlive a CLI summary.
+  상위는 `set -e` 아래에서 패키지, 감사, 인덱스 및 SQLite 검사를 순차적으로 실행합니다. 실패한 단계는 파이프라인을 중지합니다. 이후 로그는 해당 단계가 시작될 때까지 존재할 필요가 없습니다. 파이프라인 종료뿐만 아니라 실제 출력도 검사하세요.
+- 최종 SQLite 체크포인트는 CLI 요약보다 오래 살아남을 수 있습니다. DB를 열거나 다른 작성자를 시작하기 전에 실제 프로세스 종료기를 기다리세요. 관찰 창이 만료된다는 이유만으로 취소하거나 재시작하지 마십시오. 실제 드라이브 완료, 감사, 무결성 및 완전 인덱스 타이밍은 여전히 미결입니다.
+- 7:08 라이터가 경과할 때, 재개된 JSONL에는 10,227 스킵, 45 임포트 및 1 리비전이 포함되어 있었으며, 0 오류 이벤트와 빈 stderr가 발생했습니다. 이것들은 1,706,421,892가 방문한 소스 바이트를 포함하며, 대부분의 152.73 GB 페이로드가 아직 미결 상태입니다. 작성자는 PID 563에서 실시간으로 확인되었으며, 로그를 통해 추론되지 않았습니다.
+- SDK 전달 후 CLI 옵션 추출 전: `iiFileProviderObjects`와 `iiFileProviderObjectPackage`를 성공적으로 재구성한 다음 현재 API, 정적 라이브러리, CLI 및 `/Users/ymy/.local/SDK/iiFileProvider`로 설치했습니다. 설치된 헤더와 CLI는 소스 헤더/빌드 CLI와 일치하며, 모든 8 아카이브 멤버 페이로드가 빌드 아카이브와 일치합니다(설치 시간 아카이브 심볼 테이블 타임스탬프는 다릅니다).
+- 설치 전용 소비자 회귀 를 업데이트하여 구성 가능한 생성자를 통해 작성하고 원래 생성자로 다시 열었습니다. 신선한 구성/빌드 및 `ctest --test-dir build/objects-consumer-current --output-on-failure` 가 **1/1 를 12.64 초**동안, 표준 설치 CMake 패키지를 사용하여 수행되었습니다. `otool -L` 는 SQLite, libc++ 및 libSystem 만 나열합니다. 문서 또한 마지막 연결의 체크포인트가 CLI 요약보다 오래 지속될 수 있는 이유를 설명합니다.
 
-### Maintainability close-out: independent CLI policy
+<a id="maintainability-close-out-independent-cli-policy"></a>
 
-- Added private `ObjectPackageOptions` with a typed mode/options value and a pure
-  parser. CLI validation has no inventory, database or session side effects.
-  Runtime execution/JSONL stays in `ObjectPackage.cpp`; existing library APIs,
-  persistence schema and current-record contracts remain unchanged. No generic
-  framework or speculative storage interface was introduced.
-- Parsing covers all five modes, UTF-8 paths, namespace-bound exclusions and
-  strict complete integer conversion. Invalid options are now also tested at
-  the real-process boundary before any package directory can be created.
-- TDD red was an expected unresolved parser symbol; after registering the
-  implementation, the regular CMake CLI/options build passed. An independent
-  C++23 build with `-Wall -Wextra -Wpedantic` and the pure test also passed.
-- `ctest --test-dir build -R '^iiFileProvider.object_package_(options|cli)$'
-  passed **2/2**, exit 0: pure options 0.32 seconds, real-process crash/resume/
-  audit 227.35 seconds, total 228.13 seconds. Execution handle **29207** is
-  terminal. The process regression includes rejected options before storage,
-  crash recovery, session closure, unchanged-object identity, changed-file
-  revisions, source/payload audit, index scan and fixture SQLite integrity.
-  This latest CLI refactor is built in `build/` but has not been reinstalled
-  into the canonical SDK prefix. App/device reinstallation was not performed.
-- The actual writer remains separate and was confirmed live at 34:47 elapsed.
-  Last confirmed head is index 10,278; stderr is empty. Large-file WAL writes are
-  still in progress. These observations do not establish final package/audit or
-  integrity completion. Keep the existing pipeline, without another writer.
+### 유지보수성 종료: 독립적인 CLI 정책
 
-### Completion-scope check — same live pipeline
+- 타입화된 모드/옵션 값과 순수 파서를 가진 사설 `ObjectPackageOptions` 를 추가했습니다. CLI 유효성 검사에는 재고, 데이터베이스 또는 세션 부작용이 없습니다. 런타임 실행/ JSONL 는 `ObjectPackage.cpp` 에 유지됩니다. 기존 라이브러리 API, 지속성 스키마 및 현재 레코드 계약은 변경되지 않았습니다. 일반적인 프레임워크나 추측성 저장 인터페이스는 도입되지 않았습니다.
+- 파싱은 모든 5 모드, UTF-8 경로, 네임스페이스 바인딩 제외 및 엄격한 완전 정수 변환을 포함합니다. 잘못된 옵션은 이제 실제 프로세스 경계에서도 테스트된 후, 어떤 패키지 디렉터리도 생성될 수 있습니다.
+- TDD의 실패 단계는 예상한 미해결 파서 심볼 오류였다. 구현을 등록한 후 일반 CMake CLI/옵션 빌드가 통과했다. `-Wall -Wextra -Wpedantic`를 사용하는 독립 C++23 빌드와 순수 테스트도 통과했다.
+- `ctest --test-dir build -R '^iiFileProvider.object_package_(options|cli)$'`는 **2/2**를 통과했으며 종료 코드는 0이다. 순수 옵션 검사는 0.32초, 실제 프로세스의 충돌/재개/감사는 227.35초, 총 소요 시간은 228.13초이다. 실행 핸들 **29207**은 종료 상태이다. 프로세스 회귀 검사는 저장소 접근 전 옵션 거부, 충돌 복구, 세션 종료, 변경되지 않은 객체의 식별자 유지, 변경된 파일의 리비전, 원본/페이로드 감사, 인덱스 스캔과 픽스처 SQLite 무결성을 포함한다. 이 최신 CLI 리팩터링은 `build/`에 빌드되어 있지만 표준 SDK 접두사에 재설치하지 않았다. 앱/기기 재설치도 수행하지 않았다.
+- 실제 작가는 별개이며 34:47 경과 시점에 실시간으로 확인되었습니다. 마지막으로 확인된 헤드는 인덱스 10,278이며, stderr는 비어 있습니다. 대용량 파일 WAL 쓰기 작업이 아직 진행 중입니다. 이러한 관찰은 최종 패키지/감사 또는 무결성 완료를 확정하지 않습니다. 다른 작가 없이 기존 파이프라인을 유지하십시오.
 
-- Revalidated handle **91090** and writer **563** at 39:13 elapsed. The process
-  sample `build/object-package-checkpoint-stage-20260929-followup.sample` shows
-  `ObjectStore::importFile` committing through SQLite WAL `guarded_pwrite_np`.
-  WAL size advanced from 478,838,792 to 561,242,912 bytes. This is a verified
-  live-write wait, not a terminal/stalled-job declaration or permission to restart.
-- A read-only check of committed/skipped JSONL events found **10,278 records**,
-  **10,278 distinct object keys**, **10,278 distinct index keys** and **10,278
-  distinct logical paths**. No missing/malformed required key, positive version,
-  SHA-256, validation-key, session-key or recording-actor fields were found.
-  Observed source bytes total **1,999,347,335**; no error events or terminal
-  summary exist. This is a log-contract check of the committed subset only,
-  not a DB payload/history audit or proof of all 152.73 GB being packaged.
-- Source inspection confirms the compact index is an ordered keyset query on
-  `current_index`, without payload/history joins. The full-drive timing still
-  awaits the post-package stage. Metadata-chain validation compares each
-  revision with its session and parent validation key; the independent audit
-  also hashes fresh sources and validates current payloads and index projections.
-- Current `iiSocietyContainer` CMake/storage sources do not yet consume
-  `iiFileProvider::Objects`. Existing `FileOperations` still relies on downstream
-  indexing after native mutations. Container lifecycle/native-browser adoption
-  therefore remains unproven and must not be claimed from CLI packaging tests.
+<a id="completion-scope-check--same-live-pipeline"></a>
 
-## Historical handoff — superseded by the current state above
+### 완료 범위 확인 — 동일한 라이브 파이프라인
 
-- Sole actual writer: **32997 / PID 27785**, log
-  `build/object-package-live-all-parallel-snapshots.jsonl`, canonically installed
-  build hash `d9f308632e8326da742469a8716f434a56f446dda308131876b65678937851c5`.
-- At 10:40 elapsed: **2,173 new imports + 1,409 reused objects = 3,582 cumulative
-  confirmed objects**. No terminal summary. Full mapped scope: 10,258 inventoried
-  files / 198,342,091,658 bytes across all nine namespaces. This is not byte/time
-  progress, a full-payload audit, or a completed goal.
-- Native/forced-copy TSan, integrated packager, CLI recovery/audit and fresh
-  installed-consumer gates passed. Schema 3 is installed and the actual package
-  was migrated. The only actual index measurement covers the earlier 1,409-object
-  population immediately after backfill, not a controlled cold/full-drive scan.
-- Do not restart this writer for an observation timeout; inspect its same handle.
-  All earlier actual writers and the no-writer migration/index process are terminal.
-- Rechecking this later handoff found no live `iiFileProviderObjectPackage` process
-  and its old execution handle had expired. The JSONL ends at committed index
-  key 4504 with **3,095 imports + 1,409 skips = 4,504 confirmed current heads**,
-  but no final summary. Do not call this normal completion or zero errors. The
-  current CLI source now includes `ObjectAudit.cpp`; its source timestamp is later
-  than the canonical executable and it was not in the binary that stopped.
-- An independent read-only SQLite check of the Society object package was started
-  with `PRAGMA integrity_check`, `foreign_key_check`, schema/object/index counts and
-  unfinished-session count. Await its terminal output before reopening the package.
-  Package staging currently contains leftover `snapshot-*/payload` pairs from the
-  terminated process. Leave them untouched until integrity and exact stale-owner
-  scope are established; do not confuse these files with committed object content.
-- New `ObjectPackager::audit` implementation/test files appeared after the
-  canonical install. Integrate them into a rebuilt/staged SDK, run their focused
-  regression, and use the bounded source/payload/index audit against the actual
-  Society inventory after confirming object-database integrity. Preserve the
-  active goal; the actual mapped tree still has more files than committed objects.
+- 핸들 **91090** 와 작성자 **563** 를 39:13 경과 후 재검증했습니다. 프로세스 샘플 `build/object-package-checkpoint-stage-20260929-followup.sample` 는 `ObjectStore::importFile` 를 통해 SQLite WAL `guarded_pwrite_np` 로 커밋하는 것을 보여줍니다. WAL 크기는 478,838,792 에서 561,242,912 바이트로 진전되었습니다. 이는 검증된 라이브 쓰기 대기이며, 종결/중지 작업 선언이나 재시작 권한이 아닙니다.
+- 커밋/건너뛰기 JSONL 이벤트의 읽기 전용 검사에서 **10,278개 레코드**, **10,278개 고유 객체 키**, **10,278개 고유 인덱스 키**, **10,278개 고유 논리 경로**를 확인했다. 필수 키·양수 버전·SHA-256·검증 키·세션 키·기록 행위자 필드의 누락이나 형식 오류는 없었다. 관측된 원본 바이트는 총 **1,999,347,335**이며, 오류 이벤트나 종료 요약은 없다. 이는 커밋된 부분 집합의 로그 계약 검사이며, DB 페이로드/이력 감사나 전체 152.73 GB의 패키징 완료 증거는 아니다.
+- 소스 검사 결과, 컴팩트 인덱스가 `current_index`에서 주문형 키셋 쿼리이며, 페이로드/히스토리 조인이 없는 것으로 확인되었습니다. 전체 구동 시점은 아직 패키지 후 단계에 기다리고 있습니다. 메타데이터 체인 검증은 각 리비전을 해당 세션 및 상위 검증 키와 비교합니다; 독립 감사는 또한 새로운 소스를 해시하고 현재 페이로드와 인덱스 예측을 검증합니다.
+- 현재 `iiSocietyContainer` CMake / 저장 소스가 아직 `iiFileProvider::Objects`를 소비하고 있지 않습니다. 기존 `FileOperations`는 네이티브 변이 이후에도 여전히 하위 소비 측 인덱싱에 의존하고 있습니다. 컨테이너 수명 주기/ 네이티브 - 브라우저 채택은 아직 입증되지 않았으며 CLI 패키징 테스트에서 청구해서는 안 됩니다.
 
-## Current increment: bounded snapshot acquisition and cleanup
+<a id="historical-handoff--superseded-by-the-current-state-above"></a>
 
-- The previous turn was progress: schema-3 compact-index source and all delivery
-  gates completed, plus another 256 actual imports. Actual writer **1627 / 14995**
-  was then live and unchanged, with **1,409** cumulative confirmed objects.
-- New private `ObjectSnapshotBatch` overlaps acquisition and destruction of
-  small-batch snapshots, hardware concurrency capped at 64 and request count.
-  Metadata callbacks and SQLite publication remain on the owning thread.
-  Requests retain the 256-file / 16 MiB payload cap; metadata bounds are unchanged.
-  Worker acquisition errors reject the whole selected batch, join all workers
-  and clean only owned snapshots. Cleanup-worker launch failure drains remaining
-  items on the caller and joins any workers already started.
-- `ObjectSource` retains its existing three-argument constructor and adds an
-  expected-identity overload to reject stale descriptors before copy/clone.
-  Fallback-copy buffers moved from a 1 MiB stack array to bounded heap storage;
-  growth beyond the acquired source size is rejected before excess bytes are
-  written. This avoids overflowing smaller native worker stacks.
-- New tests cover serial/parallel order and byte equality (empty and 2 MiB +
-  17-byte boundary/tail content), source-edit isolation, stale/missing/symlink
-  inputs, cancellation, bounds and cleanup preserving unrelated staging files.
-  The integrated packager test additionally changes a source between metadata
-  preparation and snapshot capture, expecting a complete rejected batch, no
-  committed prefix, clean staging and a successful fresh-inventory retry.
-- Standalone forced-copy ThreadSanitizer build/run **passed**, exit 0, **64.26 s**
-  (0.49 user / 0.25 system), handle **31347**. Logs:
-  `object-snapshot-batch-copy-tsan-build.log` and
-  `object-snapshot-batch-copy-tsan-tests.log`. The private test compile definition
-  disables Apple cloning only for this test, exercising the actual copy fallback.
-- Initial new-test link failed on missing `ObjectSnapshotBatch` symbols (handle
-  **52541**, exit 2, `object-snapshot-batch-red-build.log`). Configuration had
-  captured the old source list while source registration was being edited.
-  An overlapping full-build process group **21949** was stopped (handle **77944**,
-  exit 143) to avoid concurrent CMake writers; the actual drive writer was not
-  signalled. A fresh explicitly serialized configure/build/test pipeline is now
-  running in **75297**. It runs the native snapshot test, integrated packager
-  regression and full CLI process-recovery/source audit in that order. Logs use
-  `build/object-snapshot-batch-final-*`, `object-snapshot-batch-tests.log`,
-  `object-snapshot-batch-packager-tests.log`, and `object-snapshot-batch-cli-tests.log`.
-  No canonical installation of these changes has happened.
-- Fresh configure completed (19.5 s configure / 152.3 s generation), and the full
-  SDK build passed. Native snapshot CTest **passed in 3.82 s**, total 4.59 s.
-  The same delivery pipeline **75297** is now running the integrated packager
-  regression; no later-stage success should be inferred yet.
-- A transient `Ts` process state was observed for actual writer 14995. Polling
-  the same **1627** handle and re-reading the process immediately showed `Us`
-  disk wait again. No restart or signal was sent; the process remains live.
-- The installed-only consumer fixture now also compiles and invokes the public
-  expected-identity snapshot overload before its existing store/inventory checks.
-  Its new staging build/run remains a delivery gate, not a completed result.
-- Integrated packager regression **passed in 280.56 s** (0.10 user / 0.16 system),
-  including complete batch rejection and fresh-inventory retry after a source
-  changes during preparation. Pipeline **75297** has advanced to CLI crash/recovery
-  and source/payload audit. Staging installation and a fresh installed-only
-  consumer are being validated independently; no actual writer replacement yet.
-- All delivery gates completed: pipeline **75297 exit 0**, full 256-object CLI
-  process-kill/resume/source-payload audit **passed 256.54 s**. Staging/consumer
-  pipeline **55212 exit 0**, installed-only consumer **passed 52.58 s** (CTest
-  52.83 s), including the new expected-identity constructor.
-- Build and staging executable SHA-256 matches:
-  `d9f308632e8326da742469a8716f434a56f446dda308131876b65678937851c5`.
-  After these gates, the actual writer **14995 / 1627** was sent **SIGINT** for
-  the planned validated upgrade. Normal shutdown and terminal completion must
-  be verified before installing canonically or opening the actual package.
-  No force kill, remount, original-file deletion or second writer was used.
-- Old actual writer **1627 / 14995 terminated with exit 130**. Final summary:
-  imported=256, skipped=1152, revised/errors=0, cancelled=true, **3286.54 s**.
-  The close sample reached SQLite WAL checkpoint `pwrite`; process disappearance
-  and terminal status were both checked, not just the summary. Cumulative
-  committed objects remain 1,409.
-- Container identifier and both source volume UUIDs still match the prior run;
-  approximately 2.4 TiB is available on the mapped volumes. Canonical installation
-  and a no-writer actual schema-3 index measurement have now been started. Logs:
-  `object-snapshot-batch-install.log`, `object-index-live-schema3.jsonl`,
-  `object-index-live-schema3-time.log`. The measurement population is the existing
-  committed subset; it is not proof of a complete drive migration or cold-cache
-  latency after a just-completed schema backfill.
-- Canonical install completed and matches the tested build hash `d9f308...7851c5`.
-  Actual schema-3 index measurement **6784 completed with exit 0**: all three scans
-  returned **1,409** objects, in **1.381 / 0.9785 / 0.985667 ms**. Entire command,
-  including migration/open/close: **46.19 s** (0.01 user / 0.02 system). These are
-  post-backfill traversal timings, not a controlled cold-cache comparison or
-  full-drive population benchmark. Existing full migration remains incomplete.
-- Only after that measurement terminated, the upgraded CLI was launched against
-  the same package/container and all nine original mappings. New live log:
-  `build/object-package-live-all-parallel-snapshots.jsonl`. This run combines
-  compact schema-3 indexing, bounded payload reads and bounded snapshot lifecycle
-  workers; the old writer is terminal, not running in parallel.
-- Upgraded actual run is **handle 32997 / PID 27785**. Inventory completed with
-  **10,258 files / 198,342,091,658 bytes**, zero inventory issues, **0.774664 s**.
-  This is a later observed inventory, not a controlled speed comparison; the
-  source set's byte total changed. Background scheduling was removed with
-  `taskpolicy -B -p 27785`. Revalidate this same handle before any other actual
-  writer or database observer; previous handle 1627 is terminal.
-- All **1,408** resumed Photos entries exactly match the union of prior committed
-  logs for path, object/index key, version, bytes, SHA-256, validation key,
-  session, recording actor and provenance-known flag. The Files object still
-  sorts later. Source logs contain 1,409 prior imported objects in total.
-- At **4:08 elapsed**, upgraded run **32997 / 27785** had committed **1,536 new
-  objects** (six complete batches), bringing cumulative confirmed objects to
-  **2,945**. No final summary yet; zero emitted error events does not prove zero
-  accumulated issues. Do not translate object counts to byte/time completion.
-- The native sample `object-package-snapshots-live-sample.txt` observed ten
-  simultaneous `readObjectBatch` payload workers and the owning thread joining
-  them. That sample caught payload reading, not snapshot-worker execution; the
-  snapshot implementation has separate native and forced-copy/TSan tests.
-  Launch/cache/storage conditions differ from the old run, so no controlled
-  throughput multiplier is claimed.
-- At **7:29 elapsed**, the same writer had imported **1,917** new objects and
-  skipped **1,409** existing objects; cumulative confirmed count is **3,326**.
-  It has progressed beyond small descriptors into JPEG preview payloads. The
-  latest observed event was index 3326, `Photos/.previews/cd13552a3a6214e58c38879358ab160ecddb9e6ea60b03fd13638e7a00f1bf8f.jpg`,
-  38,874 bytes. No summary yet: all-drive packaging and final source/payload
-  audit remain outstanding. The first Files object has now also been reused.
-- Source SHA-256 of newly committed Photos descriptor `b61053...706c.societyphoto`
-  independently matched its event (`736326c1be7aa72e2046410447ce734bfa11442c9994358aef5d66f3c9cd47f6`).
-  This is a source comparison, not the final package extraction audit.
-- The JPEG preview source at index 3326 also independently matched its committed
-  SHA-256: `902e02077ee590515de2e81a9b200322d5f5177b55b9904db15d1dfa2f6a7f2c`.
-- Final prior-log comparison covers all 1,409 reused objects with an evidence
-  distinction: all 1,408 Photos entries match every current event field. The
-  oldest Files import event predates expanded progress logging and contains only
-  path/key/version/bytes; those fields match exactly (`object-1859fc4b59c1a7fae70d281f54cdf0c0`,
-  version 1, 8,196 bytes). Missing historical digest/actor fields are not a mismatch
-  and must not be presented as independently compared old fields.
+## 과거 핸드오프 - 위의 현재 상태로 대체됨
 
-## Current handoff: persistent compact-index increment
+- 유일한 실제 작성자: **32997 / PID 27785**, 로그 `build/object-package-live-all-parallel-snapshots.jsonl`, 정식 빌드 해시 `d9f308632e8326da742469a8716f434a56f446dda308131876b65678937851c5` 로 정식 설치되었습니다.
+- 10:40 경과: **2,173 새 가져오기 + 1,409 재사용된 객체 = 3,582 누적 확인된 객체**. 종결 요약 없음. 전체 맵 범위: 10,258 인벤토리 파일 / 198,342,091,658 바이트 전체 9 네임스페이스. 이는 바이트/시간 진행이 아니며, 전체 페로드 감사 또는 완료된 목표가 아님.
+- 네이티브/강제 복사 TSan, 통합 패커, CLI 복구/감사 및 새로 설치된 소비자 게이트 통과. 스키마 3 가 설치되었고 실제 패키지가 마이그레이션되었습니다. 유일한 실제 인덱스 측정은 백필 직후의 이전 1,409-객체 집합을 다루며, 제어된 콜드/풀 드라이브 스캔이 아닙니다.
+- 이 작성자를 관찰 시간 초과로 인해 다시 시작하지 마십시오; 같은 핸들을 검사하십시오. 모든 이전 실제 작성자와 no-writer 마이그레이션/색인 프로세스는 종단적입니다.
+- 이후의 이관 작업을 다시 확인한 결과, `iiFileProviderObjectPackage` 프로세스는 살아있지 않았으며, 해당 프로세스의 이전 실행 핸들이 만료되었습니다. JSONL 는 4504 커밋 인덱스 키에서 종료되며, **3,095 가져오기 + 1,409 건너뛰기 = 4,504 현재 헤드**확인되었으나 최종 요약은 없습니다. 이것을 정상 완료 또는 0 오류로 호출하지 마십시오. 현재 CLI 소스는 이제 `ObjectAudit.cpp` 을 포함하며, 그 소스 타임스탬프는 정통 실행 가능 파일보다 늦고, 중단된 바이너리에 포함되지 않았습니다.
+- 독립적인 읽기 전용 SQLite 체크가 Society 객체 패키지를 시작했으며, `PRAGMA integrity_check`, `foreign_key_check`, 스키마/객체/인덱스 카운트 및 미완료 세션 카운트를 사용했습니다. 패키지를 다시 열기 전에 최종 출력을 기다리십시오. 패키지 준비 단계에는 종료된 프로세스에서 남은 `snapshot-*/payload` 쌍이 현재 포함되어 있습니다. 무결성과 정확한 오래된 소유자 범위가 설정될 때까지 이 파일들을 건드리지 마십시오; 이 파일들을 커밋된 객체 내용과 혼동하지 마십시오.
+- 정규 설치 후 새로운 `ObjectPackager::audit` 구현/테스트 파일이 나타났습니다. 이를 재구성된/준비된 SDK 에 통합하고, 집중된 회귀 을 실행한 다음, 객체 데이터베이스 무결성을 확인한 후 실제 Society 재고에 대해 한계가 설정된 소스/페이로드/인덱스 감사에 적용하십시오. 활성 목표를 유지하십시오; 실제 매핑된 트리는 여전히 커밋된 객체보다 더 많은 파일을 가지고 있습니다.
 
-- Sole actual drive writer: handle **1627**, PID **14995**, installed parallel-read
-  CLI, log `build/object-package-live-all-parallel-read.jsonl`. All nine namespaces
-  remain included. Latest inventory: **10,258 files / 198,341,676,161 bytes**,
-  zero inventory issues, 348.247 s. It reused 1,152 Photos objects; all identity,
-  index, version, content hash, validation and session fields in the previous
-  256-object committed batch matched exactly. The earlier Files object sorts
-  later. The continuing run has now committed another 256 objects, bringing the
-  confirmed cumulative total to **1,409**; it remains live, not a finished run.
-- The new live sample found a serial staging-source `openat` wait in
-  `ObjectSource`, before the parallel payload-read stage. Thus worker support is
-  not evidence of an observed end-to-end throughput gain. Sample:
-  `build/object-package-parallel-read-live-sample.txt`. No second actual writer
-  or live database observer was started.
-- The observed 139-second first index traversal motivates physically separating
-  current traversal rows from revision/session/payload storage. Database schema 3
-  adds a compact integer-keyed `current_index`; its publication trigger shares
-  each mutation's atomic transaction. Index traversal no longer joins revisions.
-  Schema 1/2 migration backfills the projection without changing validation keys.
-  This is currently a source/build change, **not installed into the live writer**.
-- New Qt-free index regression: old code failed `compact index requires schema 3`
-  in 29.19 s, exit 1 (`build/object-index-red-tests.log`). The initial build attempt
-  needed CMake regeneration before the new target existed; after configure it
-  built and produced the expected contract failure.
-- Updated full build succeeded (`build/object-index-build.log`); the first
-  regression passed in **148.56 s**, handle **49005**, terminal exit 0, output
-  `build/object-index-tests.log`. It checks
-  all projected fields against authoritative heads, seven-row keyset pages,
-  imports/revision/move/tombstone, rollback, reopen, schema-2 backfill and a
-  single-table range query plan.
-- Initialization and the complete schema migration now share one transaction,
-  avoiding extra durable commits per schema step. A forced trigger-name conflict
-  regression checks rollback after projection backfill. Fixture roots are pinned
-  to `build/`. Final delivery validation is running in handle **34266**: rebuild,
-  final compact-index CTest, streaming/legacy regression, actual-process CLI
-  crash/resume/audit, staging installation and installed-only Qt-free consumer.
-  Logs use `build/object-index-final-*`, `object-index-store-tests.log`,
-  `object-index-cli-tests.log`, `object-index-stage.log` and
-  `object-index-consumer-*`. No canonical/live writer replacement is authorized
-  by a stage start alone; inspect terminal outcomes before replacing it.
-- No actual-drive first-read improvement is yet established, and all-drive
-  migration/audit remains incomplete.
-- The continuing parallel-read writer subsequently committed **256 new objects**,
-  index keys **1154–1409**, work session
-  `session-1c6c008a13b8b0ab9640a4332bce5282`. Cumulative confirmed imports across
-  runs are now **1,409**. The first new key is
-  `object-dedab4f221ec366071547404bc34af6c`; the last is
-  `object-7e7a574ce12a4f64045b943bdc636fd8`. This is positive real commit evidence,
-  not a full-drive summary, controlled speed comparison or byte-progress metric.
-- The final compact-index CTest **passed in 146.54 s**, total CTest time 149.57 s,
-  including the failed-migration rollback case. The full final build also passed.
-  Delivery handle **34266** is now running the streaming/legacy store regression;
-  the CLI recovery, staging and installed-consumer gates follow only on success.
-  Do not infer completion of those later stages from the compact-index pass.
-- An independent SHA-256 read of the last newly imported source,
-  `Photos/6aa552a352a2b71e40dca2fc172c5cc7a9e7de171753653d3e8a6975a427e5d0.societyphoto`,
-  matched its committed event:
-  `155f73ce0d712d4136f1616f68846167ca4501b0316dd1661649cb59f961a1c5`.
-  This verifies that source digest, not full-package payload extraction or the
-  complete mapped-drive audit. The actual writer remains the schema-2 binary;
-  the schema-3 index source is not yet canonically installed.
-- The final streaming/legacy ObjectStore regression passed in **269.63 s**
-  (0.04 user / 0.05 system). A native sample found WAL `unixSync` / `fcntl`
-  waits during import, not CPU saturation. Delivery handle **34266** advanced
-  to the CLI process-kill/resume/audit gate; staging and installed-consumer
-  verification still follow only if that gate succeeds.
-- Final delivery chain **34266 completed with exit 0**. The unchanged full
-  256-object process-kill/resume/source-payload audit passed in **294.11 s**.
-  Staging installation succeeded under `build/object-index-stage`; a fresh
-  installed-only consumer configured/built and passed **42.68 s** (CTest 43.74 s).
-  Its linked libraries are SQLite, libc++ and libSystem only, no Qt.
-- Build/staged executable SHA-256 matches:
-  `0470b84b022acfc121bac73e6bfa80fd306af90859c7521e027362b11f4a4ff0`.
-  Canonical installed executable remains the live schema-2 version:
-  `f027231370e6cc634d5106b910ab0e56e0669001988cc5e215d8f1394cddb704`.
-  No new Society app bundle or physical-iPhone execution is established here.
-- A later sample of the same actual writer found **serial snapshot cleanup**
-  after its successful batch, in `ObjectSource::~ObjectSource` / `remove` /
-  `unlink`, log `build/object-package-parallel-second-batch-sample.txt`.
-  Together with the earlier serial snapshot `openat`, snapshot creation and
-  cleanup are measured remaining bottlenecks outside parallel payload reads.
-  Bounded snapshot lifecycle concurrency is a relevant next optimization, not
-  an implemented or tested feature. Do not interrupt/restart the real writer
-  just because a poll interval elapsed; no completion summary has appeared.
+<a id="current-increment-bounded-snapshot-acquisition-and-cleanup"></a>
 
-## Bounded parallel payload-read increment
+## 현재 증분: 한계가 설정된 스냅샷 획득 및 정리
 
-- The existing installed 256-file writer (handle 70850 / PID 5649) finally
-  committed its first additional 256 objects without errors. Combined with the
-  prior 897 objects, the observed committed total was 1,153. It was then live;
-  completion of a first batch is not completion of the real drive migration.
-  The CLI currently emits accumulated per-item failures only after `package`
-  returns; no error events during a live run is **not** proof of zero accumulated
-  issues. Use committed events for positive progress and the final summary for
-  the whole-run error count. Live failure reporting still needs improvement.
-- Its native sample found serial payload `read` waits inside `importFiles`.
-  The new internal `ObjectBatchRead` input stage overlaps those reads using
-  hardware concurrency, capped at 64 and at the number of files. Every source
-  size is checked before payload allocation; captured data is capped at 16 MiB
-  plus bounded caller-owned input buffers. SQLite is used only by the owning
-  thread, publishing in original order inside the same atomic transaction.
-- Source identities are checked after the read and before each publication.
-  Read errors/cancellation reject the batch, and every started worker is joined
-  before buffers are destroyed. Individual large-file streaming stays intact.
-  This changes concurrency, not durability, scope, key or validation formats.
-- Red build: the new reader contract initially failed on the missing private
-  header (`build/object-batch-read-red-build.log`). The full updated build then
-  succeeded; the serial/parallel binary-content contract passed in 10.23 seconds.
-  A standalone ThreadSanitizer build/run passed with no reported races
-  (`build/object-batch-read-tsan-build.log`, `object-batch-read-tsan-tests.log`).
-- The integrated batch test now mixes a binary chunk-boundary/tail file, an empty
-  file and repeated ordinary content, then extracts and verifies the result.
-- The targeted run finished **3/4**: reader 10.23 s, integrated atomic batch
-  107.64 s, and provenance reconciliation 85.98 s passed. CLI kill/resume/audit
-  exceeded its 300-second CTest limit (300.04 s); do not call this a green suite.
-  Output: `build/object-batch-read-tests.log`, terminal handle 43684 / exit 8.
-- The final reader regression also exercised actual payload read denial after
-  successful metadata inspection and passed in 0.93 s. The platform Threads
-  target is exported through the installed CMake package for non-Qt consumers.
-- Delivery validation is running in handle **64243**: final rebuild, verbose
-  reader test, refreshed TSan build, staging install under
-  `build/object-batch-read-stage`, fresh installed-only consumer build/test,
-  refreshed TSan run, standalone full CLI retry (same 256-file scope and its
-  unchanged per-call timeout), then the streaming ObjectStore regression.
-  Logs use `build/object-batch-read-*`; the standalone CLI log is
-  `object-batch-read-cli-retry.log`. Final build/reader/staging steps completed;
-  the fresh installed-only consumer passed in 92.60 s and the refreshed TSan run
-  also passed, explicitly exercising worker read denial. The standalone CLI
-  retry passed in **244.46 s** (0.72 user / 1.81 system), preserving all 256
-  committed objects and completing the source/payload/revision audit. This does
-  not erase the earlier CTest timeout. The streaming-store regression is now
-  running (PID 13121 at observation). Inspect each stage and terminal exit;
-  later stages have not necessarily run. Only a staging prefix is written. Do
-  not install over or duplicate the live actual writer while these run.
-- After the passing CLI gate, the actual old writer was revalidated and sent
-  SIGINT to prepare the parallel-read upgrade. Handle **70850** / PID **5649**
-  then completed with **exit 130**. Its final summary reports imported=256,
-  skipped=896, revised/errors=0, cancelled=true, 2483.63 seconds. The cumulative
-  committed count is 1,153 including the first Files object. Close completion,
-  not the earlier signal or summary alone, was checked before replacement.
-- The streaming ObjectStore regression passed in **292.78 s** (0.04 user /
-  0.06 system); handle **64243** completed with exit 0. Its sampled wait was
-  SQLite constructor/journal `unixSync`, and the old writer's shutdown sample
-  showed `endSession` / WAL `unixSync`, not CPU saturation.
-- The container identifier and both source volume UUIDs were revalidated;
-  approximately 2.59 TB remained available. Only after the actual writer and
-  test chain terminated was canonical installation started, followed by a
-  no-writer index measurement of the current actual package. Logs:
-  `object-batch-read-install.log`, `object-index-live-before-parallel.jsonl`,
-  `object-index-live-before-parallel-time.log`. This index population is the
-  committed subset, not all 10,256 currently inventoried source files.
-- Canonical installation completed; built/installed CLI hashes match:
-  `f027231370e6cc634d5106b910ab0e56e0669001988cc5e215d8f1394cddb704`.
-- The actual current 1,153-object index completed all three scans: **139,055 ms**
-  first, **1.37692 ms** second, **1.05725 ms** third. Whole command: 148.37 s
-  (0.01 user / 0.03 system), exit 0, handle 66098. A live sample located the slow
-  first traversal inside `ObjectStore::index` / SQLite B-tree page `pread`, not
-  just connection initialization. This was an observed first traversal, not a
-  controlled OS cold-cache test. Warm traversal is fast at this population;
-  first-use latency and full-drive population performance remain unproven/poor.
-- After the index process finished, the newly installed parallel-read CLI was
-  launched against the same package/container and all nine mappings. Live log:
-  `build/object-package-live-all-parallel-read.jsonl`, execution handle **1627**,
-  PID **14995**. It has emitted `inventory-start`; its background scheduling
-  policy was removed with `taskpolicy -B`. Launch is not completion. Revalidate
-  this handle before any additional actual writer or observer is started.
+- 이전 차례는 진행 상황이었습니다: 스키마‐3 컴팩트 인덱스 소스와 모든 전달 게이트가 완료되었으며, 또 다른 256 실제 수입이 포함됩니다. 실제 라이터 **1627 / 14995**는 이후 실시간이며 변경되지 않았으며, **1,409** 누적 확인된 객체와 함께.
+- 새로운 개인 `ObjectSnapshotBatch` 중첩 획득과 소규모 스냅샷의 파괴가 발생했으며, 하드웨어 동시성은 64 로 제한되고 요청 카운트가 있습니다. 메타데이터 콜백과 SQLite 게시는 소유 스레드에 남아 있습니다. 요청들은 256파일/16 MiB 페이로드 한도를 유지하며, 메타데이터 경계는 변경되지 않았습니다. 워커 획득 오류는 선택된 전체 배치 를 거부하고, 모든 워커에 연결하며 소유된 스냅샷 만 정리합니다. 클린업 워커 시작 실패는 호출자에게 남은 항목을 배수시키고 이미 시작된 모든 워커에 연결합니다.
+- `ObjectSource` 는 기존 3-인수 생성자를 유지하고, 복사/복제 전에 오래된 설명자를 거부하는 예상된 동일성 오버로드를 추가합니다. 대체 경로 -복제 버퍼는 1 MiB 스택 배열에서 한계가 설정된 힙 저장소로 이동되었으며, 초과 바이트가 작성되기 전에 획득된 소스 크기 이상의 성장은 거부됩니다. 이는 더 작은 네이티브 작업자 스택이 넘치는 것을 방지합니다.
+- 새로운 테스트는 직렬/병렬 순서와 바이트 동일성 (비어있고 2 MiB + 17-바이트 경계/꼬리 내용), 소스 편집 격리, 오래된/누락된/연결고리 입력, 취소, 관련 없는 임시 파일을 보존하는 범위 및 정리, 메타데이터 준비와 스냅샷 캡처 사이에 소스를 변경하여 완전한 거부된 배치, 커밋된 접두사 없음, 깨끗한 임시 파일, 성공적인 새로고침 재시도 등을 추가로 다룹니다.
+- 독립형 강제 복사 ThreadSanitizer build/run **가**를 통과했으며, 종료 0, **64.26 s** (0.49 사용자 / 0.25 시스템), **31347**를 처리합니다. 로그: `object-snapshot-batch-copy-tsan-build.log` 및 `object-snapshot-batch-copy-tsan-tests.log`. 프라이빗 테스트 컴파일 정의는 이 테스트에 대해서만 Apple 복제를 비활성화하며, 실제 복사본 대체 경로를 실행합니다.
+- 초기 새 테스트 링크는 `ObjectSnapshotBatch` 기호 누락으로 실패했습니다 (**52541**처리, 2종료, `object-snapshot-batch-red-build.log` ). 구성이 소스 등록이 편집되는 동안 오래된 소스 목록을 포착했습니다. 중첩된 전체 빌드 프로세스 그룹 **21949** 는 동시 CMake 작성자를 피하기 위해 중지되었습니다 (**77944**처리, 143 종료); 실제 드라이브 작성자는 신호를 받지 않았습니다. 새로 명시적으로 직렬화된 구성/ build/test 파이프라인이 **75297**에서 현재 실행 중입니다. 그것은 순서대로 네이티브 스냅샷 테스트, 통합 패키지 회귀 와 전체 CLI 프로세스 복구/소스 감사 를 실행합니다. 로그는 `build/object-snapshot-batch-final-*`, `object-snapshot-batch-tests.log`, `object-snapshot-batch-packager-tests.log`, `object-snapshot-batch-cli-tests.log` 를 사용합니다. 이 변경 사항의 표준 설치 는 아직 이루어지지 않았습니다.
+- 새로 구성이 완료되었습니다 ( 19.5 초 구성 / 152.3 초 생성) 이며, 전체 SDK 빌드가 통과했습니다. 네이티브 스냅샷 CTest **는 3.82 초**에 총 4.59 초 동안 통과했습니다. 동일한 배포 파이프라인 **75297** 은 이제 통합 패커 회귀 를 실행 중이며, 이후 단계의 성공을 추론해서는 안 됩니다.
+- 실제 라이터 14995에 대해 일시적인 `Ts` 프로세스 상태가 관찰되었습니다. 동일한 **1627** 핸들을 폴링하고 프로세스를 다시 읽어보면 즉시 `Us` 디스크가 다시 대기 중임을 표시되었습니다. 재시작이나 신호가 전송되지 않았으며, 프로세스는 계속 진행 중입니다.
+- 설치 전용 소비자 픽스처는 이제 기존 스토어/인벤토리 검사보다 먼저 공개 예상 아이덴티티 스냅샷 오버로드를 컴파일하고 호출합니다. 새로운 스테이징 build/run는 완성된 결과가 아니라 배송 게이트로 남아 있습니다.
+- 통합 패커 회귀 **는 280.56 초** ( 0.10 사용자 / 0.16 시스템) 에 통과했으며, 준비 중 소스가 변경된 후 완전한 배치 거부 및 신선한 재고 재시도를 포함합니다. 파이프라인 **75297** 는 CLI 충돌/회복 및 소스/페이로드 감사 단계로 진행되었습니다. 스테이지 설치와 신선한 설치 전용 소비자는 독립적으로 검증 중이며, 실제 작성자 교체는 아직 이루어지지 않았습니다.
+- 모든 배포 게이트가 완료되었습니다: 파이프라인 **75297 종료 0**, 전체 256-객체 CLI 프로세스 종료/재개/소스-페이로드 감사 **는 256.54 초**동안 통과했습니다. 스테이지/소비자 파이프라인 **55212 종료 0**, 설치 전용 소비자 **는 52.58 초** ( CTest 52.83 초) 동안 통과했으며, 예상된 신원 생성기를 포함합니다.
+- 빌드 및 스테이지 실행 파일 SHA-256 이 일치합니다: `d9f308632e8326da742469a8716f434a56f446dda308131876b65678937851c5` 입니다. 이러한 게이트 이후, 실제 작성자 **14995 / 1627** 는 계획된 검증된 업그레이드를 위해 **SIGINT** 로 전송되었습니다. 정지된 종료와 터미널 완료를 확인해야 공식적으로 설치하거나 실제 패키지를 열 수 있습니다. 강제 종료, 재 마운트, 원본 파일 삭제 또는 두 번째 작성자가 사용되지 않았습니다.
+- 기존 실제 작성자 **1627 / 14995 는 exit 130**로 종료됨. 최종 요약: import= 256, skip= 1152, revise/error= 0, cancelled=true, **3286.54 개**. Close sample 는 SQLite WAL 체크포인트 `pwrite` 에 도달했으며, 프로세스 소실과 터미널 상태는 요약만 확인한 것이 아님. 누적 커밋된 객체는 1,409로 남음.
+- 컨테이너 식별자와 두 소스 볼륨 UUID 는 이전 실행과 여전히 일치하며, 매핑된 볼륨에는 대략 2.4 TiB 가 사용 가능함. 캐노니컬 설치와 no-writer 실제 스키마-3 인덱스 측정이 이제 시작됨. 로그: `object-snapshot-batch-install.log` , `object-index-live-schema3.jsonl` , `object-index-live-schema3-time.log` . 측정 집단은 기존 커밋된 부분집합이며, 바로 완료된 스키마 백필 이후의 완전한 드라이브 마이그레이션 증명이나 콜드 캐시 지연이 아님.
+- 캐노니컬 설치가 완료되어 테스트된 빌드 해시 `d9f308...7851c5` 와 일치함. 실제 스키마-3 인덱스 측정 **6784 는 exit 0**로 완료됨: 모든 3 스캔은 **1,409** 객체를 반환했으며, **1.381 / 0.9785 / 0.985667 ms**소요됨. 이전 명령 전체, 마이그레이션/열기/닫기를 포함: **46.19 초** ( 0.01 사용자 / 0.02 시스템). 이는 백필 이후의 탐색 시간이며, 제어된 콜드 캐시 비교나 전체 드라이브 집합 벤치마크가 아님. 기존 전체 마이그레이션은 여전히 완료되지 않음.
+- 그 측정이 종료된 후에야 업그레이드된 CLI가 동일한 패키지/컨테이너와 모든 9 원본 매핑에 대해 발사되었습니다. 새 실시간 로그: `build/object-package-live-all-parallel-snapshots.jsonl`. 이 실행은 컴팩트한 스키마인3 인덱싱, 한계가 설정된 페이로드 읽기 및 한계가 설정된 스냅샷 라이프사이클 워커를 결합합니다; 이전 라이터는 터미널이며 병렬로 실행되지 않습니다.
+- 업그레이드된 실제 실행은 **핸들 32997 / PID 27785**임. **10,258  파일 198,342,091,658  바이트**로 재고가 완료되었으며, 0  미삭제 문제 **0.774664  초**입니다. 이는 제어된 속도 비교가 아닌 나중에 관찰된 재고이며, 소스 세트의 바이트 총량이 변경되었습니다. 배경 스케줄링은 `taskpolicy -B -p 27785` 로 제거되었습니다. 다른 실제 작성자 또는 데이터베이스 관찰자 전에 동일한 핸들을 다시 유효성 검사해야 합니다; 이전 핸들 1627 는 종단적입니다.
+- 모든 **1,408** resumed Photos 항목은 경로, 객체/인덱스 키, 버전, 바이트, SHA-256, 검증 키, 세션, 기록 액터 및 출처 알려진 플래그에 대한 이전에 커밋된 로그의 합집합과 정확히 일치합니다. Files 객체는 여전히 나중에 정렬됩니다. 소스 로그에는 총 1,409 이전에 가져온 객체가 포함되어 있습니다.
+- **4:08  경과**에, 업그레이드된 실행 **32997  /  27785** 는 **1,536  개의 새로운 객체** 를 커밋했습니다 ( 6  완료된 배치), 누적 확인된 객체 수를 **2,945**로 가져왔습니다. 최종 요약은 아직 없습니다; 0  발신된 오류 이벤트는 0  누적된 문제를 증명하지 않습니다. 객체 수를 바이트/시간 완료로 번역하지 마십시오.
+- 네이티브 시안 `object-package-snapshots-live-sample.txt` 은 10  동시 `readObjectBatch`  페이로드 작업자와 소유 스레드가 그들을 연결하는 것을 관찰했습니다. 해당 시안은 페이로드 읽음을 포착했으며, 스냅샷 구현은 별도의 네이티브 및 강제 복사/TSan 테스트를 가집니다. 런/캐시/저장 조건은 이전 실행과 다르므로 제어된 처리량 승수라고 주장할 수 없습니다.
+- **경과7:29**시점에 같은 작성 프로세스는 새 객체 **1,917**개를 가져오고 기존 객체 **1,409**개를 건너뛰었다. 누적 확인 개수는 **3,326**개이다. 작은 설명자를 넘어 JPEG 프리뷰 페이로드로 진행했다. 최신 관측 이벤트는 인덱스 3326, `Photos/.previews/cd13552a3a6214e58c38879358ab160ecddb9e6ea60b03fd13638e7a00f1bf8f.jpg`, 38,874바이트였다. 아직 요약은 없으며 전체 드라이브 패키징과 최종 원본/페이로드 감사는 미완료이다. 첫 Files 객체도 이제 재사용했다.
+- 새로 커밋된 Photos 설명자 `b61053...706c.societyphoto` 의 SHA-256 번째 소스가 독립적으로 해당 이벤트 ( `736326c1be7aa72e2046410447ce734bfa11442c9994358aef5d66f3c9cd47f6` ) 와 일치했습니다. 이는 소스 비교이며 최종 패키지 추출 감사입니다.
+- 인덱스 3326 의 JPEG 번째 미리보기 소스도 독립적으로 커밋된 SHA-256 : `902e02077ee590515de2e81a9b200322d5f5177b55b9904db15d1dfa2f6a7f2c` 와 일치했습니다.
+- 최종 이전 로그 비교는 증거 구분을 통해 모든 1,409 번째 재사용 객체를 포함하며, 모든 1,408 번째 Photos 엔트리가 현재 모든 이벤트 필드와 일치합니다. 가장 오래된 Files 가져오기 이벤트는 확장된 진행 로그보다 이전이며 경로/키/버전/바이트만 포함하며, 해당 필드는 정확히 일치합니다 ( `object-1859fc4b59c1a7fae70d281f54cdf0c0` , 버전 1, 8,196 바이트). 누락된 역사적 해시/액터 필드는 불일치가 아니며 독립적으로 비교된 이전 필드로 표시되어서는 안 됩니다.
 
-## Provenance-only reconciliation increment
+<a id="current-handoff-persistent-compact-index-increment"></a>
 
-- Inspection found that an unchanged source stamp caused the packager to skip
-  an existing object before consulting the authorship callback. Later discovery
-  of original provenance could therefore never enrich already imported files.
-- A new Qt-free regression reproduced this: the old code failed
-  `unchanged bytes must reconcile newly supplied provenance` in 64.35 seconds
-  (`build/object-provenance-red-tests.log`).
-- Existing objects now consult the supplied metadata before the skip decision.
-  A different explicit document creates a revision on the same object/index key;
-  nullopt or no reader preserves known provenance, explicit empty clears it,
-  identical input stays idempotent, and invalid JSON cannot silently skip or
-  advance the version. Old documents remain in immutable history. The current
-  implementation snapshots/revalidates the content for these revisions.
-- The full SDK rebuild succeeded. The new regression passed in 154.48 seconds
-  (`build/object-provenance-build.log`, `build/object-provenance-tests.log`),
-  covering stable hashes/source stamps, an empty payload diff, changed validation
-  keys and complete historical documents. A separate staging installation
-  completed under `build/object-provenance-stage`; it does not replace the live
-  canonical CLI. The running real migration has no authorship callback, so it
-  keeps its already tested behavior and is not restarted for this change.
-  The new regression executable links only SQLite, libc++ and libSystem;
-  `build/object-provenance-linkage.log` confirms no Qt dependency.
-- Live handle **70850**, PID **5649**, was revalidated. It had skipped all 896
-  prior small objects, reported no errors, and had not yet committed its first
-  new 256-file batch. `build/object-package-live-256-first-batch-sample.txt`
-  located it inside batch ingestion's `ifstream/read/fread/__read_nocancel`,
-  with peak footprint 12.4 MiB. Read latency is an additional observed bottleneck,
-  not just commit synchronization; this is not evidence of successful new imports.
+## 현재 핸드오프: 지속적인 컴팩트 인덱스 증분
 
-## Current increment: bounded 256-file batches
+- 유일한 실제 드라이브 작성 프로세스: 핸들 **1627**, PID **14995**, 설치된 병렬 읽기 CLI, 로그 `build/object-package-live-all-parallel-read.jsonl`이다. 9개 네임스페이스를 모두 계속 포함한다. 최신 목록은 **파일10,258개 / 198,341,676,161바이트**, 목록 수집 문제 0건, 348.247초이다. Photos 객체 1,152개를 재사용했으며, 이전에 커밋한 256개 객체 배치의 식별자·인덱스·버전·내용 해시·검증·세션 필드가 모두 정확히 일치했다. 이전 Files 객체는 나중에 정렬된다. 계속되는 실행은 객체 256개를 추가로 커밋하여 확인된 누적 합계가 **1,409**개가 되었다. 실행은 계속 진행 중이며 완료 상태가 아니다.
+- 새 라이브 샘플은 병렬 페로드 읽기 단계 전에 직렬 스테이징 소스 `openat` 대기에서 `ObjectSource` 를 찾았습니다. 따라서 작업자 지원은 관찰된 엔드 투 엔드 처리량 증가의 증거가 아닙니다. 샘플: `build/object-package-parallel-read-live-sample.txt` . 두 번째 실제 작성자나 라이브 데이터베이스 관찰자가 시작되지 않았습니다.
+- 관찰된 139초 첫 번째 인덱스 탐색은 현재 탐색 행을 수정/세션/페이로드 저장소와 물리적으로 분리하도록 동기를 부여합니다. 데이터베이스 스키마 3 는 컴팩트 정수 키 `current_index` 를 추가하며; 그 발행 트리거는 각 변형의 원자적 트랜잭션을 공유합니다. 인덱스 탐색은 이제 더 이상 수정을 조인하지 않습니다. 스키마 1/2 마이그레이션은 유효성 검사 키를 변경하지 않고 프로젝션을 백필합니다. 이는 현재 소스/빌드 변경 사항이며, **라이브 작성자**에 설치되지 않았습니다.
+- 새로운 Qt - 무료 인덱스 회귀: 이전 코드가 `compact index requires schema 3`에 실패했습니다. 29.19 s, 종료 1 ( `build/object-index-red-tests.log`). 초기 빌드 시도에서는 새로운 대상이 존재하기 전에 CMake 재생이 필요했으며, 구성 후에는 빌드되어 예상된 계약 실패가 발생했습니다.
+- 업데이트된 전체 빌드가 성공했습니다 ( `build/object-index-build.log` ); 첫 번째 회귀 는 **148.56 초**, **49005**처리, 0종료, `build/object-index-tests.log` 출력입니다. 이는 모든 프로젝트된 필드를 공식 헤드에 대해 확인하며, 7행 키셋 페이지, import/revision/move/tombstone, rollback, reopen, schema-2 backfill 및 단일 테이블 범위 쿼리 계획을 확인합니다.
+- 초기화 및 전체 스키마 마이그레이션은 이제 하나의 트랜잭션을 공유하여 스키마 단계당 추가 영구 커밋을 피합니다. 강제 트리거 이름 충돌 회귀 는 프로젝트 백필 후 rollback 을 확인합니다. 픽스처 루트는 `build/` 에 고정됩니다. 최종 전달 검증은 **34266**핸들에서 실행 중입니다: 재빌드, 최종 컴팩트 인덱스 CTest , 스트리밍/레거시 회귀 , 실제 프로세스 CLI 충돌/재개/감사, 스테이징 설치 및 설치 전용 Qt -free 소비자입니다. 로그는 `build/object-index-final-*`, `object-index-store-tests.log`, `object-index-cli-tests.log`, `object-index-stage.log` 및 `object-index-consumer-*` 를 사용합니다. 단일 단계 시작만으로는 표준/실시간 작성자 대체 권한이 부여되지 않으므로, 대체하기 전에 터미널 결과를 확인하십시오.
+- 실제 드라이브 최초 읽기 개선이 아직 확립되지 않았으며, 전체 드라이브 마이그레이션/감사는 아직 완료되지 않았습니다.
+- 연속된 병렬 읽기 작성자는 이후 **256 개의 새 객체**, 인덱스 키 **1154 – 1409**, 작업 세션 `session-1c6c008a13b8b0ab9640a4332bce5282` 를 제출했습니다. 실행 횟수에 따른 누적 확인된 가져오기는 현재 **1,409**입니다. 첫 번째 새 키는 `object-dedab4f221ec366071547404bc34af6c` 이며, 마지막 키는 `object-7e7a574ce12a4f64045b943bdc636fd8` 입니다. 이는 전체 드라이브 요약, 제어된 속도 비교 또는 바이트 진행 지표가 아닌 긍정적 실제 제출 증거입니다.
+- 최종 압축 인덱스 CTest **는 146.54 초**, 총 CTest 시간 149.57 초, 실패한 마이그레이션 롤백 사례를 포함하여 통과했습니다. 전체 최종 빌드도 통과했습니다. 전달 핸들 **34266** 는 이제 스트리밍/레거시 스토어 회귀 를 실행 중이며, CLI 복구, 스테이지 및 설치된 소비자 게이트는 성공 시에만 따릅니다. 압축 인덱스 통과에서 후기 단계의 완료를 추론하지 마십시오.
+- 마지막으로 새로 가져온 소스인 `Photos/6aa552a352a2b71e40dca2fc172c5cc7a9e7de171753653d3e8a6975a427e5d0.societyphoto`에 대한 독립적인 SHA-256 읽기가 해당 커밋된 이벤트인 `155f73ce0d712d4136f1616f68846167ca4501b0316dd1661649cb59f961a1c5`와 일치했습니다. 이는 전체 패키지 페이로드 추출이나 전체 매핑 드라이브 감사가 아니라 소스 다이제스트를 확인합니다. 실제 작성자는 스키마‐2 바이너리이며, 스키마‐3 인덱스 소스는 아직 정식 설치되지 않았습니다.
+- 최종 스트리밍/레거시 ObjectStore 회귀 검사는 **269.63초**에 통과했다(사용자 시간 0.04 / 시스템 시간 0.05). 네이티브 샘플은 가져오기 중 WAL `unixSync` / `fcntl` 대기를 확인했으며, CPU 포화는 아니었다. 전달 핸들 **34266**은 CLI 프로세스 종료/재개/감사 검사 단계로 진행했다. 스테이징과 설치본 소비자 검증은 해당 단계를 통과한 뒤에만 진행한다.
+- 최종 전달 체인 **34266 완료 및 종료 0**. 변경되지 않은 전체 256-객체 프로세스-종료/재개/소스-페이로드 감사 **294.11 초**. 스테이징 설치 `build/object-index-stage` 하에서 성공; 새 설치 전용 소비자 구성/빌드 및 **42.68 초** 통과 ( CTest 43.74 초). 연결된 라이브러리는 SQLite , libc++ 및 libSystem 만이며, Qt 는 없습니다.
+- 빌드/스테이디지 실행 파일 SHA-256 일치: `0470b84b022acfc121bac73e6bfa80fd306af90859c7521e027362b11f4a4ff0`. Canonical에 설치된 실행 파일은 여전히 실시간 스키마이며,2 버전: `f027231370e6cc634d5106b910ab0e56e0669001988cc5e215d8f1394cddb704`. 여기에서는 새로운 Society 앱 번들이나 물리적인 iPhone 실행이 설정되지 않았습니다.
+- 동일한 실제 작성기의 후기 샘플에서 **시리얼 스냅샷 정리** 를 성공적인 배치 후 `ObjectSource::~ObjectSource` / `remove` / `unlink` 에서 로그 `build/object-package-parallel-second-batch-sample.txt` 로 찾았습니다. 이전 시리얼 스냅샷 `openat` 와 함께, 스냅샷 생성 및 정리는 병렬 페이로드 읽기 외부의 잔여 병목 현상으로 측정됩니다. 한계가 설정된 한계가 설정된 스냅샷 수명 주기 동시성은 구현되거나 테스트되지 않은 기능의 관련 다음 최적화입니다. 인터벌이 경과했기 때문에 실제 작성기를 중단/재시작하지 마십시오; 완료 요약이 아직 나타나지 않았습니다.
 
-- The same all-nine-section writer completed inventory with 10,263 files /
-  198,338,701,645 bytes, zero issues, in 123.838 seconds. This is a later live
-  inventory, not a controlled speed comparison with the earlier scan.
-- At the pre-upgrade observation, its JSONL contained 896 committed imports and zero
-  errors, in addition to the earlier Files object. PID 98369 / handle 91645 was
-  then the sole actual writer. Counts are observations, not a final migration
-  summary. The source SHA-256 of one committed Photos descriptor independently
-  matched its event; this does not replace package-payload or full-drive audit.
-- A native sample found the active ingest waiting in SQLite WAL commit /
-  `unixSync` / `fcntl`, with low CPU use. The new implementation expands the
-  small-file count limit from 32 to 256 while retaining the 16 MiB payload cap.
-  It also caps aggregate actor-profile and provenance JSON at 16 MiB (counting
-  the actor profile for every member). Durability settings remain unchanged.
-- The direct-import API preflights metadata totals; the packager splits at the
-  budget boundary without losing the next source. Tests cover atomic 256-object
-  publication, 257-file rejection, metadata overflow and rollover, plus actual
-  process kill/resume/audit. The initial red build failed on the old 32-file limit.
-- The SDK build completed. The targeted CTest run passed batch (86.92 s), actual
-  CLI crash/resume/audit (214.41 s), and authorship (150.16 s), but packager hit
-  its 240-second limit (reported 241.73 s). This was **3/4**, not a green suite.
-  A native sample located the packager in a new ObjectStore constructor's SQLite
-  commit / `unixSync` / `fcntl`, not in a failing metadata-budget assertion.
-  Logs: `object-batch-256-build.log`, `object-batch-256-tests.log`,
-  `object-batch-256-packager-sample.txt` under `build/`.
-- The rollover fixture now reuses its already-open store/session instead of
-  initializing a third durable database. It still verifies all 17 metadata-heavy
-  objects, the 16+1 commit boundary, exact provenance and source stamps, and
-  staging cleanup. The rebuilt standalone retry **passed**, exit 0, in 273.94 s
-  (0.10 user / 0.09 system); output is in
-  `build/object-batch-256-packager-retry.log`. This does not erase the earlier
-  CTest timeout or establish a passing 240-second performance bound. The retry
-  sample reached `endSession` / WAL commit / `unixSync` / `fcntl`.
-- A separately staged installation and installed-only consumer passed (79.54 s).
-  `otool -L build/objects-256-consumer/objects_installed` shows system SQLite,
-  libc++ and libSystem only, no Qt. Logs use `object-batch-256-consumer-*`.
-- Following the passing CLI recovery/installed-consumer gates, SIGINT was sent
-  to PID 98369 to prepare the batching upgrade. Handle 91645 subsequently ended
-  with **exit 130**. Its final summary reports imported=896, revised/skipped/errors=0,
-  cancelled=true, 2072.41 seconds; database close finished later. The earlier
-  Files object is separate, so 897 objects have committed across the actual runs.
-- Only after terminal exit was confirmed was canonical SDK installation started
-  (`build/object-batch-256-install.log`). All nine mappings remain required on
-  resume; no full-drive completion or measured 256-batch speedup is claimed.
-- Canonical installation completed. The built and installed CLI SHA-256 values
-  match (`fdc8721a228ff647f3842c7cea201f647079fb86931c3a1485f24dfdedfc990e`),
-  and the installed header exposes the 256-file limit. The new installed CLI was
-  launched with the same package/container and **all nine section mappings**;
-  only the existing explicit Files OS-directory exclusions remain. Live output:
-  `build/object-package-live-all-256.jsonl`, execution handle **70850**, PID **5649**.
-  Its new inventory completed: **10,256 files / 198,341,151,568 bytes**, zero
-  issues, 87.2267 seconds. The live tree differs from the earlier 10,263-file
-  observation; this is not a fixed-dataset benchmark. It has skipped the 896
-  previously committed small objects without errors; no new import was observed
-  at that checkpoint. Resume is working, but migration remains incomplete.
-  Comparing all 896 old imported events with their resumed skipped events found
-  zero changes to the key/index/version/hash/validation/session/actor fields.
-  Revalidate this process/handle before starting anything else. Its background
-  policy was removed with `taskpolicy -B`; no measured speedup is inferred.
+<a id="bounded-parallel-payload-read-increment"></a>
 
-## Small-first ingestion and first real object
+## 한계가 설정된 병렬 페이로드-읽기 증분
 
-- The previous turn was progress: buffered/batched storage passed targeted tests
-  and installed; the old unproductive ingest was closed safely. No package process
-  was still live when this increment began.
-- The actual container ID and both mapped volume UUIDs were revalidated. A first
-  Files-only attempt failed with SQLite `locking protocol` while a read-only
-  diagnostic connection was still recovering/reading the package. That diagnostic
-  subsequently exited; the package had zero objects. The next attempt succeeded.
-- `build/object-package-live-files-retry.jsonl` records the first committed actual
-  object: `Files/.DS_Store`, 8,196 bytes, version 1,
-  `object-1859fc4b59c1a7fae70d281f54cdf0c0`, in session
-  `session-34c66de6e982a2f51fbdab3eef06ebd4`. Its final summary reports imported=1,
-  errors=0, cancelled=false, 192.317 s; the process later exited 0 after database
-  close. This is filesystem metadata, not proof that user images/models are done.
-- The new CLI schedules the full inventory smallest-first with path tie-breaking.
-  A red test demonstrated that the earlier lexical order committed a 128 MiB file
-  before all small objects; the changed CLI passed the complete kill/resume/audit
-  regression in 124.61 s. Scope is not reduced; all mapped files remain required.
-- Per-item event coverage now requires index key, content hash, validation key,
-  recorded session and actor to survive resume unchanged, with an explicit unknown
-  original-authorship flag. Its initial red run failed on missing `indexKey`.
-  The added fields report committed records without repeated observer DB opens;
-  final green/install results are recorded separately when available.
-- The completed record-event regression passed in 141.03 s. It independently
-  checks SHA-256 values, preserved index/session/actor/validation fields on resume,
-  and new hash/validation key with the same index key on revision. Build and
-  canonical SDK/tool installation completed (`object-record-events-build.log`,
-  `object-record-events-tests.log`, `object-small-first-install.log`).
-- The updated installed tool was then launched for **all nine sections**, including
-  Photos and the separately mounted Files volume. It resumes the same actual
-  package; no second actual writer is running. Live output is
-  `build/object-package-live-all-small-first.jsonl`. Launch is not completion;
-  inventory, individual commits and the final audit still need inspection.
-  At the handoff observation the live process was PID 98369, execution handle
-  91645, and had emitted `inventory-start`. Revalidate that same handle/PID before
-  deciding it stopped; do not launch another writer on an observation timeout.
-- A live sample of the real one-file run blocked in `beginSession -> SQLite WAL
-  commit -> unixSync -> fcntl`. This is a device synchronization wait, not evidence
-  of hashing consuming all CPU. Durability settings were not weakened.
+- 기존 설치된 256-파일 작성자 (핸들 70850 / PID 5649 )는 마침내 첫 번째 추가 256 객체를 오류 없이 커밋했습니다. 이전 897 객체와 결합하여 관찰된 커밋된 총량은 1,153입니다. 그것은 이후 라이브 상태였습니다; 첫 번째 배치의 완료는 실제 드라이브 마이그레이션의 완료가 아닙니다. 현재 CLI 는 `package` 가 반환된 후에만 누적된 항목별 실패를 방출하며, 라이브 실행 중의 오류 이벤트는 **가 아닌** 0 누적 문제의 증거가 아닙니다. 긍정적 진전을 위해 커밋된 이벤트를 사용하고 전체 실행 오류 계수를 위해 최종 요약문을 사용하십시오. 라이브 실패 보고는 여전히 개선이 필요합니다.
+- 그의 네이티브 샘플은 직렬 페이로드 `read` 가 `importFiles` 내부에 대기 중임을 발견했습니다. 새로운 내부 `ObjectBatchRead` 입력 단기는 하드웨어 동시성을 사용하여 해당 읽기들을 겹치며, 64 와 파일 수로 제한됩니다. 페이로드 할당 전에 모든 소스 크기가 확인되며, 포착된 데이터는 16 MiB 및 한계가 설정된 호출자 소유 입력 버퍼로 제한됩니다. SQLite 는 소유 스레드에서만 사용되어 동일한 원자적 트랜잭션 내에서 원래 순서로 게시됩니다.
+- 출처 신원은 읽은 후 각 출판 전에 확인됩니다. 읽기 오류/취소는 배치를 거부하고, 버퍼가 파괴되기 전에 시작된 모든 워커가 결합됩니다. 개별 대용량 파일 스트리밍은 그대로 유지됩니다. 이것은 내구성, 범위, 키 또는 검증 형식이 아니라 동시성을 변경합니다.
+- 실패 단계 빌드: 새 읽기 계약은 처음에 비공개 헤더 누락으로 실패했다(`build/object-batch-read-red-build.log`). 이후 갱신한 전체 빌드가 성공했으며, 직렬/병렬 바이너리 내용 계약은 10.23초에 통과했다. 독립 ThreadSanitizer build/run도 경합 보고 없이 통과했다(`build/object-batch-read-tsan-build.log`, `object-batch-read-tsan-tests.log`).
+- 통합 배치 테스트는 이제 바이너리 청크 경계/테일 파일, 빈 파일 및 반복되는 일반 콘텐츠를 혼합한 뒤, 결과를 추출하고 검증합니다.
+- 표적 실행은 **3/4**를 완료했습니다: 리더 10.23 개, 통합 원자 배치 107.64 개, 그리고 기원 추적 조정 85.98 개가 통과했습니다. CLI 종료/재개/감사는 300초 CTest 제한 ( 300.04 초) 을 초과했습니다. 이를 녹색 스위트라고 부르지 마십시오. 출력: `build/object-batch-read-tests.log` , 터미널 핸들 43684 / 종료 8입니다.
+- 최종 리더 회귀는 메타데이터 검사를 성공적으로 수행한 후 실제 페이로드 읽기 거부를 수행했으며 0.93 s에 통과했습니다. 플랫폼 Threads 대상은 Qt가 아닌 소비자를 위해 설치된 CMake 패키지를 통해 내보낼 수 있습니다.
+- 전송 검증은 핸들 **64243**에서 실행 중입니다: 최종 재구성, 상세 리더 테스트, 새로 갱신된 TSan 빌드, `build/object-batch-read-stage` 하의 스테이지 설치, 신선한 설치 전용 소비자 build/test , 새로 갱신된 TSan 실행, 독립형 전체 CLI 재시도 (동일한 256파일 범위 및 호출당 변경되지 않은 시간 제한), 그리고 그 후 스트리밍 ObjectStore 회귀 입니다. 로그는 `build/object-batch-read-*` 를 사용합니다; 독립형 CLI 로그는 `object-batch-read-cli-retry.log` 입니다. 최종 build/reader/staging 단계가 완료되었으며, 신선한 설치 전용 소비자가 92.60 초 내에 통과했고, 새로 갱신된 TSan 실행도 통과하여 작업자 읽기 거부를 명시적으로 수행했습니다. 독립형 CLI 재시도는 **244.46 초** ( 0.72 사용자 / 1.81 시스템) 내에 통과하여 모든 256 커밋된 객체를 보존하고 소스/페이로드/리비전 감사 작업을 완료했습니다. 이는 이전 CTest 시간 제한을 지우지 않습니다. 스트리밍 스토어 회귀 는 현재 실행 중입니다 (관찰 시 PID   13121 ). 각 단계와 터미널 출력을 검사하세요; 후속 단계는 반드시 실행된 것은 아닙니다. 단순히 스테이지 접두어만 작성됩니다. 이러한 실행 중 라이브 실제 작성기에 덮어쓰거나 중복 설치하지 마십시오.
+- CLI 게이트 통과 후, 실제 이전 작성기가 재검증되어 병렬 읽기 업그레이드를 준비하기 위해 SIGINT 로 전송되었습니다. **70850** / PID   **5649** 를 처리한 후 **출력 130**로 완료되었습니다. 최종 요약 보고서에서 import(수입)= 256, skip(건너뛰기)= 896, revise/error(수정/오류)= 0, cancelled(취소)=true, 2483.63 초입니다. 교체 전에 확인된 것은 누적 커밋된 개수 (첫 번째 Files 객체 포함) 1,153 입니다. 이전 신호나 요약만 단독으로 확인하지 않고, 완료 종료를 확인했습니다.
+- 스트리밍 ObjectStore   회귀 는 **292.78 초** ( 0.04 사용자 / 0.06 시스템) 를 통과했으며, **64243** 를 처리한 후 0출력으로 완료되었습니다. 샘플링 대기 시간은 SQLite 컨스트럭터/저널 `unixSync` 였으며, 이전 작성기의 종료 샘플은 `endSession` / WAL   `unixSync` 가 아닌 CPU 포화 상태였습니다.
+- 컨테이너 식별자와 두 소스 볼륨 UUID 가 재검증되었으며, 대략 2.59   TB 가 사용 가능하게 남았습니다. 실제 작성기와 테스트 체인이 종료된 후에야 표준 설치가 시작되었고, 현재 실제 패키지에 대한 무작성가 인덱스 측정이 이어졌습니다. 로그: `object-batch-read-install.log` , `object-index-live-before-parallel.jsonl` , `object-index-live-before-parallel-time.log` . 이 인덱스 채움은 현재 인벤토리된 모든 소스 파일 10,256 가 아닌 커밋된 부분집합입니다.
+- Canonical 설치가 완료되었습니다; 빌드/설치된 CLI 해시 일치: `f027231370e6cc634d5106b910ab0e56e0669001988cc5e215d8f1394cddb704`.
+- 실제 현재 1,153-객체 인덱스가 모든 3 스캔을 완료했습니다: **139,055 ms** 처음, **1.37692 ms** 두 번째, **1.05725 ms** 세 번째. 전체 명령: 148.37 s ( 0.01 사용자 / 0.03 시스템), 종료 0, 처리 66098. 살아있는 샘플이 `ObjectStore::index` / SQLite B-tree 페이지 `pread` 내부의 느린 첫 번째 탐색을 찾았습니다, 단순히 연결 초기화만은 아닙니다. 이는 관찰된 첫 번째 탐색이며, 제어된 OS 콜드 캐시 테스트가 아닙니다. 이 인구에 대해 온Traversal은 빠르지만, 첫 사용 지연 시간과 전체 드라이브 인구 성능은 증명되지 않거나 나쁩니다.
+- 인덱스 프로세스가 완료된 후, 새로 설치된 병렬 읽기 CLI 가 동일한 패키지/컨테이너 및 모든 9 맵에 대해 시작되었습니다. 라이브 로그: `build/object-package-live-all-parallel-read.jsonl`, 실행 핸들 **1627**, PID **14995**. `inventory-start` 를 방출했으며, `taskpolicy -B` 로 배경 스케줄링 정책이 제거되었습니다. 시작은 완료가 아닙니다. 추가적인 실제 작성자나 관찰자가 시작되기 전에 이 핸들을 재검증하세요.
 
-## Latest observed state: bounded batches and buffered reads
+<a id="provenance-only-reconciliation-increment"></a>
 
-- The complete nine-section inventory finished: 10,262 files, 198,338,058,004
-  bytes, zero traversal issues, 2,260.27 seconds. This supersedes the older
-  10,259-file inventory below; live source files can change.
-- A separate eight-section ingestion (Photos not included yet) inventoried 198
-  files / 196,810,872,202 bytes in 49.653 seconds. It created a real work session
-  and the package database. At the last read-only count, zero objects had committed;
-  growing WAL bytes are not proof of successful imports or a completed migration.
-- Bounded small-file batches now preserve individual object identities while
-  committing at most 32 files / 16 MiB atomically. The actual CLI crash test kills
-  after the first callback and verifies all 32 committed members survive/resume.
-- The final buffered build passed four targeted CTest suites (batch, CLI,
-  packager, authorship): 366.51 seconds total. The independent ObjectStore
-  boundary/tail contract passed in 272.57 seconds (0.03 user / 0.04 system).
-  Logs: `object-buffer-tests.log`, `object-buffer-boundary-tests.log` in `build/`.
-- The earlier batch full suite passed 11/12; ObjectStore exceeded its unchanged
-  60-second CTest limit. Its isolated rerun passed in 200.92 seconds. This remains
-  a timeout failure in that full-suite run, not a green full suite.
-- A live ingestion sample blocked in libc++ filebuf/fread/read. The installed
-  libc++ header defaults that buffer to 4 KiB. Ingest and source-audit streams now
-  request a 1 MiB input buffer, with chunk-boundary/tail correctness coverage.
-  A separate native 1 MiB-read probe of 16 MiB took 88.75 seconds (189,041 B/s),
-  demonstrating severe underlying storage latency, not a proven app speedup.
-- The live ingestion process was started before these changes. Installing new
-  SDK files does not update an already-running process. Do not start a concurrent
-  replacement writer or claim that its live speed reflects this implementation.
-- That old ingestion was subsequently cancelled normally to reduce foreground
-  storage contention: exit 130, imported/revised/skipped/errors all zero,
-  cancelled=true, 2,750.2 seconds in its final summary. SQLite close itself stalled
-  in WAL `ftruncate` before final process exit. No replacement ingestion is running;
-  the all-nine-section packaging requirement remains unfinished.
-- A temporary blank RAM-device diagnostic could not mount without elevated
-  credentials. It ran no tests, was detached, and its empty scratch directory
-  was removed. No real Society volume was detached or source file removed.
+## 출처 전용 조정 증분
 
-## Requirement audit
+- 검사 결과, 변경되지 않은 소스 스탬프가 패키징러가 저작자 콜백을 검토하기 전에 기존 객체를 건너뛰게 만든 것으로 확인되었습니다. 따라서 원래 출처를 나중에 발견하는 것은 이미 가져온 파일을 절대 풍부하게 만들 수 없습니다.
+- 새로운 Qt -free 회귀가 이를 재현했습니다: 이전 코드가 `unchanged bytes must reconcile newly supplied provenance`를 64.35 초(`build/object-provenance-red-tests.log`) 동안 실패했습니다.
+- 기존 객체들은 이제 스킵 결정 전에 제공된 메타데이터를 참조합니다. 다른 명시적 문서가 동일한 객체/인덱스 키에서 리버전을 생성하면, nullopt 또는 리더가 없는 경우 알려진 기원을 보존하고, 명시적 빈 값은 이를 지우며, 동일한 입력은 멱등성을 유지합니다. 유효하지 않은 JSON 는 아무런 알림 없이 스킵하거나 버전을 진행할 수 없습니다. 오래된 문서들은 불변 역사에 남아 있습니다. 현재 구현은 이러한 리버전에 대해 스냅샷/재검증을 수행합니다.
+- 전체 SDK 재빌드가 성공했습니다. 새로운 회귀 는 154.48 초 동안 ( `build/object-provenance-build.log` ,  `build/object-provenance-tests.log` ) 완료되어 안정적 해시/소스 스탬프, 빈 페이로드 차이, 변경된 검증 키 및 완전한 역사적 문서를 포함합니다. 별도의 스테이징 설치 작업이 `build/object-provenance-stage` 하에서 완료되었으며, 라이브 캐노니컬 CLI 를 대체하지 않습니다. 실행 중인 실제 마이그레이션은 저자 콜백이 없으므로 이미 테스트된 동작을 유지하며 이 변경을 위해 다시 시작되지 않습니다. 새로운 회귀 실행 파일은 SQLite ,  libc++ 및 libSystem 만 연결하며, `build/object-provenance-linkage.log` 는 Qt 의존성이 없다고 확인합니다.
+- 라이브 핸들 **70850**,  PID   **5649**는 재검증되었으며, 모든 896 이전 작은 객체를 건너뛰었고 오류가 없으며 첫 번째 새로운 256파일 배치에 아직 커밋하지 않았습니다. `build/object-package-live-256-first-batch-sample.txt` 는 이를 배치 인테스트의 `ifstream/read/fread/__read_nocancel` 내부에 위치시켰으며, 최대 푸트프린트 12.4   MiB 입니다. 읽기 지연은 성공적인 새 가져오기의 증거가 아닌 추가적으로 관찰된 병목 현상이며, 이는 커밋 동기화뿐만 아닙니다.
 
-| Requirement | Current authoritative evidence | Remaining work |
+<a id="current-increment-bounded-256-file-batches"></a>
+
+## 현재 증분: 한계가 설정된 256파일 배치
+
+- 동일한 all-9섹션 라이터가 10,263 파일 / 198,338,701,645 바이트, 0 이슈를 123.838 초 만에 인벤토리를 완료했습니다. 이는 이전 스캔과의 제어된 속도 비교가 아니라 나중에 실시간 재고 조사입니다.
+- 업그레이드 전 관찰 시, JSONL 는 896 커밋된 가져오기와 0 오류를 포함하여 이전 Files 객체도 있었습니다. PID   98369 / 핸들 91645 은 그 후 유일한 실제 작성자였습니다. 카운트는 최종 마이그레이션 요약이 아닌 관찰입니다. 하나의 커밋된 Photos 설명자의 소스 SHA-256 는 독립적으로 해당 이벤트와 일치했으며, 이는 패키지 페이로드나 전체 드라이브 감사 결과를 대체하지 않습니다.
+- 네이티브 샘플이 SQLite WAL 커밋 / `unixSync` / `fcntl` 에서 대기 중인 활성 인제스트를 찾았으며, CPU 사용량이 낮습니다. 새로운 구현은 작은 파일 개수 제한을 32 에서 256 로 확장하면서 16 MiB 페이로드 상한을 유지합니다. 또한 집계된 액터 프로파일과 기원 JSON 를 16 MiB 로 제한합니다 (각 구성원마다 액터 프로파일을 세는 경우). 내구성 설정은 변경되지 않았습니다.
+- 직접 가져오기 API는 메타데이터 총합을 사전 검토합니다; 패키저는 다음 소스를 잃지 않고 예산 경계에서 분할합니다. 테스트는 원자적 256-object 게시, 257-파일 거부, 메타데이터 오버플로 및 롤오버, 그리고 실제 프로세스 종료/재개/감사를 포함합니다. 초기 레드 빌드가 이전 32파일 제한에 실패했습니다.
+- The SDK 빌드가 완료되었습니다. 대상 CTest 실행은 배치 ( 86.92 초), 실제 CLI 충돌/재개/감사 ( 214.41 초), 그리고 저작권 ( 150.16 초) 를 통과했지만, 패커는 240초 제한에 도달했습니다 (보고된 241.73 초). 이는 **3/4**가 아니었습니다. 녹색 스위트가 아니었습니다. 네이티브 샘플이 실패한 메타데이터 예산 주장을 통해가 아닌, 새로운 ObjectStore 생성자의 SQLite 커밋 / `unixSync` / `fcntl` 에서 패커를 찾았습니다. 로그: `object-batch-256-build.log` , `object-batch-256-tests.log` , `object-batch-256-packager-sample.txt` 는 `build/` 아래에 있습니다.
+- 롤오버 픽스처 는 이제 이미 열려 있는 스토어/세션을 재사용하여 세 번째 내구성 데이터베이스를 초기화하는 대신 사용합니다. 그것은 여전히 모든 17 메타데이터 집중형 객체, 16+1 커밋 경계, 정확한 기원과 소스 스탬프, 그리고 스테이지 클리너업을 확인합니다. 다시 빌드된 독립형 재시도 **는**, 종료 0, 273.94 초 ( 0.10 사용자 / 0.09 시스템) 를 통과했습니다; 출력은 `build/object-batch-256-packager-retry.log` 에 있습니다. 이는 이전 CTest 시간 초과를 지우거나 통과하는 240초 성능 경계를 설정하지 않습니다. 재시도 샘플이 `endSession` / WAL 커밋 / `unixSync` / `fcntl` 에 도달했습니다.
+- 별도의 스테이징 설치와 설치본만 사용하는 소비자 검사가 통과했다(79.54초). `otool -L build/objects-256-consumer/objects_installed`는 시스템 SQLite, libc++, libSystem만 표시하며 Qt는 없다. 로그는 `object-batch-256-consumer-*`를 사용한다.
+- CLI 복구/설치된 소비자 게이트 통과 후, SIGINT 는 PID 98369 로 보내져 배치 업그레이드를 준비했습니다. 91645 를 처리한 후 **종료 130**로 끝났습니다. 최종 요약 보고서에서 imported= 896, revised/skipped/errors= 0, cancelled=true, 2072.41 초; 데이터베이스 닫기가 나중에 완료되었습니다. 이전 Files 객체는 별도이므로 897 객체들은 실제 실행에서 커밋되었습니다.
+- 터미널 종료가 확인된 후에야 정규 SDK 설치가 시작되었습니다 ( `build/object-batch-256-install.log` ). 모든 9 매핑은 이력서에 여전히 필요합니다; 전체 구동 완료나 측정된 256-배치 속도 상승은 청구되지 않습니다.
+- 정규 설치 완료됨. 빌드 및 설치된 CLI SHA-256 값이 일치하며 ( `fdc8721a228ff647f3842c7cea201f647079fb86931c3a1485f24dfdedfc990e` ), 설치된 헤더는 256파일의 제한을 노출합니다. 새로 설치된 CLI 는 동일한 패키지/컨테이너로 시작되었으며, **모든 9 섹션 매핑은**유지되었고, 기존 명시적 파일 OS -디렉터리 제외 항목만 남았습니다. 실시간 출력:  `build/object-package-live-all-256.jsonl` , 실행 핸들  **70850**,  PID   **5649**. 새 인벤토리가 완료되었습니다:  **10,256  파일 /  198,341,151,568  바이트**,  0  문제,  87.2267  초. 라이브 트리는 이전 10,263-파일 관측과 다릅니다; 이는 고정된 데이터셋 벤치마크가 아닙니다. 896 이전에 커밋된 작은 객체들을 오류 없이 건너뛰었으며, 해당 체크포인트에서 새로운 가져오기가 관찰되지 않았습니다. 복구 작업은 진행 중이지만, 마이그레이션은 여전히 완료되지 않았습니다. 896 개의 이전 가져온 이벤트를 0 개의 키/인덱스/버전/해시/검증/세션/액터 필드에 대한 재개된 건너뜀 이벤트와 비교합니다. 이 프로세스/핸들을 재검토하거나 시작하기 전에 처리하세요. `taskpolicy -B` 배경 정책이 제거되었으므로 측정된 속도 향상은 추론되지 않습니다.
+
+<a id="small-first-ingestion-and-first-real-object"></a>
+
+## 작은 우선 수집 및 첫 번째 실제 객체
+
+- 이전 차례는 진행 상황이었습니다: 버퍼링/배치 스토리지는 목표 테스트를 통과하고 설치되었으며, 기존의 비생산적인 인제스트는 안전하게 종료되었습니다. 이 증가가 시작될 때 아직 진행 중인 패키지 프로세스가 없었습니다.
+- 실제 컨테이너 ID와 매핑된 두 볼륨 UUID가 재검증되었습니다. 첫 번째 파일 전용 시도가 SQLite `locking protocol`에서 실패했으며, 읽기 전용 진단 연결이 아직 패키지를 복구/읽고 있는 동안 실패했습니다. 그 진단은 이후에 종료되었으며, 패키지에는 0 객체가 있었습니다. 다음 시도가 성공했습니다.
+- `build/object-package-live-files-retry.jsonl` 기록은 첫 번째 커밋된 실제 객체: `Files/.DS_Store`, 8,196 바이트, 버전 1, `object-1859fc4b59c1a7fae70d281f54cdf0c0`, 세션 `session-34c66de6e982a2f51fbdab3eef06ebd4` 를 기록합니다. 최종 요약은 가져온 개수= 1, 오류= 0, 취소=false, 192.317 초; 프로세스는 데이터베이스 종료 후 0 이후 종료됩니다. 이는 파일 시스템 메타데이터이며, 사용자 이미지/모델이 완료되었음을 증명하는 것이 아닙니다.
+- 새로운 CLI는 전체 인벤토리를 가장 작은 것부터 먼저 순으로 일정 잡고, 경로 동점과 연계합니다. 레드 테스트는 이전 어휘 순서가 모든 작은 객체보다 먼저 128 MiB 파일을 커밋했음을 입증했으며, 변경된 CLI는 124.61 s에서 전체 킬/재검토 회귀를 통과했습니다. 범위가 축소되지 않으며, 매핑된 모든 파일은 여전히 필요합니다.
+- 항목별 이벤트 커버리지는 이제 인덱스 키, 콘텐츠 해시, 유효성 검사 키, 기록된 세션 및 액터를 포함해야 재시작 후 변경 없이 생존하며, 명시적인 알 수 없는 원저작 플래그가 있습니다. 초기 빨간 실행은 누락된 `indexKey` 에서 실패했습니다. 추가된 필드는 반복된 관찰자 DB 열림 없이 커밋된 기록을 보고하며, 사용 가능한 경우 최종 초록/설치 결과는 별도로 기록됩니다.
+- 완료된 기록 이벤트 회귀 는 141.03 초 내에 통과했습니다. 이는 독립적으로 SHA-256 값을 확인하며, 재시작 시 보존된 인덱스/세션/액터/유효성 검사 필드와 같은 인덱스 키로 새 해시/유효성 검사 키를 확인합니다. 빌드 및 표준 SDK /도구 설치가 완료되었습니다 (`object-record-events-build.log`, `object-record-events-tests.log`, `object-small-first-install.log`).
+- 업데이트된 설치된 도구는 **모든 9 섹션**, 사진 및 별도로 마운트된 파일 볼륨을 위해 시작되었습니다. 동일한 실제 패키지를 재시작하며, 두 번째 실제 작성자가 실행 중이 아닙니다. 라이브 출력은 `build/object-package-live-all-small-first.jsonl` 입니다. 시작은 완료이 아닙니다; 재고, 개별 커밋 및 최종 감사 여전히 점검이 필요합니다. 핸드오프 관찰 시 라이브 프로세스는 PID 98369, 실행 핸들 91645, `inventory-start` 를 방출했습니다. 정지했음을 결정하기 전에 동일한 핸들/ PID 를 재검증하며, 관찰 시간 초과 시 또 다른 작성자를 시작하지 마십시오.
+- `beginSession -> SQLite WAL commit -> unixSync -> fcntl`에서 차단된 실제 원파일 실행의 실시간 샘플입니다. 이는 장치 동기화 대기이며, 해싱이 모든 CPU를 소모한 증거가 아닙니다. 내구성 설정이 약화되지 않았습니다.
+
+<a id="latest-observed-state-bounded-batches-and-buffered-reads"></a>
+
+## 최근 관찰된 상태: 한계가 설정된 배치 및 버퍼링된 읽기
+
+- 전체 9섹션 인벤토리가 완료되었습니다: 10,262 파일, 198,338,058,004 바이트, 0 탐색 이슈, 2,260.27 초. 이는 아래의 이전 10,259파일 인벤토리를 대체합니다; 실시간 소스 파일은 변경될 수 있습니다.
+- 별도의 8개 섹션 수집(Photos는 아직 미포함)은 49.653초에 파일 198개 / 196,810,872,202바이트를 목록으로 수집했다. 실제 작업 세션과 패키지 데이터베이스를 생성했다. 마지막 읽기 전용 집계에서 객체 0개가 커밋되었다. WAL 바이트 증가는 가져오기 성공이나 마이그레이션 완료의 증거가 아니다.
+- 한계가 설정된 소형 파일 배치는 이제 개별 객체의 정체성을 보존하면서 최대 32 파일 / 16 MiB 파일을 원자적으로 커밋합니다. 실제 CLI 충돌 테스트는 첫 번째 콜백 이후에 종료되며, 모든 32 커밋된 멤버가 살아남아 재개되는지 확인합니다.
+- 최종 버퍼링 빌드는 배치·CLI·패키저·저작자 정보의 4개 대상 CTest 스위트를 통과했으며, 총 소요 시간은 366.51초였다. 독립 ObjectStore 경계/마지막 부분 계약은 272.57초에 통과했다(사용자 시간 0.03 / 시스템 시간 0.04). 로그: `build/`의 `object-buffer-tests.log`, `object-buffer-boundary-tests.log`.
+- 이전 배치 전체 스위트는 11/12를 통과했다. ObjectStore는 변경되지 않은 60초 CTest 제한을 넘었다. 해당 검사의 격리 재실행은 200.92초에 통과했다. 이 결과는 해당 전체 스위트 실행의 시간 초과 실패이며, 전체 스위트 통과가 아니다.
+- 실시간 인gestion 샘플이 libc++ filebuf/fread/read 에서 차단되었습니다. 설치된 libc++ 헤더 기본값이 4 KiB 로 버퍼링됩니다. 인gestion 및 소스 감사 스트림은 이제 1 MiB 입력 버퍼를 요청하며, 청크 경계/테일 정확도 커버리지를 갖습니다. 별도의 네이티브 1 MiB -읽기 탐사가 16 MiB 에 걸린 88.75 초 ( 189,041 B/s) 를 소요하여, 증명된 앱 속도 향상이지 아닌 심각한 근본적인 저장소 지연을 나타냈습니다.
+- 실시간 인gestion 프로세스는 이 변경 사항 전에 시작되었습니다. 새로운 SDK 파일을 설치하는 것은 이미 실행 중인 프로세스를 업데이트하지 않습니다. 동시 대체 작성자를 시작하거나 그 실시간 속도가 이 구현을 반영한다고 주장하지 마십시오.
+- 그 이전 인gestion 은 정상적으로 취소되어 프론트그라운드 저장소 경쟁을 줄였습니다: exit 130, import/수정/건너뛰기/오류 모두 0, cancelled=true, 2,750.2 초의 최종 요약. SQLite close 자체가 WAL `ftruncate` 에서 멈췄습니다. 대체 인gestion 이 실행 중이 아닙니다; 모든9-섹션 패키징 요구사항이 아직 완료되지 않았습니다.
+- 임시 빈 RAM -device 진단은 고급 자격 증명 없이는 마운트할 수 없습니다. 테스트를 실행하지 않았으며, 분리되었고, 빈 스크래치 디렉터리가 삭제되었습니다. 실제 Society 볼륨이 분리되지 않았으며 소스 파일도 제거되지 않았습니다.
+
+<a id="requirement-audit"></a>
+
+## 요구사항 감사
+
+|요구 사항|현재 권위 있는 증거|남은 작업|
 | --- | --- | --- |
-| Logical objects independent of directory classification | ObjectStore key/path separation; move keeps key and index | Integrate the ordinary directory projection and native file lifecycle |
-| Per-file unique key, index key, version | SQLite object heads and immutable revisions; CAS/concurrent-writer tests | Assign and verify these values for every real drive file |
-| Society validation key and content hash | SHA-256 known vectors, metadata hash chain, payload and ancestor tamper tests | Full real-drive audit; standard-key policy must not be misrepresented as authentication |
-| Author | Schema 2 preserves exact FileAuthor actor profile and independent Authorship document; existing-model round-trip test | Discover available source provenance during real ingestion; unknown creators remain explicitly unknown |
-| Modification diff and journal | Reversible chunk references, append-only mutation history, source snapshots and original-removal extraction test | Capture application/Finder/external changes and reconcile renames/deletions |
-| Work-session records | Explicit start/end, device/description, closed-session mutation rejection | Bind application editing/ingestion sessions to the shared record |
-| Very fast complete index traversal | Compact keyset index excludes payload/full author documents; page and tombstone tests | Real large-index measurements and actual Society consumer adoption |
-| iiFileProvider owns the feature | New C++23 Objects target; no Qt/upward SDK dependency | Full integration with existing value models and container/sync layers |
-| Package Society drive files | Capacity checks, source snapshots, per-file atomic commits; cancellation and real-process kill/resume tests | Run migration of all mapped sections and full source/payload verification |
+|디렉토리 분류에 독립적인 논리 객체|ObjectStore 키/경로 분리; 이동은 키와 인덱스를 유지합니다|일반 디렉토리 투영과 네이티브 파일 수명 주기를 통합합니다|
+|파일별 고유 키, 인덱스 키, 버전|SQLite 객체 헤드와 불변 수정본;  CAS 동시 작성자 테스트|모든 실제 드라이브 파일에 대해 이 값을 할당하고 확인합니다|
+|Society 검증 키 및 콘텐츠 해시|SHA-256 알려진 벡터, 메타데이터 해시 체인, 페이로드 및 상위 변조 테스트|전체 실제 드라이브 감사; 표준 키 정책을 인증으로 잘못 표현해서는 안 됩니다.|
+|작성자|스키마 2는 정확한 FileAuthor 행위자 프로필과 독립적인 작성자 문서를 유지합니다. 기존 모델 왕복 변환 테스트|실제 수집 중에 사용 가능한 소스 출처를 검색합니다. 알려지지 않은 제작자는 명시적으로 알려지지 않은 상태로 남아 있습니다.|
+|수정 diff 및 저널|가역적 청크 참조, 추가 전용 돌연변이 기록, 소스 스냅샷 및 원본 제거 추출 테스트|애플리케이션/Finder/외부 변경 사항 캡처 및 이름 변경/삭제 조정|
+|작업 세션 레코드|명시적 시작/종료, 장치/설명, 폐쇄 세션 변형 거부|애플리케이션 편집/수집 세션을 공유 레코드에 바인딩|
+|매우 빠른 전체 인덱스 탐색|컴팩트 키 세트 인덱스는 페이로드/전체 작성자 문서를 제외합니다. 페이지 및 묘비 테스트|실제 대형 지수 측정 및 실제 Society 소비자 채택|
+|iiFileProvider는|기능을 소유합니다. 새로운 C++23 개체 대상; Qt/상향 SDK 종속성 없음|기존 가치 모델 및 컨테이너/동기화 레이어와의 완전한 통합|
+|패키지 Society 드라이브 파일|용량 확인, 소스 스냅샷, 파일별 원자성 커밋; 취소 및 실제 프로세스 종료/재개 테스트|매핑된 모든 섹션의 마이그레이션 실행 및 전체 소스/페이로드 확인|
 
-## Verified in this increment
+<a id="verified-in-this-increment"></a>
 
-- Red test first failed with missing ObjectStore symbols (`build/object-store-red.log`).
-- Full SDK build and CTest: 8/8 targets passed (`build/object-store-build.log`,
-  `build/object-store-tests.log`).
-- Qt-disabled standalone build and object-store test passed
-  (`build/object-store-standalone-*.log`).
-- Installed-package-only consumer passed (`build/object-store-consumer-tests.log`).
-  `otool -L build/objects-consumer/objects_installed` lists only system SQLite,
-  libc++ and libSystem, not Qt.
-- Installed to the canonical `~/.local/SDK/iiFileProvider` prefix
-  (`build/object-store-install.log`). This does not update Society's running
-  executable or migrate its files.
-- Real container identity was read from `/Volumes/Society Data/.society-drive.json`.
-  The Files section maps by its volume UUID to `/Volumes/Society`; other sections
-  are under `/Volumes/Society Data`. Do not omit the separately mounted Files tree.
-- No actual Society file content, container manifest, sync catalogue or author
-  history was modified by this increment. Inventory is read-only.
-- Completed inventory: 10,259 regular files / 198,336,695,850 logical bytes;
-  2,589,102,186,496 bytes available at observation time. No traversal errors or
-  symlinks were reported. OS-managed `.Trashes` and `.fseventsd` roots on the Files
-  volume were explicitly excluded; this is a scoped inventory, not a forensic
-  filesystem image. Section counts: Deleted 8, Files 1, Generation History 94,
-  Models 92, Photos 10,064; remaining four sections empty.
+## 이 증분에서 확인됨
 
-## Next sequence
+- ObjectStore 기호(`build/object-store-red.log`)가 누락되어 빨간색 테스트가 처음 실패했습니다.
+- 전체 SDK 빌드와 CTest: 8/8 대상이 통과했다(`build/object-store-build.log`, `build/object-store-tests.log`).
+- Qt를 비활성화한 독립 빌드와 객체 저장소 테스트가 통과했다(`build/object-store-standalone-*.log`).
+- 설치 패키지만 사용하는 소비자 검사가 통과했다(`build/object-store-consumer-tests.log`). `otool -L build/objects-consumer/objects_installed`는 시스템 SQLite, libc++, libSystem만 표시하며 Qt는 없다.
+- 정규 `~/.local/SDK/iiFileProvider` 접두사(`build/object-store-install.log`)에 설치되었습니다. 이것은 Society의 실행 중인 실행 파일을 업데이트하거나 파일을 마이그레이션하지 않습니다.
+- 실제 컨테이너 식별자는 `/Volumes/Society Data/.society-drive.json` 에서 읽혔습니다. Files 섹션은 볼륨 UUID 를 통해 `/Volumes/Society` 로 매핑되며, 다른 섹션은 `/Volumes/Society Data` 아래에 있습니다. 별도로 마운트된 Files 트리를 생략하지 마십시오.
+- 실제 Society 파일 내용, 컨테이너 매니페스트, 동기화 카탈로그 또는 저자 기록은 이 증가에 의해 수정되지 않았습니다. 재고는 읽기 전용입니다.
+- 완료된 재고: 10,259 개의 일반 파일 / 198,336,695,850 개의 논리적 바이트; 관찰 시점에 2,589,102,186,496 개의 바이트 사용 가능. 탐색 오류 또는 심볼릭 링크는 보고되지 않았습니다. OS -관리 `.Trashes` 와 `.fseventsd` 루트는 파일 볼륨에서 명시적으로 제외되었습니다; 이는 범용 재고가 아닌 포렌식 파일 시스템 이미지입니다. 섹션 개수: 삭제 8, 파일 1, 생성 히스토리 94, 모델 92, 사진 10,064 ; 나머지 4 개의 섹션이 비어 있습니다.
 
-1. Use `build/object-store-drive-inventory.json` as the initial inventory;
-   revalidate volume identities, free space and the changing file set before writes.
-2. Preserve available source FileAuthor/Authorship without inventing historical creators.
-3. Run the resumable packager, inspect explicit per-item outcomes, and perform
-   source/payload audit. Keep originals and account for any crash orphan staging.
-4. Integrate object identity with SocietyDrive/FileOperations, sync and native
-   projections, then adopt indexed queries in relevant consumers.
-5. Measure large/full index traversal, run cross-platform and installed-consumer
-   gates, package all real drive files and audit every mapped item and metadata
-   requirement before marking the goal complete.
+<a id="next-sequence"></a>
 
-## Schema-2 and packager increment
+## 다음 순서
 
-- Metadata red test rejected the then-unimplemented malformed-document case
-  (`build/object-metadata-red.log`); round-trip tests now retain original
-  creator/contributors separately from the work-session actor.
-- Captured schema-1 fixture migrates without rewriting old validation keys;
-  subsequent schema-2 revisions, old extraction and mixed chains validate.
-- `ObjectSource` captures descriptor-based APFS clones or checked copy fallbacks;
-  modified originals cannot change captured snapshots. Cancellation rolls back
-  only the in-flight object.
-- `ObjectPackager` accepts all mapped section roots, explicit exclusions, stable
-  stamps, per-file capacity checks, authorship callback and resumable CAS writes.
-- CLI regression kills an actual child after the first committed object. Restart
-  preserves its key/version, adds the remaining object once, audits source and
-  payload, then revises exactly the changed file. SQLite integrity is checked.
-- Full SDK tests passed 11/11, Qt-disabled release tests passed 3/3 and installed
-  consumer passed 1/1 before the final metadata-only/worker-pool optimization.
-  Updated builds/test logs use the `build/object-packager-*` prefix; recheck these
-  logs for the final optimization rather than treating earlier passes as proof.
-- Installed consumer links only SQLite, libc++ and libSystem (no Qt).
-- A read-only real-drive probe showed prolonged `openat` waits on the preview
-  tree. POSIX inventory now uses no-follow `fstatat` metadata instead of opening
-  every payload, with bounded hardware-concurrency workers. The old read-only
-  probe was gracefully cancelled after this implementation change; it did not
-  create a package. Do not misreport this as a completed whole-drive inventory.
-- The metadata-only probe also encountered a kernel `getdirentries64` wait while
-  enumerating `Photos/.previews` (`build/packager-parallel-inventory-sample.txt`).
-  A kernel-log capture (`build/object-package-disk-diagnostics.log`) records APFS
-  disk13 transaction synchronization of about 24 seconds and flush preparation
-  of about 40 seconds. This is evidence of filesystem latency, not evidence of
-  corruption or a completed file scan. Do not attempt destructive repair or
-  stop unrelated generation workers on this evidence alone.
-- The worker-pool version passed 11/11 main, 3/3 Qt-free and 1/1 installed tests.
-  An additional red test then exposed FileAuthor accepted in the Authorship slot;
-  the format-specific validation was fixed. Its latest main-suite run hit the
-  object-store test's 60-second timeout during this I/O-latency interval, so a
-  serialized rerun is required before claiming final all-pass proof.
-- Final format-specific source: the serialized main SDK suite passed 11/11 in
-  68.02 seconds (`build/object-packager-tests-serial.log`). The Qt-disabled
-  suite still hit its 60-second object-store timeout; an isolated executable run
-  is retained for diagnosis, not counted as a pass until it exits successfully.
-- The tested main build was installed to the canonical SDK prefix and staging
-  prefix; the installed-only consumer was rebuilt and its CTest completed with
-  exit 0 (`build/object-packager-final-install.log`,
-  `build/object-packager-consumer-tests.log`). This updates the SDK, not Society's
-  bundled executable, and does not make the real-drive migration complete.
-- The actual drive inventory remains in flight with only `inventory-start` in
-  `build/object-package-live-inventory.jsonl`. No real package creation command
-  has been issued. Do not infer completion from the earlier inventory totals.
-- Society's live sample (`build/society-storage-wait-sample.txt`) showed
-  `SyncWorker::refreshWatches` eagerly collecting `QDir::entryInfoList` from
-  `Photos/.previews`. During normal quit the GUI waits in
-  `Controller::closeAndWait` for that worker. The queued watch-count limit is
-  applied only after collection, so it does not bound enumeration cost. A future
-  fix must preserve ownership-handoff guarantees, not simply drop the wait.
-- Normal quit timed out. Only the known installed Society process was terminated
-  and a restart requested; no drive files, journals, mounts or separate model
-  worker were removed/reset/stopped. Screen recovery is not yet confirmed.
-- Real container and Files-volume UUID mappings were revalidated before writes;
-  `.society-objects` did not yet exist at that check. The drive still has not been
-  packaged by this increment as of this ledger entry.
+1. 초기 인벤토리로 `build/object-store-drive-inventory.json`를 사용하고, 쓰기 전에 볼륨 아이덴티티, 여유 공간 및 변경되는 파일 세트를 재검증하십시오.
+2. 역사적 창작자를 발명하지 않고도 사용 가능한 소스 FileAuthor/저자를 보존합니다.
+3. 재개 가능한 패키저를 실행하고, 항목별 명시적인 결과를 검사하며, 소스/페이로드 감사를 수행합니다. 원본을 보관하고 모든 충돌 고아 스테이징을 고려하십시오.
+4. 객체 아이덴티티를 SocietyDrive / FileOperations와 통합하고, 네이티브 프로젝션을 동기화한 뒤, 관련 소비자에게 인덱스된 쿼리를 채택합니다.
+5. 대용량/전체 인덱스 탐색을 측정하고, 크로스 플랫폼 및 설치된 소비자 게이트를 실행하며, 모든 실제 드라이브 파일을 패키징하고, 목표를 완료하기 전에 매핑된 모든 항목 및 메타데이터 요구 사항을 감사하십시오.
 
-The current source has only macOS build/runtime proof. iOS/Windows/Linux builds,
-real-drive migration, external lifecycle synchronization and application-level
-index adoption remain unverified. Crash recovery is now tested on macOS fixtures,
-not yet on real data or every platform.
+<a id="schema-2-and-packager-increment"></a>
 
-## 2026-09-28 resumed live package
+## Schema-2 및 패키저 증분
 
-- After verifying the former writer had terminated and closing its stale session
-  through the CLI, the canonical package writer was resumed once using the
-  current `build/iiFileProviderObjectPackage` binary and the nine revalidated
-  drive mappings above. No concurrent writer or destructive source operation was
-  started.
-- The current JSONL is
-  `build/object-package-live-resume-20260928.jsonl`. At the latest read-only
-  checkpoint it contains 2,124 imports, 5 revisions and 4,499 unchanged objects
-  (6,628 current objects accounted for), with no `error` event. The writer is
-  still running; this is partial progress, not completion.
-- Before the resumed writer began, the package database passed SQLite
-  `integrity_check` and `foreign_key_check` (`ok`, no violations) with 4,504
-  objects, 4,504 current-index entries and 4,504 live objects. The previous
-  stale packaging session was closed only after its writer process was verified
-  absent. Do not inspect the SQLite database while the resumed writer is live.
-- The complete source inventory most recently verified 10,292 files,
-  153,069,688,624 bytes and zero path/read issues across the nine mappings. A
-  full post-package audit is still required after the writer exits normally.
-- Live revalidation on 2026-09-28 found the same writer, PID 58432, still active
-  against the same package and mappings; do not open SQLite or start a competing
-  writer. Its JSONL now records 5,665 imports, 4,499 unchanged skips and 5
-  revisions, reaching current index key 10,169, with no error or terminal summary.
-  Those outcomes cover 10,169 visited paths / 1,534,585,289 source bytes so far;
-  the largest visited object is still only 883,276 bytes, so most source payload
-  bytes have not yet been packaged.
-  Read-only process samples during quiet intervals showed the main thread in
-  SQLite's automatic WAL checkpoint (`guarded_pwrite_np`, then `unixSync -> fcntl`);
-  subsequent JSONL events confirmed the writer resumed. Treat this as a storage-sync
-  wait, not CPU-bound hashing or a completed package. After normal exit, rebuild/install
-  the newer audit-capable CLI if needed, then run a fresh all-mapping source/payload/index
-  audit before deciding whether a delta packaging pass is required.
+- 메타데이터 실패 단계 테스트는 당시 구현하지 않은 잘못된 문서 사례를 거부했다(`build/object-metadata-red.log`). 왕복 변환 테스트는 이제 원래 제작자/기여자와 작업 세션 행위자를 별도로 유지한다.
+- 캡처된 스키마 -1 픽스처는 기존 검증 키를 재작성하지 않고 마이그레이션됩니다; 이후 스키마 -2 리비전, 기존 추출 및 혼합 체인이 검증됩니다.
+- `ObjectSource`는 디스크립터 기반 APFS 클론 또는 체크된 복사 폴백을 캡처합니다; 수정된 원본은 캡처된 스냅샷을 변경할 수 없습니다. 취소는 인플라이트 객체만 롤백합니다.
+- `ObjectPackager`는 매핑된 모든 섹션 루트, 명시적 제외, 안정적인 스탬프, 파일당 용량 검사, 저자 콜백 및 재개 가능한 CAS 쓰기를 모두 허용합니다.
+- CLI 회귀는 첫 번째 커밋된 객체 이후에 실제 자식을 죽입니다. 재시작은 키/버전을 유지하고, 남은 객체를 한 번 추가하며, 소스와 페이로드를 감사한 다음, 변경된 파일을 정확히 수정합니다. SQLite 무결성이 확인되었습니다.
+- 전체 SDK 테스트는 11/11를 통과했으며, Qt -비활성화된 릴리스 테스트는 3/3를 통과했고, 설치된 소비자 테스트는 최종 메타데이터 전용/워커풀 최적화 이전에 1/1를 통과했습니다. 업데이트된 빌드/테스트 로그는 `build/object-packager-*` 접두사를 사용합니다; 이전 패스를 증명으로 간주하기보다 최종 최적화를 위해 이 로그를 다시 확인하십시오.
+- 설치된 소비자 링크는 SQLite, libc++ 및 libSystem(Qt 없음)만 설치되었습니다.
+- 읽기 전용 실제 드라이브 프로브는 프리뷰 트리에서 장시간 `openat` 대기를 보였다. POSIX 목록 수집은 이제 각 페이로드를 열지 않고 링크를 따르지 않는 `fstatat` 메타데이터를 사용하며, 하드웨어 동시 실행 수에 한계가 설정된 작업자를 사용한다. 이전 읽기 전용 프로브는 이 구현 변경 후 정상적으로 취소했고 패키지는 생성하지 않았다. 이를 전체 드라이브 목록 수집 완료로 잘못 보고해서는 안 된다.
+- 메타데이터 전용 프로브도 `Photos/.previews` 열거 중 커널 `getdirentries64` 대기에 걸렸다(`build/packager-parallel-inventory-sample.txt`). 커널 로그 캡처(`build/object-package-disk-diagnostics.log`)는 APFS disk13의 트랜잭션 동기화 약 24초와 플러시 준비 약 40초를 기록한다. 이는 파일 시스템 지연의 증거이며 손상이나 파일 스캔 완료의 증거가 아니다. 이 증거만으로 파괴적인 복구를 시도하거나 무관한 생성 작업자를 중지해서는 안 된다.
+- 작업자 풀 버전은 주 검사 11/11, Qt가 없는 검사 3/3, 설치본 검사 1/1를 통과했다. 이어서 추가한 실패 단계 테스트가 Authorship 슬롯에서 FileAuthor를 수락하는 문제를 드러내어 형식별 검증을 수정했다. 최신 주 스위트 실행은 이 I/O 지연 구간에 객체 저장소 테스트의 60초 제한에 도달했으므로, 최종 전체 통과를 주장하기 전에 직렬 재실행이 필요하다.
+- 형식별 최종 소스: 직렬 실행한 주 SDK 스위트는 68.02초에 11/11를 통과했다(`build/object-packager-tests-serial.log`). Qt를 비활성화한 스위트는 여전히 객체 저장소의 60초 제한에 도달했다. 진단을 위해 격리된 실행 파일 실행을 유지하며, 성공적으로 종료할 때까지 통과로 집계하지 않는다.
+- 테스트된 메인 빌드는 정규 SDK 접두사와 스테이징 접두사에 설치되었으며, 설치 전용 소비자는 재구축되어 CTest가 종료 0 ( `build/object-packager-final-install.log` , `build/object-packager-consumer-tests.log` ) 로 완료되었습니다. 이것은 SDK를 업데이트하고, Society의 번들 실행 파일이 아니며, 실제 드라이브 마이그레이션을 완료하지 않습니다.
+- 실제 드라이브 목록 수집은 아직 진행 중이며 `build/object-package-live-inventory.jsonl`에는 `inventory-start`만 있다. 실제 패키지 생성 명령은 실행하지 않았다. 이전 목록 합계로 완료를 추론해서는 안 된다.
+- Society의 실행 중 샘플(`build/society-storage-wait-sample.txt`)은 `SyncWorker::refreshWatches`가 `Photos/.previews`에서 `QDir::entryInfoList`를 즉시 수집하는 것을 보여 주었다. 정상 종료 시 GUI는 `Controller::closeAndWait`에서 해당 작업자를 기다린다. 대기열의 감시 수 제한은 수집 이후에만 적용하므로 열거 비용을 제한하지 못한다. 후속 수정은 소유권 인계 보장을 유지해야 하며, 단순히 대기를 제거해서는 안 된다.
+- 일반 종료 시간 초과. 알려진 설치된 Society 프로세스만 종료되었으며 재시작이 요청되었습니다; 드라이브 파일, 저널, 마운트 또는 별도의 모델 워커는 제거·리셋·정지되지 않았습니다. 화면 복구가 아직 확인되지 않았습니다.
+- 실제 컨테이너와 파일 볼륨 UUID 매핑은 쓰기 전에 재검증되었으며, 해당 검사에서는 `.society-objects`가 아직 존재하지 않았습니다. 이 원장 항목 기준으로 이 증분에 의해 드라이브가 아직 패키징되지 않았습니다.
 
-## 2026-09-29 WAL checkpoint tuning follow-up
+현재 소스는  macOS   build/runtime 증명만 있습니다.  iOS / Windows / Linux 빌드, 실제 드라이브 마이그레이션, 외부 수명 주기 동기화 및 애플리케이션 수준 인덱스 도입은 미검증입니다. 충돌 복구는 이제  macOS   픽스처 에서 테스트되었으며, 실제 데이터나 모든 플랫폼에서는 아직 테스트되지 않았습니다
 
-- Added a configurable SQLite WAL auto-checkpoint page threshold to the object
-  store and packager CLI, retaining `synchronous=FULL` and `fullfsync=ON`. The
-  source-compatible default is 1,000 pages; `--wal-autocheckpoint-pages` can
-  raise or disable automatic checkpoints. Documentation describes the WAL-space
-  tradeoff. Build targets `iiFileProviderObjectPackage` and
-  `iiFileProvider_object_batch` built successfully; the batch test passed in
-  103.82 seconds.
-- The crash/resume CLI regression was extended to run with a high threshold and
-  assert its emitted setting. It did not complete: CTest timed out the test at
-  304.19 seconds while a separate real Society writer was simultaneously blocked
-  in SQLite's full-durability WAL checkpoint path. A sample of the fixture CLI
-  showed `sqlite3Close -> sqlite3WalCheckpoint -> unixSync -> fcntl`; this
-  confirms that suppressing intermediate auto-checkpoints does not suppress the
-  required close-time checkpoint. The timed-out test is not a passing regression.
-- The real Society writer (PID 58432) is still the only database writer. Its
-  JSONL contains 5,724 imports, 4,499 skips and 5 revisions, reaching index key
-  10,228 / 10,228 visited paths with no error event, but it has emitted neither
-  a terminal summary nor a close event. Source bytes are still only about 1.51
-  GB of the 153.07 GB inventory. It remains in `sqlite3WalDefaultHook ->
-  sqlite3_wal_checkpoint_v2 -> sqlite3WalCheckpoint -> unixSync -> fcntl`.
-  SIGINT was requested; the process remains in uninterruptible kernel I/O, so
-  cancellation is not yet confirmed and the database must not be reopened.
-- The mapped volume is an APFS sparsebundle disk image at
-  `/Volumes/Storage/Society.sparsebundle`; it has ample reported free space. This
-  establishes where the nested-volume sync is occurring, but not a media fault
-  or corruption diagnosis. No destructive repair or remount was attempted.
-- Next safe gate: wait for PID 58432 to exit and inspect its JSONL terminal state;
-  only then close any unfinished session and resume once with the rebuilt CLI's
-  higher threshold. Run focused crash/recovery tests without concurrent real
-  drive I/O, followed by a complete mapped-source/payload/index audit and SQLite
-  integrity checks. The package goal remains incomplete.
-- Follow-up on the next check: PID 58432 exited and the log ended with
-  `{"event":"summary","imported":5724,"revised":5,"skipped":4499,"errors":0,"cancelled":true,...}`.
-  The session was already closed by that cancellation path; an explicit second
-  `--end-session` correctly reported `object work session is closed`. No package
-  writer remains active. The full SQLite `integrity_check` was attempted after
-  exit but interrupted after several minutes blocked in `pread` against the
-  nested volume, so integrity remains unverified (do not describe this as a
-  pass).
-- After the real writer exited, the focused crash/resume CLI regression was
-  rerun alone and passed 1/1 in 171.29 seconds. It exercises a killed child,
-  session closure, resume with the configured checkpoint threshold, payload and
-  source audit, revision identity, and SQLite fixture integrity. The earlier
-  304.19-second timeout occurred during concurrent real-volume I/O and remains
-  recorded as a failed run; the serialized pass is the current test result.
-- The user explicitly requested that the process be closed. Therefore the real
-  drive writer was not restarted with the higher threshold. Packaging remains
-  partial at 10,228 / 10,292 visited paths (5,724 imports, 4,499 skips, 5
-  revisions), approximately 1.61 GB of source payload bytes visited out of
-  153.07 GB. Full audit, DB integrity, complete package and index timing are
-  outstanding; user-requested stop has been honored.
+<a id="2026-09-28-resumed-live-package"></a>
+
+## 2026-09-28 재개된 라이브 패키지
+
+- 이전 작성 프로세스의 종료를 검증하고 CLI를 통해 오래된 세션을 닫은 후, 현재 `build/iiFileProviderObjectPackage` 바이너리와 위에서 재검증한 9개 드라이브 매핑을 사용하여 표준 패키지 작성 프로세스를 한 번 재개했다. 동시 작성 프로세스나 파괴적인 원본 작업은 시작하지 않았다.
+- 현재 JSONL는 `build/object-package-live-resume-20260928.jsonl`입니다. 최신 읽기 전용 체크포인트에는 2,124 임포트, 5 리비전 및 4,499 변경되지 않은 객체(6,628 현재 객체가 고려됨)가 포함되어 있으며, `error` 이벤트는 없습니다. 작가는 아직 진행 중이며, 이는 부분적인 진행이며 완료가 아닙니다.
+- 재개한 작성 프로세스가 시작하기 전에 패키지 데이터베이스는 4,504개 객체·현재 인덱스 항목 4,504개·활성 객체 4,504개 상태에서 SQLite `integrity_check`와 `foreign_key_check`를 통과했다(`ok`, 위반 없음). 이전의 오래된 패키징 세션은 작성 프로세스가 없는 것을 확인한 뒤에만 닫았다. 재개한 작성 프로세스가 실행 중일 때 SQLite 데이터베이스를 검사해서는 안 된다.
+- 완전한 소스 재고는 최근 10,292 개의 파일, 153,069,688,624 바이트, 0 개의 경로/읽기 문제를 9 개의 맵핑을 통해 확인했으며, writer 가 정상적으로 종료한 후에도 전체 패키지 감사 (audit) 가 여전히 필요합니다.
+- 2026-09-28 에 대한 라이브 재검증이 동일한 작성자, PID 58432를 여전히 동일한 패키지 및 매핑에 대해 활성 상태로 발견했으므로 SQLite 를 열거나 경쟁 작성자를 시작하지 마십시오. 그의 JSONL 는 이제 5,665 임포트, 4,499 변경되지 않은 스킵 및 5 수정을 기록하여 현재 인덱스 키 10,169에 도달했으며, 오류나 종결 요약이 없습니다. 그 결과들은 지금까지 방문한 10,169 경로 / 1,534,585,289 소스 바이트를 포함하며, 가장 큰 방문한 객체는 여전히 883,276 바이트뿐이므로 대부분의 소스 페이로드 바이트가 아직 패키징되지 않았습니다. 읽기 전용 프로세스는 조용한 간격 동안 샘플링하여 SQLite 의 자동 WAL 체크포인트 ( `guarded_pwrite_np` , 그 다음 `unixSync -> fcntl` ) 에서 메인 스레드를 보여주었고, 이후 JSONL 이벤트는 작성자가 재개되었음을 확인했습니다. 이를 저장 동기화 대기 처리로 간주하고, CPU -결합 해싱이나 완료된 패키지로 간주하지 마십시오. 정상 종료 후 필요에 따라 새 감사 기능 CLI 를 다시 구축/설치한 다음, 델타 패키징 패스가 필요한지 여부를 결정하기 전에 새 전체 매핑 소스/페이로드/인덱스 감사를 실행하십시오.
+
+<a id="2026-09-29-wal-checkpoint-tuning-follow-up"></a>
+
+## 2026-09-29 WAL 체크포인트 튜닝 후속 조치
+
+- 객체 저장소 및 패커 CLI 에 구성 가능한 SQLite WAL 자동 체크포인트 페이지 임계값을 추가하여 `synchronous=FULL` 와 `fullfsync=ON` 를 유지합니다. 소스 호환성 기본값은 1,000 페이지이며, `--wal-autocheckpoint-pages` 는 자동 체크포인트를 높이거나 비활성화할 수 있습니다. 문서에는 WAL -공간 절충에 대해 설명되어 있습니다. 빌드 대상 `iiFileProviderObjectPackage` 와 `iiFileProvider_object_batch` 는 성공적으로 구축되었으며, 배치 테스트는 103.82 초에 통과했습니다.
+- 충돌/재개 CLI 회귀 검사는 높은 임계값으로 실행하고 출력된 설정을 확인하도록 확장했다. 그러나 완료하지 못했다. 별도의 실제 Society 작성 프로세스가 동시에 SQLite의 완전한 내구성을 보장하는 WAL 체크포인트 경로에서 막힌 동안, CTest는 304.19초에 테스트를 시간 초과로 종료했다. 픽스처 CLI의 샘플은 `sqlite3Close -> sqlite3WalCheckpoint -> unixSync -> fcntl`를 보였다. 이는 중간 자동 체크포인트를 억제해도 종료 시 필수 체크포인트는 억제하지 않는다는 것을 확인한다. 시간 초과된 테스트는 통과한 회귀 검사가 아니다.
+- 실제 Society 작성 프로세스(PID 58432)는 여전히 유일한 데이터베이스 작성 프로세스이다. 해당 JSONL에는 가져오기 5,724건, 건너뛰기 4,499건, 리비전 5건이 있으며, 오류 이벤트 없이 인덱스 키 10,228 / 방문 경로 10,228개에 도달했다. 그러나 종료 요약과 닫기 이벤트는 모두 출력하지 않았다. 원본 바이트는 여전히 153.07 GB 목록 중 약 1.51 GB에 불과하다. 프로세스는 `sqlite3WalDefaultHook -> sqlite3_wal_checkpoint_v2 -> sqlite3WalCheckpoint -> unixSync -> fcntl`에 머물러 있다. SIGINT를 요청했지만 중단 불가능한 커널 I/O에 머물러 있으므로 취소를 아직 확인하지 못했으며, 데이터베이스를 다시 열어서는 안 된다.
+- 매핑된 볼륨은 `/Volumes/Storage/Society.sparsebundle` 의 APFS sparsebundle 디스크 이미지입니다; 충분한 보고된 사용 가능 공간을 가지고 있습니다. 이는 중첩 볼륨 동기화가 발생하는 위치를 설정하지만, 미디어 오류 또는 손상 진단은 아닙니다. 파괴적 복구 또는 재 마운트가 시도되지 않았습니다.
+- 다음 안전한 게이트: PID 58432 를 종료하고 그 JSONL 종결 상태를 검사할 때까지 기다린 후, 완료되지 않은 세션을 닫고 재구성된 CLI 의 더 높은 임계값으로 한 번에 다시 재개합니다. 동시 실제 드라이브 I/O 없이 집중된 충돌/복구 테스트를 실행한 다음, 완전한 매핑된 소스/페이로드/인덱스 감사 및 SQLite 무결성 검사를 수행합니다. 패키지 목표는 여전히 완료되지 않았습니다.
+- 다음 점검에 대한 추후 조치: PID   58432 가 종료되어 로그가 `{"event":"summary","imported":5724,"revised":5,"skipped":4499,"errors":0,"cancelled":true,...}` 로 끝났습니다. 해당 취소 경로로 세션이 이미 닫혔으며, 명시적인 두 번째 `--end-session` 가 `object work session is closed` 를 올바르게 보고했습니다. 패키지 작성자가 활성 상태에 남아 있지 않습니다. 종료 후 몇 분 동안 `pread` 의 중첩 볼륨에 대해 차단되어 중단되었으므로 완전한 SQLite   `integrity_check` 가 시도되었으나 무결성이 확인되지 않았습니다 (이를 통과로 설명하지 마십시오).
+- 실제 작성자가 종료된 후, 집중된 충돌/복구 CLI   회귀 가 단독으로 재실행되어 1/1 에서 171.29 초 동안 통과했습니다. 이는 종료된 자식 프로세스, 세션 종료, 구성된 체크포인트 임계값, 페이로드 및 소스 감사, 수정본 식별자, 그리고 SQLite   픽스처 무결성을 수행합니다. 이전 304.19초 시간 제한은 동시 실제 볼륨 I/O 도중 발생했으며 실패한 실행으로 기록되어 있으며, 직렬화된 통과가 현재 테스트 결과입니다.
+- 사용자가 프로세스를 종료하라고 명시적으로 요청하였다. 따라서 실제 드라이브 작성자를 더 높은 임계값으로 재시작하지 않았다. 패키징은 방문한 경로 10,228 / 10,292개(5,724개 가져오기, 4,499개 건너뛰기, 5개 리비전)에서 부분 완료 상태이다. 전체 153.07 GB 중 방문한 원본 페이로드는 약 1.61 GB이다. 전체 감사, DB 무결성, 완전한 패키지 및 색인 소요 시간 확인은 미완료이며 사용자가 요청한 중단을 이행하였다.

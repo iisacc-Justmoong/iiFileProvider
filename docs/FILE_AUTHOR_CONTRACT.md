@@ -13,7 +13,7 @@
 | `backend/app/services/accounts/society_cloud_membership.rb` | 멤버십 값은 정확히 `Free`, `Plus`, `Pro`, `Enterprise` |
 | `backend/app/services/accounts/login_session_service.rb` | 세션 관리 ID, 앱 디바이스, 생성·최근 접속·만료 시각. registry 비밀값은 43자리 base64url, Redis에는 SHA-256만 저장 |
 | `backend/app/services/auth/service.rb`, `issue_session`, `resolve_session` | Cognito ID/refresh 쿠키와 registry 쿠키를 함께 사용. registry 만료·해제는 유효한 Cognito 토큰만으로 복구하지 않음 |
-| `POST /Account/GraphQL`, `appSession` mutation | 코드 검증·refresh 성공의 JSON은 `{account, session, limits}`이며 인증 원문은 JSON에 없음 |
+|`POST /Account/GraphQL`, `appSession` mutation| 코드 검증·refresh 성공의 JSON은 `{account, session, limits}`이며 인증 원문은 JSON에 없음 |
 
 파일의 작성자 귀속은 멤버십·제품 소유권·라이선스·로그인 허용과 별개이다. `sub`를 email이나 User ID로 대체하지 않는다. 서버가 이메일을 검증한다는 사실만으로 로컬에서 입력받은 JSON에 인증 성공 상태를 부여하지 않는다.
 

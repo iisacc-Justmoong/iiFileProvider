@@ -1,376 +1,105 @@
-# Society object package — database schema 3
+<a id="society-object-package--database-schema-3"></a>
 
-`iiFileProvider::Objects` is a C++23/SQLite target with no Qt or upward SDK
-dependency. It is additive to the existing Qt author/file adapters. Consumers use
-`find_package(iiFileProviderObjects CONFIG REQUIRED)` and `<ObjectStore.h>`.
-The installed CMake package resolves both SQLite and the platform thread target;
-consumers do not need to add thread linker flags manually.
-Configure `-DIIFILEPROVIDER_BUILD_QT_API=OFF` for a Qt-free build.
+# Society 개체 패키지 — 데이터베이스 스키마 3
 
-## Identity and layout
+`iiFileProvider::Objects` 는 C++23/SQLite 타겟이며 Qt 또는 상향 SDK 의존성이 없습니다. 기존 Qt 작성자/파일 어댑터에 추가됩니다. 소비자는 `find_package(iiFileProviderObjects CONFIG REQUIRED)` 와 `<ObjectStore.h>` 를 사용합니다. 설치된 CMake 패키지는 SQLite 와 플랫폼 스레드 타겟을 모두 해결하며, 소비자는 스레드 링커 플래그를 수동으로 추가할 필요가 없습니다. `-DIIFILEPROVIDER_BUILD_QT_API=OFF` 를 Qt 없는 빌드를 위해 구성합니다.
 
-`ObjectStore(directory, containerKey, create)` owns `objects.sqlite3` and its SQLite
-WAL sidecars. Creating a package must be explicit. Unknown databases, another
-container's package, redirected paths and nonempty unknown package directories
-are rejected. Do not copy an open database without its WAL: use a consistent
-SQLite backup or close all connections first. The original directory tree is not
-rewritten by these APIs.
+<a id="identity-and-layout"></a>
 
-An object has a random opaque key independent of its logical relative path, a
-stable monotonically allocated integer index key, an increasing version, source
-SHA-256, byte count, author attribution, a work-session reference, an operation,
-a timestamp, a parent validation key and a Society schema validation key.
-`move` changes the classification/path without changing object identity. Two
-separate files with identical content still have different object keys.
+## 아이덴티티와 레이아웃
 
-WAL durability remains `synchronous=FULL` with `fullfsync=ON`. A connection uses
-SQLite's default 1,000-frame auto-checkpoint unless a caller supplies a different
-page threshold through the four-argument `ObjectStore` constructor. The package
-CLI exposes this as `--wal-autocheckpoint-pages`; `0` disables auto-checkpointing.
-Raising the threshold reduces how often a commit also checkpoints the main DB,
-but allows the WAL sidecar to grow to the threshold (or to a single transaction's
-size) before checkpointing. This is a durability-preserving scheduling choice,
-not a free-space optimization: select it only when the package volume has room
-for the expected WAL. CLI default remains 1,000 frames.
-The threshold controls commit-triggered automatic checkpoints only. SQLite still
-attempts a final checkpoint when the last connection closes; setting the threshold
-to zero does not make shutdown free of disk synchronization. A CLI summary is
-emitted before connection destruction, so require the process's exit status as
-well as its summary before reopening the package for another operation.
-The installed-only consumer regression writes with an explicit threshold and
-reopens with the original constructor, checking that both exported call forms
-link and preserve the same validated object and compact index.
+`ObjectStore(directory, containerKey, create)` 는 `objects.sqlite3` 와 그 SQLite WAL 사이드카를 소유합니다. 패키지를 생성하는 것은 명시적이어야 합니다. 알 수 없는 데이터베이스, 다른 컨테이너의 패키지, 리디렉션된 경로 및 비어 있지 않은 알 수 없는 패키지 디렉토리는 거부됩니다. WAL 없이 열린 데이터베이스를 복사하지 마십시오: 일관된 SQLite 백업이나 모든 연결을 먼저 닫으십시오. 원래 디렉토리 트리는 이 API 들에 의해 다시 작성되지 않습니다.
 
-The current index is separate from immutable version records. `scan` uses
-keyset pagination on index keys, not recursive directory traversal or OFFSET.
-Separate database connections can read committed heads while packaging writes
-under WAL. One ObjectStore serializes its own connection. Pages are bounded to
-10,000 records. Concurrent changes may appear on later pages; a scan is not a
-frozen multi-page snapshot.
+객체는 논리적 상대 경로와 독립적인 무작위 불투명 키, 논리적 상대 경로에 독립적인 안정적인 단조 증가 할당 정수 인덱스 키, 증가하는 버전, 소스 SHA-256, 바이트 수, 작성자 귀속, 작업 세션 참조, 작업, 타임스탬프, 부모 유효성 검사 키 및 Society 스키마 유효성 검사 키를 가집니다. `move` 는 객체 동일성을 변경하지 않으면서 분류/경로를 변경합니다. 2 는 동일한 콘텐츠를 가진 별도의 파일이 서로 다른 객체 키를 가집니다.
 
-`index` returns a compact projection of keys, path, version, content digest,
-size, validation/session keys, tombstone and actor identity. It does not load
-payload, history or potentially large author documents. Use `lookup` for full
-metadata on demand. Both APIs use the same monotonic keyset boundary and live/
-deleted policy; concurrent mutations do not provide a frozen multi-page snapshot.
-The projection is stored physically in `current_index`, ordered by its integer
-primary key. Traversal is a single range query with no revision/session joins
-or temporary sort. A database trigger updates each head's projection in the same
-transaction as import, revision, move or deletion; a failed batch also rolls back
-its projected rows. This trades one small current-state row per object for fewer
-disk-page lookups. It does not eliminate the storage device's first-read latency.
-The projection is a traversal cache, not an independent integrity authority;
-`validate` continues to verify the immutable revision chain and content.
-The `object_index` regression compares every projected field to authoritative
-heads through import/revise/move/delete, failed-batch rollback, keyset pagination
-and reopen. It checks the single-table query plan, schema-2 backfill, rejection of
-a mismatched container, and complete rollback when a migration fails after
-backfill. The legacy fixture additionally checks schema-1 index preservation.
+WAL 내구성은 `synchronous=FULL` 로 유지되며 `fullfsync=ON` 입니다. 연결은 호출자가 4인수 `ObjectStore` 생성자를 통해 다른 페이지 임계값을 제공하지 않는 한 SQLite 의 기본 1,000-프레임 자동 체크포인트를 사용합니다. 패키지 CLI 는 이를 `--wal-autocheckpoint-pages` 로 노출하며 `0` 는 자동 체크포인트를 비활성화합니다. 임계값을 높이면 커밋이 메인 DB 를 체크포인트하는 빈도가 줄어들지만, WAL 사이드카가 체크포인트하기까지 임계값 (또는 단일 트랜잭션의 크기) 까지 성장할 수 있게 합니다. 이는 무료 공간 최적화가 아닌 내구성을 보존하는 스케줄링 선택입니다. 예상 WAL 에 패키지의 용량이 여유가 있을 때만 선택하세요. CLI 기본값은 1,000 프레임으로 유지됩니다. 임계값은 커밋에 의해 트리거되는 자동 체크포인트만 제어합니다. SQLite 는 마지막 연결이 닫힐 때 여전히 최종 체크포인트를 시도하며, 임계값을 0 로 설정한다고 해서 종료 시 디스크 동기화가 없게 되는 것은 아닙니다. CLI 요약은 연결 파괴 전에 방출되므로, 패키지를 다시 열기 위해 프로세스의 종료 상태와 그 요약 모두를 요구해야 합니다. 설치 전용 소비자 회귀 는 명시적인 임계값으로 작성하고 원래 생성자로 다시 열며, 두 가지 내보낸 호출 형식이 연결되고 동일한 검증된 객체 및 콤팩트 인덱스를 유지하는지 확인합니다.
 
-## Package payload, diff and journal
+현재 인덱스는 불변 버전 기록과 분리됩니다. `scan` 는 인덱스 키에 키셋 페이지네이션을 사용하며 재귀적 디렉토리 탐색 또는 OFFSET 를 사용하지 않습니다. 별도의 데이터베이스 연결은 WAL 하에 패키징된 작성 작업을 읽을 수 있는 커밋된 헤드를 읽을 수 있습니다. 하나의 ObjectStore 는 자신의 연결을 직렬화합니다. 페이지는 한계가 설정된 에서 10,000 개의 기록을 포함합니다. 동시 변경은 나중에 나타날 수 있으며 스캔은 동결된 다중 페이지 스냅샷이 아닙니다.
 
-Each imported/revised file is streamed in 1 MiB chunks with bounded working
-memory. The package stores immutable content-addressed chunk bytes, deduplicated
-across files and revisions. Version manifests retain chunk order. A revision,
-its chunks and its current-index update commit in one SQLite transaction. Failed
-imports/conflicts roll back and never rewrite the source file.
-Source ingestion and CLI source audits request a 1 MiB file-stream buffer before
-opening the file. In the inspected Apple libc++ implementation the default is
-only 4 KiB, independently of the caller's `read()` size. This avoids repeated
-small buffer refills on image-backed storage; it does not promise that the OS
-will complete an individual read within a fixed time. Boundary/tail sentinel
-tests verify that buffering does not omit or duplicate bytes.
+`index` 는 키, 경로, 버전, 콘텐츠 해시, 크기, 검증/세션 키, 무덤표기 및 액터 신원 정보를 포함한 키의 콤팩트 투영을 반환합니다. 그것은 페이로드, 이력 또는 잠재적으로 큰 작성자 문서를 로드하지 않습니다. 필요에 따라 전체 메타데이터를 위해 `lookup` 를 사용하세요. 두 API 는 동일한 단조 키셋 경계와 살아있는/삭제된 정책을 사용하며 동시 변형은 동결된 다중 페이지 스냅샷을 제공하지 않습니다. 투영은 정수 기본 키에 따라 순차적으로 물리적으로 `current_index` 에 저장됩니다. 탐색은 수정/세션 조인 또는 임시 정렬이 없는 단일 범위 쿼리입니다. 데이터베이스 트래igger 는 import, revision, move 또는 삭제와 같은 트랜잭션에서 각 헤드의 투영을 업데이트하며 실패한 배치도 해당 투영된 행을 롤백합니다. 이것은 각 객체당 하나의 작은 현재 상태 행을 희생하여 디스크 페이지 조회를 줄입니다. 그것은 저장 장치의 첫 번째 읽기 지연을 제거하지 않습니다. 투영은 독립적인 무결성 권한이 아닌 탐색 캐시이며 `validate` 는 불변 버전 체인과 콘텐츠를 계속 검증합니다. `object_index` 회귀 는 import/revise/move/delete, failed-batch rollback, keyset pagination 및 reopen 을 통해 모든 투영된 필드를 공식 헤드와 비교합니다. 그것은 단일 테이블 쿼리 계획, 스키마-2 백필, 불일치된 컨테이너 거부 및 백필 후 마이그레이션 실패 시 완전한 롤백을 확인합니다. 레거시 픽스처 는 추가로 스키마-1 인덱스 보존을 확인합니다.
 
-For small-file ingestion, `importFiles` accepts at most 256 files and 16 MiB total
-payload per transaction. A separate 16 MiB author/provenance JSON budget counts
-the recording actor's profile once per file plus each supplied authorship document.
-This aggregate metadata budget is checked before payload reads or object writes.
-It reuses the same import/validation path, assigns an
-independent object/index key to every file and publishes all records together.
-Any missing source, conflicting path, invalid metadata, limit violation or
-cancellation rolls back the entire batch. This amortizes durable synchronization
-without disabling WAL durability or exposing partial objects.
-Batch payloads are read by a bounded standard-C++ worker pool (hardware thread
-count by default, at most 64 workers and never more workers than files). All
-source sizes are inspected before reading: the combined captured payload stays
-within 16 MiB. Caller-provided stream buffers are capped at 1 MiB and at source size,
-so they add at most another 16 MiB plus a byte per empty worker input; SQLite,
-metadata and result allocations have separate overhead. Workers do not access
-SQLite. The owning thread hashes/stores the prepared bytes in input order inside
-one transaction. Source identities are checked after reads and again before
-publishing each object. Any read failure, detected source change or cancellation
-rejects the batch; all started workers are joined before their buffers are freed.
-Large individual files retain the bounded streaming path instead of being read
-entirely into RAM. This overlaps small-file I/O latency; actual storage throughput
-still requires measurement and is not guaranteed by the worker count.
+<a id="package-payload-diff-and-journal"></a>
 
-The packager also captures and destroys small-batch `ObjectSource` snapshots with
-bounded workers (hardware concurrency, capped at 64 and the batch count). Metadata
-callbacks and candidate selection remain on the owning thread. Every request is
-checked against its inventoried identity before and after acquisition. An
-expected-identity overload checks the acquired descriptor before copying or
-cloning; copy fallback rejects growth before writing beyond the acquired size. An
-acquisition failure rejects the complete selected batch, waits for all workers,
-and cleans its owned snapshots; per-item issues identify every rejected member.
-Earlier metadata-budget boundaries still publish their prepared prefix. Committed
-progress is emitted before snapshot cleanup; cleanup joins before the next batch.
-It never removes unrelated staging files or original sources. Failure to start
-cleanup workers falls back to the caller instead of abandoning owned snapshots.
-Fallback-copy scratch buffers are heap allocated, capped at 1 MiB and source size
-(one byte for empty sources), so small native thread stacks cannot overflow.
-The snapshot regression covers serial/parallel equivalence, source-edit isolation,
-stale/missing/redirected inputs, cancellation, size/count bounds and owned cleanup.
-The private `IIFILEPROVIDER_TEST_COPY_SNAPSHOTS` compile definition forces the
-existing copy fallback in standalone tests; normal Apple builds still prefer clones.
+## 패키지 페이로드, diff 및 저널
 
-`history` is the append-only per-object mutation journal. Each entry records the
-actor/session/operation and a hash chain. `diff` reports changed binary chunks
-with byte offsets and before/after hashes and sizes. The hashes refer to retained
-bytes, so `extract` can reconstruct and verify any non-deleted version. This is
-a reversible chunk diff, not a minimal textual line diff. A deletion appends a
-tombstone, retaining previous versions and freeing the live logical path.
+각 imported/수정된 파일은 1 MiB 크기의 청크로 스트리밍되며 한계가 설정된 작업 메모리를 사용합니다. 패키지는 파일 및 리비전 간에 중복 제거된 불변 콘텐츠 주소화 청크 바이트를 저장합니다. 버전 매니페스트는 청크 순서를 유지합니다. 리비전, 그 청크 및 현재 인덱스 업데이트 커밋은 하나의 SQLite 트랜잭션에 포함됩니다. 실패한 import/갈등은 롤백되며 소스 파일을 다시 작성하지 않습니다. 소스 인gestion 및 CLI 소스 감사 요청은 파일을 여는 전에 1 MiB 파일 스트림 버퍼를 요청합니다. 검사된 Apple libc++ 구현에서 기본값은 호출자의 `read()` 크기와 무관하게 4 KiB 만입니다. 이는 이미지 기반 저장소에서 반복된 작은 버퍼 리필을 피하며, OS 이 고정 시간 내에 개별 읽기를 완료할 것이라고 약속하지 않습니다. 경계/테일 센테널 테스트는 버퍼링이 바이트를 누락하거나 중복시키지 않는지 확인합니다.
 
-An explicit work session records its author, device, description, start and end.
-Closed sessions cannot mutate files. Attribution records are domain metadata,
-not proof of identity. Existing files must not be silently attributed to their
-importer as their historical creator; the integration must distinguish unknown
-provenance and the actor performing the import.
+작은 파일의 인gestion을 위해, `importFiles` 는 한 번의 트랜잭션당 최대 256 개의 파일과 16 MiB 의 총 페이로드를 허용합니다. 별도의 16 MiB 작성자/출처 JSON 예산은 녹음 행위자의 프로필을 파일당 한 번씩 세우고, 제공된 저작권 문서마다 하나씩 더 세는 것입니다. 이 집계 메타데이터 예산은 페이로드 읽기 또는 객체 쓰기 전에 확인됩니다. 동일한 가져오기/검증 경로를 재사용하며, 모든 파일에 대해 독립적인 객체/인덱스 키를 할당하고 모든 기록을 함께 게시합니다. 누락된 소스, 충돌하는 경로, 잘못된 메타데이터, 제한 위반 또는 취소는 전체 배치 를 되돌립니다. 이것은 영구 동기화를 amortizes(분산 처리하여) 하면서 WAL 영구성이나 부분 객체를 노출하지 않습니다. 배치 페이로드는 한계가 설정된 표준 C++ 워커 풀에 의해 읽힙니다 (기본적으로 하드웨어 스레드 수, 최대 64 워커 및 파일보다 결코 더 많은 워커가 아닙니다). 모든 소스 크기는 읽기 전에 검사됩니다: 결합된 캡처된 페이로드는 16 MiB 범위 내에 있습니다. 호출자가 제공한 스트림 버퍼는 1 MiB 및 소스 크기로 로 제한되므로, 최대 16 MiB 플러스 빈 워커 입력당 1 바이트를 추가합니다; SQLite, 메타데이터 및 결과 할당은 별도의 오버헤드를 가집니다. 워커는 SQLite 에 접근하지 않습니다. 소유 스레드는 입력 순서로 준비된 바이트를 한 트랜잭션 내부에 해시/저장합니다. 소스 식별자는 읽기 후 및 각 객체 발행 전 다시 확인됩니다. 읽기 실패, 감지된 소스 변경 또는 취소는 배치 를 거부하며, 버퍼 가 해제되기 전에 모든 시작된 작업자가 연결됩니다. 큰 개별 파일은 한계가 설정된 스트리밍 경로를 그대로 유지하며 RAM 에 완전히 읽히지 않습니다. 이것은 소스 파일 I/O 지연과 겹치며, 실제 저장소 처리량은 측정 이 필요하고 작업자 수 로 보장 되지 않습니다.
 
-`ObjectAuthor::profile` preserves the exact credential-free JSON from the legacy
-FileAuthor model (`iiFileProvider.FileAuthor/1`). `ObjectRecord::authorship`
-independently preserves the original author/contributor roster and links from
-`Authorship::dump` (`iiFileProvider.Authorship/3`). Empty metadata means unknown;
-it never means the importer was the historical creator. An omitted authorship
-write option preserves the previous document; explicit empty metadata clears it.
-The packager accepts an optional source-metadata callback; the CLI does not guess
-missing original authors from operating-system file ownership.
-For existing objects the callback is evaluated before the unchanged-source skip.
-An omitted document preserves recorded provenance; an explicitly empty document
-clears it. A different supplied document creates a new revision on the same
-object/index key even when the source bytes are unchanged. Old provenance stays
-in history and the validation key changes; unchanged bytes produce no chunk diff.
-Identical documents remain idempotent. Readers may be invoked again during retry
-or batch lookahead and should only read/resolve metadata, not mutate source data.
-Actor profiles and original-authorship rosters are not interchangeable formats;
-an import or revision receiving a FileAuthor document in the roster slot fails
-without allocating a new object or advancing its version.
+패커 도  `ObjectSource`  스냅샷 을  한계가 설정된  작업자 (하드웨어 동시성,  64 로 제한됨) 로 포착하고 파괴합니다. 메타데이터 콜백 과 후보 선택 은 소유 스레드 에 유지됩니다. 각 요청 은 획득 전후 로 재고화된 신원 과 대조 됩니다. 예상 신원 과부하 는 복사 또는 복제 전에 획득된 설명자를 확인하며,  대체 경로  복사는 획득된 크기 를 초과하는 작성 전에 성장을 거부합니다. 획득 실패 는 전체 선택된 배치 를 거부하고 모든 작업자를 기다리며 소유된 스냅샷 을 정리합니다; 항목별 문제는 각 거부된 구성원을 식별합니다. 이전 메타데이터 예산 경계 는 준비된 접두어를 여전히 발행합니다. 전용 진행 상황 은 스냅샷 정리 전에 방출되며, 정리는 다음 배치 전에 연결됩니다. 관련 없는 임시 파일 또는 원래 소스를 제거하지 않습니다. 정리 작업자 시작 실패 는 소유된 스냅샷 을 포기하는 대신 호출자 로 되돌아갑니다. 대체 경로 - 복사 scratch 버퍼는 힙에 할당되며, 1 MiB 및 소스 크기 (빈 소스의 경우 1 바이트) 로 제한되므로 작은 네이티브 스레드 스택이 오버플로우할 수 없습니다. 스냅샷 회귀 은 직렬/병렬 동등성, 소스 편집 격리, 오래된/누락된/리디렉션된 입력, 취소, 크기/개수 제한 및 소유된 정리 범위를 다룹니다. 사유 `IIFILEPROVIDER_TEST_COPY_SNAPSHOTS` 컴파일 정의는 독립 테스트에 있는 기존 복사 대체 경로 를 강제하며, 일반적인 Apple 빌드는 여전히 클론을 선호합니다.
 
-Metadata validation uses SQLite JSON functions: object root, schema version,
-known top-level fields, required basic shapes, duplicate-field rejection and
-recursive credential-key rejection. Actor profile identity must match its
-session identity. The existing FileAuthor/Authorship models remain responsible
-for their complete domain semantics before serialization. The Qt-free storage
-layer does not duplicate every legacy profile/timestamp/link semantic validator.
-SQLite must supply JSON functions for nonempty metadata; unavailable functions
-fail closed. Full documents are bounded to 2 MiB and included in validation keys.
+`history` 는 객체별 단일 수정 저널입니다. 각 항목은 액터/세션/작업과 해시 체인을 기록합니다. `diff` 는 바이트 오프셋과 전/후 해시 및 크기를 가진 변경된 바이너리 덱을 보고합니다. 해시는 유지된 바이트를 참조하므로 `extract` 는 삭제되지 않은 모든 버전을 재구성하고 검증할 수 있습니다. 이는 최소 텍스트 줄 차이가 아닌 가역 덱 차이입니다. 삭제는 이전 버전을 유지하고 라이브 논리적 경로를 해제하는 무덤석을 추가합니다.
 
-The validation key binds the container, object/index keys, version, path, content
-digest/size, attribution, immutable session data, timestamp, operation and parent
-key. It detects inconsistency/corruption, but is **not a cryptographic signature,
-authentication credential or authorization mechanism**. `validate` checks the
-metadata chain and optionally the current version's payload/chunk digests.
+명시 작업 세션은 작성자, 장치, 설명, 시작 및 종료 시간을 기록합니다. 종료된 세션은 파일을 수정할 수 없습니다. 귀속 기록은 도메인 메타데이터이며 신원 증명입니다. 기존 파일은 역사적 작성자로서 아무런 알림 없이 귀속되어서는 안 되며, 통합은 알 수 없는 출처와 파일을 가져온 액터를 구별해야 합니다.
 
-Opening schema 1 or 2 with the correct container identity upgrades the database
-to schema 3. Initialization or all required migration steps share one transaction;
-schema 3 backfills current heads and installs the publication trigger together.
-A first upgrade can take
-time proportional to the existing object population and must complete before
-traversal begins. Older binaries reject the new database schema. Existing
-revisions retain their original schema-1 or schema-2
-validation key and cannot acquire unbound metadata. New revisions use
-`society-object-v2:` and bind actor profile, original authorship and source stamp.
-Mixed-version history remains verifiable and extractable. A mismatched container
-identity is rejected before migration.
+`ObjectAuthor::profile` 는 레거시 FileAuthor 모델 ( `iiFileProvider.FileAuthor/1` ) 에서 정확한 인증서 없는 JSON 를 보존합니다. `ObjectRecord::authorship` 는 `Authorship::dump` ( `iiFileProvider.Authorship/3` ) 에서 독립적으로 원래 작성자/기여자 명단과 링크를 보존합니다. 빈 메타데이터는 알 수 없는 것을 의미하며, 역사적 작성자가 가져온 사람이라는 것을 의미하지는 않습니다. 제거된 저작권 작성 옵션은 이전 문서를 보존하며, 명시적 빈 메타데이터는 이를 지웁니다. 패키저는 선택적 소스 메타데이터 콜백을 받지만, CLI 은 운영체제 파일 소유자에서 누락된 원래 저자를 추측하지 않습니다. 기존 객체의 경우 콜백은 변경되지 않은 소스 스킵 전에 평가됩니다. 생략된 문서는 기록된 기원을 보존하며, 명시적으로 빈 문서는 이를 지웁니다. 다른 제공된 문서는 소스 바이트가 변경되지 않았더라도 동일한 객체/인덱스 키에 새 버전을 생성합니다. 기존 기원은 히스토리에 유지되고 검증 키가 변경되며, 변경되지 않은 바이트는 차분(diff)을 생성하지 않습니다. 동일한 문서들은 멱등성(idempotent)을 유지합니다. 리더는 재시도 또는 배치 미리보기 동안 다시 호출될 수 있으며, 소스 데이터를 변형하는 대신 메타데이터만 읽거나 해결해야 합니다. 액터 프로필과 원래 저자 명단은 상호 교환 가능한 형식이 아니며, 명단 슬롯에 FileAuthor 문서가 수신되면 새 객체를 할당하거나 버전을 진행하지 않고 실패합니다.
 
-## Safety and current boundaries
+메타데이터 검증은 SQLite JSON 함수를 사용합니다: 객체 루트, 스키마 버전, 알려진 최상위 필드, 필수 기본 형식, 중복 필드 거부 및 재귀적 인증 키 거부. 액터 프로필 신원은 세션 신원과 일치해야 합니다. 직렬화 이전에는 기존 FileAuthor /저자 모델이 자신의 전체 도메인 의미론에 대해 책임을 집니다. Qt 없는 저장 계층은 모든 레거시 프로필/타임스탬프/링크 의미론 검증기를 복제하지 않습니다. SQLite 는 비어 있지 않은 메타데이터에 JSON 함수를 공급해야 하며, 사용 불가능한 함수는 안전하게 거부한다 입니다. 전체 문서는 한계가 설정된 에서 2 MiB 로 제한되어 검증 키에 포함됩니다.
 
-Sources remain ordinary files. Path traversal and symlinks are rejected. Direct
-`importFile`/`reviseFile` still require a stable source from the caller. Use
-`ObjectSource` or `ObjectPackager` for external filesystem sources:
+검증 키는 컨테이너, 객체/인덱스 키, 버전, 경로, 콘텐츠 해시/크기, 귀속, 불변 세션 데이터, 타임스탬프, 작업 및 부모 키를 바인딩합니다. 그것은 일관성/부패를 감지하지만 **암호학적 서명, 인증 자격 증명 또는 권한 메커니즘이 아닙니다**. `validate` 은 메타데이터 체인을 확인하며 현재 버전의 페이로드/채크 해시를 선택적으로 확인합니다.
 
-- Source handles reject redirected ancestors and non-regular final entries.
-- POSIX inventory reads metadata through a no-follow parent handle and `fstatat`;
-  it does not open every payload merely to collect identity. Payload acquisition
-  is deferred to snapshotting, preventing unnecessary provider hydration.
-- macOS uses descriptor-based APFS cloning where available; fallback copies
-  stream from the acquired handle with cancellation and identity checks.
-- Source stamps bind canonical path, volume/file identity, size and nanosecond
-  change/modification times (plus creation time where available), not just mtime.
-- Handle and current-path identities are compared before/after capture. The
-  snapshot is then independent of subsequent original-file changes.
-- The portable copy fallback protects against ordinary concurrent modification,
-  not privileged writers deliberately restoring all checked metadata. Windows
-  uses a read handle denying write/delete sharing; that path still needs runtime
-  platform validation.
+올바른 컨테이너 정체성으로 스키마 1 나 2 를 열면 데이터베이스를 스키마 3로 업그레이드합니다. 초기화 또는 모든 필요한 마이그레이션 단계는 하나의 트랜잭션을 공유하며, 스키마 3 는 현재 헤드를 백필하고 발행 트리거를 함께 설치합니다. 첫 번째 업그레이드는 기존 객체 집합에 비례할 수 있으며, 탐색이 시작되기 전에 완료되어야 합니다. 기존 바이너리는 새로운 데이터베이스 스키마를 거부합니다. 기존 리비전은 원래 스키마-1 또는 스키마-2 검증 키를 유지하며 바인딩되지 않은 메타데이터를 획득할 수 없습니다. 새 리비전은 `society-object-v2:` 를 사용하며 배우자 프로필, 원래 저작권 및 소스 스탬프를 바인딩합니다. 혼합 버전의 히스토리는 검증 가능하고 추출 가능합니다. 일치하지 않는 컨테이너 정체성은 마이그레이션 전에 거부됩니다.
 
-SHA-256 uses the operating system's CommonCrypto implementation on Apple and a
-portable C++ implementation elsewhere, with identical standard digest output.
-All new database/files use owner-only permissions. Extraction validates first
-and publishes via an exclusive hard link; existing destinations are never
-overwritten. A filesystem without hard-link support rejects extraction safely.
+<a id="safety-and-current-boundaries"></a>
 
-The initial package retains a copy of source content (deduplication only saves
-identical chunks). A real-drive migration requires a capacity inventory and a
-recoverable plan; this API must not be deployed as an unbounded startup copy.
-No real Society drive is migrated by the SDK tests.
+## 안전 및 현재 경계
 
-## Resumable tree packaging and CLI
+소스는 일반 파일로 유지됩니다. 경로 순회 및 심볼릭 링크가 거부됩니다. Direct `importFile`/`reviseFile`에는 여전히 호출자의 안정적인 소스가 필요합니다. 외부 파일 시스템 소스에는 `ObjectSource` 또는 `ObjectPackager`를 사용합니다.
 
-### Reader/writer access boundary
+- 소스 핸들은 리디렉션된 상위 항목과 비정규 최종 항목을 거부합니다.
+- POSIX 인벤토리는 팔로우할 수 없는 상위 핸들과 `fstatat`를 통해 메타데이터를 읽습니다; 모든 페이로드를 열어 신원을 수집하기 위해서만 하는 것이 아닙니다. 페이로드 획득은 스냅샷팅으로 연기되어 불필요한 공급자 수분 공급을 방지합니다.
+- macOS는 가능한 경우 디스크립터 기반 APFS 클로닝을 사용합니다; 대체 경로는 획득된 핸들에서 스트림을 취소 및 신원 확인과 함께 복사합니다.
+- 소스 스탬프는 정통 경로, 볼륨/파일 식별자, 크기 및 나노초 변경/수정 시간 (사용 가능한 경우 생성 시간 포함) 을 바인딩하며, mtime 만 바인딩하지 않습니다.
+- 핸들 및 현재 경로 아이덴티티는 캡처 전후에 비교됩니다. 그 스냅샷은 이후 원본 파일 변경 사항과 무관하게 됩니다.
+- 휴대용 복사본 대체 경로는 일반적인 동시 수정으로부터 보호되며, 특권이 부여된 작가가 의도적으로 모든 확인된 메타데이터를 복원하지 않습니다. Windows는 쓰기/삭제 공유를 거부하는 읽기 핸들을 사용합니다; 해당 경로는 여전히 런타임 플랫폼 검증이 필요합니다.
 
-Consumers that only query objects should explicitly open
-`ObjectStore(directory, container, ObjectStore::Access::ReadOnly)`. The connection
-uses SQLite `READONLY` and `query_only`, checks the container identity and requires
-schema 3. It neither creates a package nor runs migrations, sets writer WAL
-checkpoint policy or changes persistent journal mode. Older schemas must first
-be opened by a writer for their existing transactional migration. The existing
-boolean constructors retain their previous create/open-for-writing behavior;
-`Access::ReadWrite` and `Access::Create` are explicit alternatives.
+SHA-256 는 Apple 에서 운영체제의 CommonCrypto 구현을 사용하고, 다른 곳에서는 포터블한 C++ 구현을 사용하여 동일한 표준 디지스트 출력을 제공합니다. 모든 새로운 데이터베이스/파일은 소유자 전용 권한을 사용합니다. 추출은 먼저 유효성을 검사한 후 독점적인 하드 링크를 통해 게시하며, 기존 대상은 절대 덮어쓰지 않습니다. 하드 링크 지원이 없는 파일 시스템은 추출을 안전하게 거부합니다.
 
-The same lookup, session, index, history, diff and validation APIs work for a
-reader. Database mutation methods reject writes. Each completed query can see
-later committed state; this is not a single frozen snapshot across many index
-pages. SQLite may use WAL shared-memory sidecars, so read-only **database access**
-is not a claim that the filesystem has no auxiliary I/O. Explicit `extract`
-still writes its caller-selected output, and source audit still owns temporary
-snapshots under package staging. The CLI `--index` and `--audit` now use this
-reader access mode. Normal packaging and `--end-session` remain writer actions.
+초기 패키지는 소스 콘텐츠의 사본을 유지합니다 (중복 제거는 동일한 조각만 저장합니다). 실제 드라이브 마이그레이션은 용량 인벤토리와 복구 가능한 계획이 필요하며, 이 API 는 무제한 시작 복사본으로 배포되어서는 안 됩니다. 실제 Society 드라이브는 SDK 테스트에 의해 마이그레이션되지 않습니다.
 
-`iiFileProvider.object_read_only` verifies opening and reading while another
-connection owns a WAL write transaction, every mutation entry point rejecting
-writes, committed-state visibility, missing-package non-creation, container
-identity, and rejection of schema 2 without migration. An explicit writer then
-upgrades that fixture and preserves its object identity.
+<a id="resumable-tree-packaging-and-cli"></a>
 
-### Command-line policy
+## 재개 가능한 트리 패키징 및 CLI
 
-CLI policy is isolated in `tools/ObjectPackageOptions.{h,cpp}`. Its pure
-`parseObjectPackageOptions` function returns typed options before inventory,
-database access, signal observation or session creation. The executable owns
-process lifetime and JSONL output; `ObjectPackager` owns source reconciliation
-and ingestion; `ObjectStore` owns persistence and integrity. Library users do
-not depend on command-line parsing, and changing CLI validation does not require
-changing storage code or its public API.
+<a id="readerwriter-access-boundary"></a>
 
-The parser rejects conflicting modes, duplicate namespaces, malformed mappings,
-unmapped/nested exclusions and missing required arguments. Checkpoint counts must
-be complete nonnegative decimal integers within `int` range: signs, whitespace,
-suffixes and overflow are rejected instead of accepting a numeric prefix.
-Exclusions can precede their mapping, and UTF-8 paths/spaces are preserved.
-Filesystem existence, canonical confinement and source identity remain runtime
-SDK checks, not parser responsibilities. `iiFileProvider.object_package_options`
-tests these rules without opening source files or a database; the existing
-`iiFileProvider.object_package_cli` regression verifies real-process wiring,
-crash/resume, audit, revision identity and index behavior.
+### 리더/라이터 액세스 경계
 
-`ObjectPackager::inventory` traverses explicitly mapped namespaces. It rejects
-overlapping/redirected roots, duplicate namespaces, symlinks and special files.
-Exclusions are explicit top-level names per mapping, never a blanket exclusion
-of hidden files. Any incomplete inventory prevents publication. Logical paths
-retain their section/directory tree even when section roots live on other volumes.
-Metadata acquisition uses a bounded worker pool (hardware concurrency by default,
-at most 64; explicit concurrency is accepted for constrained callers). Parallel
-and single-worker inventories have the same sorted paths, stamps and totals.
-This does not run multiple SQLite writers against the same package; file commits
-remain serial and recoverable.
+객체만 쿼리하는 소비자는 명시적으로 `ObjectStore(directory, container, ObjectStore::Access::ReadOnly)` 를 여야 합니다. 연결은 SQLite `READONLY` 와 `query_only` 를 사용하여 컨테이너 신원을 확인하고 스키마 3를 요구합니다. 그것은 패키지를 생성하지도 마이그레이션을 실행하지도 않으며, 작성자 WAL 체크포인트 정책을 설정하거나 영구 저널 모드를 변경하지 않습니다. 기존 스키마는 기존 트랜잭션 마이그레이션을 위해 먼저 작성자에 의해 열려야 합니다. 기존 불리안 생성자는 이전의 생성/쓰기용 열기 동작을 유지하며, `Access::ReadWrite` 와 `Access::Create` 는 명시적인 대안입니다.
 
-Each file is snapshotted and ingested. By default the library commits each file
-independently; callers can opt into batches of up to 256 new small files. A stored source
-stamp makes unchanged committed files skippable after restart; changed sources
-receive a new revision of the same path's object. Cancellation rolls back the
-in-flight transaction and leaves previous commits intact. Publication uses expected
-version checks; conflicting concurrent changes are reported, not overwritten.
-Capacity is checked per file with a conservative `3 * bytes + 256 MiB` reserve
-for snapshot, payload and journal. No original file is removed or rewritten.
+동일한 조회, 세션, 인덱스, 이력, 차이 및 유효성 검사 API 는 리더에게도 작동합니다. 데이터베이스 변형 메서드는 쓰기 작업을 거부합니다. 각 완료된 쿼리는 나중에 커밋된 상태를 볼 수 있으며, 이는 여러 인덱스 페이지에 걸친 단일 동결 스냅샷이 아닙니다. SQLite 는 WAL 공유 메모리 사이드카를 사용할 수 있으므로, 읽기 전용 **데이터베이스 액세스** 가 파일 시스템이 보조 I/O 를 가지고 있지 않다는 주장이 아님을 의미합니다. 명시적 `extract` 은 여전히 호출자 선택 출력으로 작성하며, 소스 감사 (audit) 는 여전히 패키지 스테이지 (staging) 하에 임시 스냅샷을 소유합니다. The CLI, `--index`, `--audit` 는 이제 이 리더 액세스 모드를 사용합니다. 일반 패키징과 `--end-session` 는 여전히 작성자 행동입니다.
 
-The CLI `iiFileProviderObjectPackage` accepts repeated
-`--map Namespace=/absolute/source` and optional `--exclude Namespace/name`:
+`iiFileProvider.object_read_only` 는 다른 연결이 WAL 작성 트랜잭션을 소유하는 동안 열기와 읽기를 확인하며, 모든 변형 진입점은 작성 거부, 커밋 상태 가시성, 누락된 패키지 비생성, 컨테이너 식별 및 마이그레이션 없이 스키마 2 거부합니다. 명시적 작성자는 그런 픽스처 을 업그레이드하고 객체 식별을 유지합니다.
+
+<a id="command-line-policy"></a>
+
+### 명령줄 정책
+
+CLI 정책은 `tools/ObjectPackageOptions.{h,cpp}` 에서 격리되어 있으며, 순수 `parseObjectPackageOptions` 함수는 재고, 데이터베이스 액세스, 신호 관찰 또는 세션 생성 전에 타입화된 옵션을 반환합니다. 실행 가능 (executable) 은 프로세스 수명주기와 JSONL 출력을 소유하며, `ObjectPackager` 은 소스 조정과 섭취를 소유하고, `ObjectStore` 는 지속성과 무결성을 소유합니다. 라이브러리 사용자는 명령줄 파싱에 의존하지 않으며, CLI 유효성 검사를 변경해도 저장 코드나 그 공개 API 를 변경할 필요가 없습니다.
+
+파서는 충돌하는 모드, 중복 네임스페이스, 잘못된 매핑, 매핑되지 않거나 중첩된 제외, 누락된 필수 인수를 거부합니다. 체크포인트 카운트는 `int` 범위 내의 완전한 음이 아닌 십진수 정수여야 하며, 부호, 공백, 접미사 및 오버플로 대신 숫자 접두사를 허용합니다. 제외는 매핑 앞에 올 수 있으며, UTF-8 경로/공간은 보존됩니다. 파일 시스템 존재, 정통한 격리 및 소스 식별은 런타임 SDK 확인으로 남아 있으며, 파서 책임이 아닙니다. `iiFileProvider.object_package_options` 테스트는 소스 파일이나 데이터베이스를 열지 않고 이 규칙들을 테스트하며, 기존 `iiFileProvider.object_package_cli` 회귀 는 실제 프로세스 와이어링, 충돌/재개, 감사, 버전 신원 및 인덱스 동작을 확인합니다.
+
+`ObjectPackager::inventory` 는 명시적으로 매핑된 네임스페이스를 순회합니다. 중첩/리디렉션된 루트, 중복 네임스페이스, 심볼릭 링크 및 특수 파일은 거부됩니다. 제외 사항은 매핑에 따른 명시적인 최상위 이름이며, 숨김 파일의 광범위한 제외는 절대 아닙니다. 불완전한 재고는 게시를 방지합니다. 논리적 경로는 섹션 루트가 다른 볼륨에 있더라도 섹션/디렉토리 트리를 유지합니다. 메타데이터 획득은 한계가 설정된 워커 풀을 사용하며 (기본적으로 하드웨어 동시성, 최대 64 ; 제한된 호출자에게 명시적인 동시성이 허용됩니다). 병렬 및 단일 워커 재고는 동일한 정렬된 경로, 스탬프 및 합계를 가집니다. 이것은 동일한 패키지에 대해 여러 SQLite 작성기를 실행하지 않으며, 파일 커밋은 직렬적이고 복구 가능합니다.
+
+각 파일은 스냅샷으로 찍히고 섭취됩니다. 기본적으로 라이브러리는 각 파일을 독립적으로 커밋하며, 호출자는 최대 256 개의 새로운 작은 파일로 배치에 참여할 수 있습니다. 저장된 소스 스탬프는 재시작 후 변경되지 않은 커밋된 파일을 건너뛸 수 있게 하며, 변경된 소스는 해당 경로의 객체와 같은 새 버전을 받습니다. 취소는 진행 중인 트랜잭션을 롤백하고 이전 커밋을 그대로 둡니다. 발행은 예상 버전 확인을 사용하며, 충돌하는 동시 변경은 덮어쓰기 대신 보고됩니다. 용량은 파일당 확인되며, 스냅샷, 페이로드 및 저널을 위한 보수적인 `3 * bytes + 256 MiB` 예비량을 사용합니다. 원본 파일은 제거되거나 다시 쓰이지 않습니다.
+
+CLI `iiFileProviderObjectPackage`는 반복되는 `--map Namespace=/absolute/source` 및 선택적 `--exclude Namespace/name`를 허용합니다.
 
 ```
 iiFileProviderObjectPackage --package /absolute/package --container ID \
   --map Files=/absolute/tree --map Photos=/absolute/photos
 ```
 
-Normal mode creates/opens the package and writes JSONL per-item results and a
-summary. It schedules every inventoried file by ascending byte size, breaking
-ties by logical path, so a lexically early large model cannot delay all small
-objects. This changes processing order, not scope, identity, validation, or the
-requirement to finish every mapped file. Inventory and audit retain path order;
-library callers retain their supplied inventory order. The CLI groups consecutive
-new files into batches of at most 256 files /
-16 MiB payload and 16 MiB author/provenance JSON. Metadata-heavy input is split
-at the budget boundary without dropping the next file. Larger files and revisions
-keep independent transactions. Snapshots are
-retained until the batch is committed and checked against the aggregate capacity
-reserve. Per-item success events are emitted only after the entire batch commits;
-a cancellation arriving from a success callback cannot undo that committed batch.
-Batch errors report every rolled-back member. `--inventory` is read-only with
-respect to the package. Per-item committed/skipped events include the independent
-index key, SHA-256, validation key, recorded session and recording actor, as well
-as an `authorshipKnown` flag. The recording actor is not a claim about the original
-creator. These committed-record fields allow progress inspection without opening
-another database connection during ingestion; full provenance documents and payloads
-are not copied into the progress log. `--index` scans
-the compact current index three times, reporting counts and elapsed milliseconds
-without reading source files. `--wal-autocheckpoint-pages N` tunes the writer
-connection's automatic WAL checkpoint threshold without changing
-`synchronous=FULL`. Use the default for ordinary bounded writes; a larger value
-can reduce repeated checkpoint stalls during large resumable packages at the cost
-of a larger WAL and should be used only after checking free space. Process-kill/
-resume tests exercise a raised threshold to ensure committed WAL content survives
-recovery. `--end-session KEY` closes a known interrupted
-session after its writer has been verified terminal; it does not remove the
-session or its object history. `--audit` independently hashes fresh source
-snapshots, checks source identity before/after, validates each current packaged
-payload and its metadata ancestry, compares the compact index projection with
-each current head, and compares live object/index counts to inventory.
-This checks current bytes, not every historical version's payload. It is not an
-atomic snapshot of the entire concurrently changing drive; rescan on changes.
+일반 모드는 패키지를 생성/열고 항목별 JSONL 결과와 요약을 기록한다. 목록에 있는 모든 파일을 바이트 크기 오름차순으로 예약하고 같은 크기는 논리 경로로 정렬하므로, 사전순으로 앞서는 대형 모델이 모든 작은 객체를 지연시키지 않는다. 이 동작은 처리 순서만 변경하며 범위·식별자·검증·매핑된 모든 파일을 완료해야 하는 요구사항은 변경하지 않는다. 목록과 감사는 경로 순서를 유지하고 라이브러리 호출자는 제공한 목록 순서를 유지한다. CLI는 연속된 새 파일을 최대 256개 파일 / 16 MiB 페이로드와 16 MiB 저작자/출처 JSON의 배치로 묶는다. 메타데이터가 많은 입력은 다음 파일을 누락하지 않고 예산 경계에서 분할한다. 더 큰 파일과 리비전은 독립적인 트랜잭션을 유지한다. 스냅샷은 배치를 커밋하고 합산 용량 예비량과 대조할 때까지 유지한다. 항목별 성공 이벤트는 전체 배치가 커밋된 후에만 출력하며, 성공 콜백에서 도착한 취소는 해당 커밋을 되돌릴 수 없다. 배치 오류는 롤백된 모든 구성원을 보고한다. `--inventory`는 패키지에 대해 읽기 전용이다. 항목별 커밋/건너뛰기 이벤트는 독립 인덱스 키·SHA-256·검증 키·기록된 세션·기록 행위자와 `authorshipKnown` 플래그를 포함한다. 기록 행위자는 원래 제작자를 뜻하지 않는다. 이 커밋 기록 필드는 수집 중 별도 데이터베이스 연결을 열지 않고 진행 상황을 검사할 수 있게 하며, 전체 출처 문서와 페이로드는 진행 로그에 복사하지 않는다. `--index`는 원본 파일을 읽지 않고 간결한 현재 인덱스를 3회 스캔하여 개수와 경과 밀리초를 보고한다. `--wal-autocheckpoint-pages N` 는 WAL 체크포인트 임계값을 조정하여 `synchronous=FULL` 를 변경하지 않습니다. 일반적인 한계가 설정된 작성에는 기본값을 사용하며, 더 큰 값은 큰 재개 가능한 패키지에서 반복된 체크포인트 정체를 줄일 수 있지만 WAL 가 더 커지는 비용이 발생하므로 사용 가능한 공간을 확인한 후에만 사용해야 합니다. 프로세스 종료/재개 테스트는 커밋된 WAL 콘텐츠가 복구 후에도 생존하는지 확인하기 위해 임계값을 높여 테스트합니다. `--end-session KEY` 는 작성자가 종단 상태임을 확인한 후 알려진 중단된 세션을 닫으며, 세션이나 그 객체 역사를 제거하지 않습니다. `--audit` 는 신선한 소스 스냅샷을 독립적으로 해싱하고, 소스 식별자를 비교/검증하며, 각 현재 패키지 페이로드와 그 메타데이터 조상을 검증하고, 컴팩트 인덱스 투영과 각 현재 헤드를 비교하며, 라이브 객체/인덱스 카운트를 재고와 비교합니다. 현재 바이트를 확인하며, 모든 과거 버전의 페이로드를 확인하지 않습니다. 동시에 변경되는 전체 드라이브의 원자적 스냅샷이 아니며, 변경 사항에 따라 다시 스캔합니다.
 
-Graceful SIGINT/SIGTERM cancels between chunks and closes the work session. A
-forced kill can leave an unfinished session and uniquely owned staging snapshot;
-the next run recovers SQLite transactions and skips committed files, but does
-not blindly delete another process's staging directories. Orphan staging cleanup
-requires a separate ownership/liveness check. Missing source files are not
-automatically tombstoned and external renames are not inferred from content.
+우아한 SIGINT / SIGTERM 는 섹션 간에 취소하고 작업 세션을 닫습니다. 강제 종료는 완료되지 않은 세션과 고유하게 소유된 임시 스냅샷을 남길 수 있으며, 다음 실행은 SQLite 트랜잭션을 복구하고 커밋된 파일을 건너뛰지만, 다른 프로세스의 임시 디렉토리를 무작정 삭제하지 않습니다. 고아 임시 정리에는 별도의 소유자/활성성 확인이 필요합니다. 누락된 소스 파일은 자동으로 무덤으로 표시되지 않으며, 외부 이름 변경은 콘텐츠에서 추론되지 않습니다.
 
-Pending end-to-end requirements: discovery of original author documents in real
-sources, container lifecycle and filesystem-projection integration, external
-rename/deletion reconciliation, installed consumer/platform tests, measured real
-whole-index traversal, and packaging/auditing all real drive files. SDK tests
-alone do not prove that requested end state.
+대기 중인 종단 간 요구 사항: 실제 소스 내 원래 저자 문서 발견, 컨테이너 수명 주기 및 파일 시스템 투영 통합, 외부 이름 변경/삭제 조정, 설치된 소비자/플랫폼 테스트, 측정된 실제 전체 인덱스 탐색, 모든 실제 드라이브 파일 패키징/감사. SDK 테스트만으로는 요청된 최종 상태를 증명하지 못합니다.
 
-## Regression test
+<a id="regression-test"></a>
 
-`iiFileProvider.object_store` covers SHA-256 known vectors, streamed import,
-path-independent identity, versions, reversible binary diff, journal/session
-persistence, CAS conflicts, rollback, tombstones, path boundaries and source
-preservation. It also checks independent identity for equal content, empty files,
-keyset pages, competing connections, self-contained extraction after source
-removal, and deliberate payload/ancestor-metadata corruption. New mutations
-reject an inconsistent metadata chain rather than appending onto it.
-Tests create their fixtures inside the repository `build/` working
-directory. Run `ctest --test-dir build -R object_store --output-on-failure`.
+## 회귀 테스트
 
-`object_authorship` verifies exact FileAuthor/Authorship round trips while keeping
-import actor and original creator distinct, rejecting malformed/credential JSON,
-and rolling back cancellation. A captured schema-1 SQL fixture proves upgrade
-compatibility without recomputing its expected validation key from new code.
-`object_packager` covers snapshot isolation, source changes, cancellation/resume,
-idempotent retry, explicit exclusions, incomplete-inventory rejection and metadata
-budget rollover with exact provenance and source-stamp preservation.
-`object_packager_metadata` covers provenance-only reconciliation, stable object
-identity and payload digests, immutable attribution history, idempotent repeat,
-omission versus explicit clearing, and invalid-document rejection on resume.
-`object_batch` checks independent identities and all-or-none rollback for missing
-sources, conflicts, invalid metadata, cancellation, size/count bounds and closed
-sessions, including distinct source stamps for each member and aggregate metadata
-budget rejection before any object is published.
-It also extracts mixed prepared payloads across a binary chunk boundary and
-checks the canonical empty-file digest. `object_batch_read` compares serial and
-parallel reads byte-for-byte, including zero-length and chunk-tail cases, and
-rejects missing/symlink inputs, cancellation and aggregate size/count overflow.
-`object_package_cli` kills an actual packaging process after its first batch
-commit, resumes it and checks all 256 identities/versions remain committed, full audit, stale-source
-detection, compact index count and SQLite integrity. These fixtures stay beneath
-the build working directory and never access real Society contents.
+`iiFileProvider.object_store` 는 SHA-256 알려진 벡터, 스트리밍 가져오기, 경로 독립적 식별자, 버전, 가역 이진 차이, 저널/세션 지속성, CAS 충돌, 롤백, 무덤, 경로 경계 및 소스 보존을 포함합니다. 또한 동일한 콘텐츠를 위한 독립적 식별자를 확인하며, 빈 파일, 키셋 페이지, 경쟁 연결, 소스 제거 후 자체 추출, 그리고 의도된 페이로드/조상 메타데이터 부패를 확인합니다. 새로운 변형은 메타데이터 체인에 덧붙이는 대신 일관성 없는 메타데이터 체인을 거부합니다. 테스트는 저장소 `build/` 작업 디렉토리에 픽스처 를 생성합니다. `ctest --test-dir build -R object_store --output-on-failure` 를 실행합니다.
+
+`object_authorship` 는 정확한 FileAuthor /저작권 원복을 확인하면서 가져오기 행위자와 원래 창작자를 구별하고, 잘못된 형식/자격증 JSON 를 거부하며, 취소를 되돌립니다. 포착된 스키마-1   SQL   픽스처 는 새로운 코드에서 예상되는 유효성 검사 키를 다시 계산하지 않고 업그레이드 호환성을 증명합니다. `object_packager` 는 스냅샷 격리, 소스 변경, 취소/재개, 멱등성 재시도, 명시적 제외, 불완전한 재고 거부 및 정확한 출처와 소스 스탬프 보존을 포함하는 메타데이터 예산 초과를 다룹니다. `object_packager_metadata` 는 출처만 있는 조정, 안정적인 객체 식별자 및 페이로드 해시, 불변 귀속 이력, 멱등성 반복, 생략 대 명시적 지우기, 그리고 재개 시 잘못된 문서 거부로 범위를 다룹니다. `object_batch` 는 누락된 소스, 충돌, 잘못된 메타데이터, 취소, 크기/개수 한계 및 닫힌 세션에 대한 독립된 식별자와 전무rollback 을 확인하며, 각 구성원에 대한 별도의 소스 스탬프와 모든 객체가 게시되기 전에 aggregate 메타데이터 예산 거부를 포함합니다. 그리고 그것은 바이너리 청크 경계를 가로지르는 혼합 준비된 페이로드를 추출하고 정통한 빈 파일 해시를 확인합니다. `object_batch_read` 는 0-길이 및 청크 꼬리 경우를 포함한 직렬 및 병렬 읽기를 바이트 단위로 비교하며, 누락된/심볼릭 링크 입력, 취소 및 aggregate 크기/개수 오버플로우를 거부합니다. `object_package_cli` 는 첫 번째 배치 커밋 후 실제 패키징 프로세스를 종료하고, 이를 재개하며 모든 256 식별자/버전이 커밋되었음을 확인하고, 완전한 감사, 오래된 소스 감지, 압축된 인덱스 개수 및 SQLite 무결성을 확인합니다. 이 픽스처 는 빌드 작업 디렉토리 아래에 남아 있으며 실제 Society 콘텐츠를 절대 접근하지 않습니다.

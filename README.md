@@ -8,13 +8,15 @@ versioned binary diffs, mutation journals and work sessions. See
 [the object-store contract and integration boundaries](docs/OBJECT_STORE.md).
 The existing Qt APIs below are preserved; this new target does not depend on them.
 
-C++20과 Qt 6.8.3 Core를 사용하는 버전 0.5.0의 동적 라이브러리이다. `File`이 형식에 독립적인 파일 CRUD를, `Database`가 SQLite 저장 트랜잭션을 담당한다. iisacc.com 계정 모델을 확장한 `FileAuthor`가 파일 작성자의 신원·상세 프로필·기여 정보·작성 디바이스를 기록하고, `Authorship`이 최초 편집자 한 명과 이후 편집 참여자 명단을 영구 메타데이터로 보관한다. `FileLink`는 이름·URL 쌍의 선택적인 파일 링크를 표현하며, `AuthenticationToken`은 별도의 런타임 인증 토큰을 보유한다. 메타데이터 값 객체는 파일 I/O를 직접 수행하지 않는다. 로그인 HTTP 요청과 JWT 서명 검증은 이 SDK의 역할에 포함되지 않는다.
+A dynamic library, version 0.5.0, using C++20 and Qt 6.8.3 Core. `File` handles format-independent file CRUD, and `Database` handles SQLite storage transactions. `FileAuthor` extends the iisacc.com account model and records a file author's identity, detailed profile, contributions, and authoring device. `Authorship` keeps one initial editor and the subsequent editing-participant list as persistent metadata. `FileLink` represents an optional file link as a name/URL pair, while `AuthenticationToken` holds a separate runtime authentication token. Metadata value objects do not perform file I/O directly. Login HTTP requests and JWT signature verification are outside this SDK's role.
 
-공개 저장소는 [iisacc-Justmoong/iiFileProvider](https://github.com/iisacc-Justmoong/iiFileProvider)이다. 2026-09-07에 헤더·네임스페이스·CMake 패키지·공유 라이브러리·설치 경로의 SDK 식별자를 `iiFileProvider`로 통일했다. 소비자는 아래의 새 헤더와 CMake 타깃을 사용하고 기존 빌드 캐시를 다시 구성해야 한다.
+The public repository is [iisacc-Justmoong/iiFileProvider](https://github.com/iisacc-Justmoong/iiFileProvider). On 2026-09-07, SDK identifiers in headers, namespaces, the CMake package, shared library, and installation paths were unified as `iiFileProvider`. Consumers must use the new headers and CMake target below and reconfigure their existing build caches.
 
-## 공개 API
+<a id="공개-api"></a>
 
-`<src/iiFileProvider.h>` 하나로 작성자 모델·파일 링크·인증 토큰을 사용할 수 있다. 공개 헤더는 `src/FileAuthor.h`, `src/AuthenticationToken.h`, `src/Authorship.h`, `src/FileLink.h`이다. `Authorship`은 최초 편집자·참여자 구분, 작성자별 최초·최근 기여 시각, 파일 링크와 변경 번호를 보관하며 변경 직후 JSON 덤프를 갱신한다. 클래스는 QObject가 아닌 C++ 값 객체이며 Qt Network나 계정 매니저의 수명에 의존하지 않는다.
+## Public API
+
+Using `<src/iiFileProvider.h>`, the author model, file links, and authentication tokens can be used. The public headers are `src/FileAuthor.h`, `src/AuthenticationToken.h`, `src/Authorship.h`, and `src/FileLink.h`. `Authorship` stores the distinction between the first editor and participants, the first and recent contribution times per author, file links, and change numbers, and updates the JSON dump immediately after changes. Classes are C++ value objects, not QObject, and do not depend on the lifespan of Qt Network or account managers.
 
 ```cpp
 #include <iiFileProvider.h>
@@ -26,59 +28,63 @@ if (author) {
     auto metadata = author->metadata();
     metadata.details.organization = "Example Studio";
     metadata.attribution.roles = {"creator", "editor"};
-    // 파일 작성 시각은 호스트가 알고 있는 실제 시각을 명시한다.
+    // Specify the actual file creation time known to the host.
     metadata.attribution.createdAt = actualFileCreationTime;
     if (author->setMetadata(metadata, &error)) {
-        const QJsonObject fileMetadata = author->toJson(); // 토큰·로그인 세션 제외
+        const QJsonObject fileMetadata = author->toJson(); // Excludes tokens and login sessions
     }
 }
 ```
 
-`fromIisaccAccount()`는 account 객체를, `fromIisaccAppSession()`은 `{account, session, ...}` 앱 응답을 받는다. 후자는 앱 디바이스와 세션 시각도 검사한다. `fromJson()`은 버전이 명시된 파일 작성자 메타데이터를 읽는다. 모두 오류 시 `std::nullopt`와 값이 포함되지 않은 오류를 반환한다.
+`fromIisaccAccount()` receives the account object, and `fromIisaccAppSession()` receives the `{account, session, ...}` app response. The latter also checks the app device and session time. `fromJson()` reads file author metadata with a specified version. All return errors with `std::nullopt` and value not included.
 
-`AuthenticationToken::create()`에 토큰 종류·계정 subject·서비스 origin·발급/만료 시각·토큰 원문을 명시한다. 만들어진 토큰은 `setAuthenticationToken()`으로 작성자 객체에 연결한다. `secret()`만 원문을 돌려주며, `toJson()`과 디버그 출력에 원문을 넣지 않는다. `isWithinValidityWindow(at)`는 시간 범위 검사이며 인증 성공이나 접근 권한을 증명하지 않는다. iisacc.com 앱의 토큰은 JSON 응답이 아닌 HttpOnly 쿠키에 있으므로 호스트의 인증 계층이 별도로 관리해야 한다.
+Specify token type, account subject, service origin, issue/expiration time, and token raw text at `AuthenticationToken::create()`. The created token is linked to the author object at `setAuthenticationToken()`. Only `secret()` returns the raw text, and `toJson()` and debug output do not include the raw text. `isWithinValidityWindow(at)` is a time range check and does not prove authentication success or access rights. iisacc .com app's token is in HttpOnly cookie, not JSON response, so the host's authentication layer must manage it separately.
 
-필드 목록, 관측한 서버 파일, 검증 조건과 예제는 [파일 작성자 계약](docs/FILE_AUTHOR_CONTRACT.md)에 있다.
+Field list, observed server files, validation conditions, and examples are in [file author contract](docs/FILE_AUTHOR_CONTRACT.md).
 
-### 최초 편집자와 편집 참여자
+<a id="최초-편집자와-편집-참여자"></a>
 
-첫 번째로 성공한 `setAuthor()`가 최초 편집자 한 명을 고정한다. 이후 처음 등장한 계정은 참여자 목록 끝에 한 번만 추가된다. 계정 구분은 서비스 origin과 `sub` 조합이며, 표시 이름이나 이메일 변경은 새 참여자를 만들지 않는다. 최초 편집자는 참여자 목록에 중복 포함하지 않는다.
+### First editor and editing participants
+
+The first successful `setAuthor()` fixes one first editor. Subsequently, the first appearing account is added once at the end of the participant list. Account distinction is a combination of service origin and `sub`, and changing display name or email does not create a new participant. The first editor is not duplicated in the participant list.
 
 ```cpp
 iiFileProvider::Authorship history;
-history.setAuthor(firstAuthor, firstEditTime); // 호스트가 제공한 FileAuthor와 실제 기록 시각
+history.setAuthor(firstAuthor, firstEditTime); // Host-provided FileAuthor and actual recording time
 history.setAuthor(collaborator, nextEditTime);
 
 const std::optional<iiFileProvider::FileAuthor> original = history.firstEditor();
 const QList<iiFileProvider::FileAuthor> participants = history.participants();
-history.clearActiveAuthor(); // 현재 편집 문맥만 해제하며 명단은 유지한다.
+history.clearActiveAuthor(); // Clears only the current editing context and retains the participant list.
 
-const QByteArray metadata = history.dump(); // 호스트가 파일 메타데이터에 저장한다.
+const QByteArray metadata = history.dump(); // The host stores this in the file metadata.
 auto restored = iiFileProvider::Authorship::fromDump(metadata);
 ```
 
-조회 결과는 인증 토큰이 없는 복사본이다. 명단의 삭제·초기화·역할 교체 API는 없으며, 같은 계정의 프로필 갱신도 최초 편집자와 참여자 순서·최초 기여 시각을 유지한다. 최대 256명(최초 편집자 포함)·전체 메타데이터 2 MiB 한도에 도달하면 기존 기록을 지우지 않고 새 등록을 원자적으로 거절한다. 스키마 1·2의 기존 한도까지 채운 명단도 전체 기록을 보존하여 변환한다. 작성자 미지정 변경만 있는 파일은 최초 편집자가 없고 참여자는 빈 목록이다.
+Query results are copies without authentication tokens. APIs for deleting, resetting, or swapping roles in the list do not exist, and profile updates for the same account also preserve the first editor and participant order and initial contribution time. Up to 256 entries (including the first editor) and full metadata 2 MiB limit are reached, existing records are not deleted, and new registrations are atomically rejected. Lists filling up to the existing limit of schema 1 · 2 are also transformed while preserving full records. Files with only unspecified author changes have no first editor and an empty participant list.
 
-저장 스키마 3은 `firstEditor`에 최초 편집자 키 또는 null, `participants`에 이후 참여자 키 목록, `authors`에 각 키의 프로필·기여 시각, `links`에 선택적인 이름·URL 목록을 저장한다. 스키마 1·2 입력은 기존 명단과 revision을 보존하고 빈 링크 목록을 추가하여 읽는다. 소비자는 iiFileProvider 0.4.0 이상의 헤더·라이브러리로 다시 빌드해야 한다. 링크 저장 멤버 추가에 따라 공유 라이브러리 ABI 식별자도 `0.4`로 바뀌었다. 보존 계약은 같은 파일의 `Authorship`을 이어 사용하는 API와 저장·복원 경로에 적용되며, 외부 파일 변조나 별도의 빈 값으로 교체하는 행위를 막는 기능은 아니다.
+Save schema 3 stores the first editor key or null at `firstEditor`, subsequent participant key list at `participants`, each key's profile and contribution time at `authors`, and optional name and URL list at `links`. Schema 1 · 2 input reads preserving the existing list and revision and adding an empty link list. Consumers must rebuild with iiFileProvider 0.4.0 or higher headers and libraries. Shared library ABI identifier also changed to `0.4` as per link save member addition. Preservation contract applies to APIs using the same file's `Authorship` and save/restore paths, and is not a function to prevent external file tampering or replacement with separate empty values.
 
-### 이름과 URL 파일 메타데이터
+<a id="이름과-url-파일-메타데이터"></a>
 
-`FileLink::fromString("[이름|URL]")` 또는 `FileLink::create(name, QString/QUrl)`로 링크를 만들고 작성자 등록 시 추가 인자로 넘긴다. HTTP(S) 전용 제한은 없으며 Society 주소, 로컬 파일, SMB·IPFS·URN·앱 스킴과 상대 URL을 받을 수 있다. 문자열로 받은 URL은 대소문자와 인코딩 원문을 보존하며 `urlText()`로 조회한다.
+### Name and URL file metadata
+
+Create links with `FileLink::fromString("[Name|URL]")` or `FileLink::create(name, QString/QUrl)` and pass as an additional argument during author registration. HTTP (S) specific restrictions do not exist, and Society address, local files, SMB · IPFS · URN ·app scheme, and relative URLs can be received. URLs received as strings preserve case and encoding original text and are queried with `urlText()`.
 
 ```cpp
-auto address = iiFileProvider::FileLink::fromString("[Society 원본|society:document-1]");
+auto address = iiFileProvider::FileLink::fromString("[Society original|society:document-1]");
 if (address) {
     history.setAuthor(author, {*address}, actualEditTime);
 }
-// 작성자 등록과 별도로 파일 링크 목록 전체를 갱신할 수도 있다.
-history.setLinksFromStrings({"[원본|file:///files/original.png]", "[참고|../reference.svg]"});
+// The entire file-link list can also be updated separately from author registration.
+history.setLinksFromStrings({"[Original|file:///files/original.png]", "[Reference|../reference.svg]"});
 const auto fileLinks = history.links();
 const auto metadata = history.dump();
 ```
 
-추가 인자를 생략한 기존 `setAuthor(author, at)`는 링크를 유지한다. 명시적인 빈 링크 목록은 URL 메타데이터만 비우며 영구 편집자 명단을 유지한다. 링크는 등록된 URL을 자동으로 실행하거나 조회하지 않는다. 지원 형식·인코딩·원자적 갱신·버전 계약은 [파일 링크 문서](docs/FILE_LINKS.md)에 있다.
+Existing `setAuthor(author, at)` with omitted additional arguments maintains the link. Explicit empty link lists empty only URL metadata while maintaining the permanent editor list. Links do not automatically execute or query registered URLs. Supported formats, encodings, atomic updates, and version contracts are in the [file link document](docs/FILE_LINKS.md).
 
-기존 소비자와의 호환을 위해 아래의 bootstrap API도 유지한다.
+The following bootstrap API is also maintained for compatibility with existing consumers.
 
 ```cpp
 #include <iiFileProvider.h>
@@ -86,23 +92,25 @@ const auto metadata = history.dump();
 const QString message = iiFileProvider::helloWorld();
 ```
 
-`[[nodiscard]] QString iiFileProvider::helloWorld()`는 호출할 때마다 `Hello world!`를 반환한다. 공개 헤더와 구현은 소스 루트에 함께 배치한다. 외부 의존성은 기존 Qt 6.8.3 Core이며, 신규 외부 라이브러리를 도입하지 않았다. Qt의 사용 및 배포 조건은 설치된 Qt 라이선스에 따른다.
+`[[nodiscard]] QString iiFileProvider::helloWorld()` returns `Hello world!` on every call. Public headers and implementation are placed together in the source root. External dependencies are the existing Qt 6.8.3 Core, and no new external libraries were introduced. Qt usage and distribution conditions follow the installed Qt license.
 
-## 빌드, 테스트, 설치
+<a id="빌드-테스트-설치"></a>
 
-CMake 3.24 이상, C++20 컴파일러 및 Qt 6.8.3이 필요하다. macOS에서는 `/Volumes/Storage/Qt/6.8.3/macos`가 존재하면 자동으로 탐색 경로에 추가한다.
+## Build, test, install
+
+CMake 3.24 or higher, C++20 compiler, and Qt 6.8.3 are required. macOS automatically adds `/Volumes/Storage/Qt/6.8.3/macos` to the search path if it exists.
 
 ```sh
 ./install.sh
 ```
 
-단독 프로젝트로 구성할 때만 기본 설치 경로를 설정하므로 `add_subdirectory()`로 포함하는 상위 프로젝트의 설치 경로는 유지한다.
+When configured as a standalone project, the default installation path is set, so the installation path of the parent project included via `add_subdirectory()` is maintained.
 
-스크립트는 `build/`에서 Release 빌드 및 CTest를 실행하고, 기본 경로 `~/.local/SDK/iiFileProvider`에 설치한 뒤 `build/consumer/build/`에서 설치된 CMake 패키지만 사용하는 별도 실행 파일을 빌드하고 테스트한다. bootstrap 테스트는 반환 문자열, C++20 컴파일 설정, Qt 6.8.3 헤더 버전과 런타임 버전을 검사한다. 작성자 계약 테스트는 계정 매핑·상세 메타데이터 왕복·Unicode·잘못된 형식·세션 만료·토큰 바인딩·원문 제외·원자적 갱신을 소스 및 설치 소비자 양쪽에서 검사한다. `Authorship` 테스트는 최초 편집자 고정·참여자 순서·중복 방지·프로필 갱신·조회 복사본·파일 저장 후 복원·스키마 1·2 호환·잘못된 역할 참조·실패와 한도 초과 시 기록 보존도 양쪽에서 검사한다. `FileLink` 테스트는 다양한 스킴과 상대 주소·문자열/JSON/파일 왕복·인코딩·추가 인자의 원자적 기록·링크 생략과 비우기·명단 보존을 검증한다. 테스트 빌드에만 Qt Test를 사용한다.
+The script executes Release build and CTest from `build/`, installs to the default path `~/.local/SDK/iiFileProvider`, and builds and tests a separate executable that uses only the installed CMake package from `build/consumer/build/`. The bootstrap test checks return strings, C++20 compile settings, Qt 6.8.3 header version, and runtime version. The author contract test checks account mapping, detailed metadata round-trip, Unicode, invalid formats, session expiration, token binding, original exclusion, and atomic updates from both source and installed consumers. The `Authorship` test checks initial editor fixation, participant order, duplicate prevention, profile update, query copy, file restore after save, schema 1, 2 compatibility, invalid role reference, and record preservation on failure and limit exceedance from both sides. `FileLink` tests verify atomic recording of various schemes, relative addresses, string/JSON/file round-trips, encoding, additional arguments, link omission, clearing, and list preservation. Only Qt Test is used for test builds.
 
-설치 소비자 구성에는 현재 설치 경로의 패키지 디렉터리를 명시하므로 `INSTALL_PREFIX`를 변경해 재실행해도 이전 패키지 캐시를 사용하지 않는다.
+The installer consumer configuration explicitly specifies the package directory of the current installation path, so changing `INSTALL_PREFIX` and re-running does not reuse the previous package cache.
 
-설정은 명령행 인자 대신 환경 변수로 전달한다. `INSTALL_PREFIX`는 절대 경로여야 하며, `CMAKE_PREFIX_PATH`는 세미콜론 또는 콜론으로 구분한 추가 검색 경로를 받는다. 병렬 빌드 개수는 `CMAKE_BUILD_PARALLEL_LEVEL`로 지정하며 기본값은 2이다.
+Settings are passed as environment variables instead of command-line arguments. `INSTALL_PREFIX` must be an absolute path, and `CMAKE_PREFIX_PATH` receives additional search paths separated by semicolons or colons. The number of parallel builds is specified as `CMAKE_BUILD_PARALLEL_LEVEL`, with a default of 2.
 
 ```sh
 QT_PREFIX_PATH="/Volumes/Storage/Qt/6.8.3/macos" \
@@ -110,7 +118,7 @@ INSTALL_PREFIX="$HOME/.local/SDK/iiFileProvider" \
 ./install.sh
 ```
 
-수동 실행 시에도 빌드 디렉터리는 `build/`를 사용한다.
+Even in manual execution, the build directory uses `build/`.
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON \
@@ -124,44 +132,46 @@ cmake --build build/consumer/build --config Release
 ctest --test-dir build/consumer/build -C Release --output-on-failure
 ```
 
-## 설치 결과와 소비
+<a id="설치-결과와-소비"></a>
 
-기본 설치 경로에 `include/`의 umbrella·작성자·파일 링크·인증 토큰·export 헤더, `lib/`의 공유 라이브러리, `lib/cmake/iiFileProvider/`의 CMake 패키지, `share/iiFileProvider/`의 README와 계약 문서가 생성된다. 비공개 `src/JsonContract.h`는 설치하지 않는다. Windows 공유 라이브러리 실행 파일은 `bin/`에 설치된다. 소비자에게 C++20 및 `Qt6::Core` 링크 요구 사항을 전달한다. Qt를 묶어서 복사하지 않으며 설치된 Qt 런타임이 필요하다. 공유 라이브러리의 설치 RPATH는 링크에 사용한 외부 라이브러리 경로를 포함한다.
+## Installation results and consumption
+
+The default installation path generates `include/` umbrella, author, file link, authentication token, and export header, `lib/` shared libraries, `lib/cmake/iiFileProvider/` CMake package, and `share/iiFileProvider/` README and contract documents. Private `src/JsonContract.h` is not installed. The Windows shared library executable is installed to `bin/`. Consumers are informed of C++20 and `Qt6::Core` link requirements. Qt is not bundled and copied, and the installed Qt runtime is required. The shared library installation RPATH includes the external library paths used in the link.
 
 ```cmake
 find_package(iiFileProvider 0.5.0 CONFIG REQUIRED)
 target_link_libraries(my_app PRIVATE iiFileProvider::iiFileProvider)
 ```
 
-`CMAKE_PREFIX_PATH`에 SDK 설치 경로와 Qt 경로를 포함한다. 빌드·테스트·설치까지만 제공하며 커밋, 원격 업로드 또는 배포 단계는 없다.
+Includes `CMAKE_PREFIX_PATH` installation path and SDK path at Qt. Provides only build, test, and installation, with no commit, remote upload, or deployment stages.
 
 ## License
 
 SPDX-License-Identifier: AGPL-3.0-only
 
-iiFileProvider의 자체 작성 코드와 문서는 GNU Affero General Public License v3.0 전용으로
-배포한다. 전체 조건은 [LICENSE](LICENSE)를 따른다.
+Self-written code and documents of iiFileProvider are distributed exclusively under the GNU Affero General Public License v3.0. The full terms follow [LICENSE](LICENSE).
 
-Qt를 포함한 외부 라이브러리와 별도 고지가 있는 서드파티 코드는 각자의 라이선스를
-유지한다. 이 프로젝트의 라이선스 선언은 해당 서드파티 라이선스를 대체하지 않는다.
+External libraries including Qt and third-party code with separate notices maintain their own licenses. This project's license declaration does not replace the corresponding third-party license.
 
-## 계정 프로필 동기화
+<a id="계정-프로필-동기화"></a>
 
-`fromIisaccAccount()`와 `fromIisaccAppSession()`는 iisacc.com의 `account.authorDetails`를 파일 작성자의
-`metadata().details`에 반영한다. `toIisaccProfileUpdate()`는 웹 서비스가 허용하는 표시 이름과 작성자
-프로필만 명시적으로 내보낸다. 인증 토큰과 파일별 귀속 정보는 계정 업데이트에 포함되지 않는다.
+## Account profile synchronization
+
+`fromIisaccAccount()` and `fromIisaccAppSession()` reflect iisacc.com's `account.authorDetails` to the file author's `metadata().details`. `toIisaccProfileUpdate()` explicitly exports only the display name allowed by the web service and the author profile. Authentication tokens and per-file ownership information are not included in the account update.
 
 ```cpp
 const auto update = author->toIisaccProfileUpdate();
 // The host authenticates and sends update as variables.input of the updateAccountAuthor GraphQL mutation.
 ```
 
-계정 측 모델과 API는 서비스의 `docs/ACCOUNT_AUTHORS.md`, 파일 모델은
-[FILE_AUTHOR_CONTRACT.md](docs/FILE_AUTHOR_CONTRACT.md)에 정의되어 있다.
+The account-side model and API are the service's `docs/ACCOUNT_AUTHORS.md`, and the file model is
+Defined in [FILE_AUTHOR_CONTRACT.md](docs/FILE_AUTHOR_CONTRACT.md).
 
-## 파일 CRUD
+<a id="파일-crud"></a>
 
-0.5부터 파일 생성·읽기·갱신·삭제와 SQLite 저장 트랜잭션은 이 SDK가 소유한다. 다른 iisacc SDK를 참조하지 않으며 바이트, 스트림, 스키마를 입력으로 받는다. [전체 계약](docs/FILE_CRUD.md)을 따른다. 기존 0.4 값 타입의 ABI는 유지한다.
+## File CRUD
+
+Since 0.5, this SDK owns file creation, reading, updating, deletion, and SQLite storage transactions. It does not reference other iisacc SDKs and takes bytes, streams, and schemas as input. It follows the [complete contract](docs/FILE_CRUD.md). The ABI of the existing 0.4 value types is retained.
 
 ## Source layout
 
