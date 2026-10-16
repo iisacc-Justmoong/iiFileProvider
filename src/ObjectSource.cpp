@@ -1,5 +1,6 @@
 #include "ObjectSource.h"
 #include "ObjectHash.h"
+#include "TemporaryLease.h"
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -99,6 +100,7 @@ class ObjectSource::Impl {
 public:
     fs::path directory,file;
     ObjectSourceIdentity original;
+    std::unique_ptr<TemporaryLease> lease;
     ~Impl(){std::error_code ignored;if(!file.empty())fs::remove(file,ignored);if(!directory.empty())fs::remove(directory,ignored);}
 };
 ObjectSourceIdentity ObjectSource::inspect(const fs::path &input){
@@ -133,6 +135,7 @@ ObjectSource::ObjectSource(const fs::path &input,const fs::path &staging,std::st
 #endif
     m_impl->original=handleIdentity(source.value,sourcePath);
     if(expectedIdentity && m_impl->original!=*expectedIdentity)error("source changed before snapshot; rescan required");
+    m_impl->lease=std::make_unique<TemporaryLease>(parent,TemporaryLease::Mode::Shared);
     static std::atomic_uint64_t counter=0;
     for(unsigned attempt=0;attempt<64;++attempt){
         const auto name="snapshot-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count())+"-"+std::to_string(++counter);

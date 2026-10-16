@@ -1,4 +1,5 @@
 #include "ObjectPackager.h"
+#include "staging_clean.h"
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -49,7 +50,7 @@ int main(){try{
               "invalid newly supplied metadata must not be skipped or published");
         check(store.history(original.key).size()==3 && store.history(original.key)[1].authorship==enriched.authorship,
               "previous provenance remains in immutable history");
-        check(fs::is_empty(root/"package/staging"),"metadata reconciliation snapshots cleaned");
+        check(test_support::staging_clean(root/"package/staging"),"metadata reconciliation snapshots cleaned");
         store.endSession(session.key);
     }
     fs::remove_all(root);

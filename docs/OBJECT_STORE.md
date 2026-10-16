@@ -2,6 +2,10 @@
 
 # Society 개체 패키지 — 데이터베이스 스키마 3
 
+0.6의 분류 카탈로그와 조합할 때 `.iisacc.json` 동반 파일은 원본과 함께 패키징한다. `.iisacc-file-provider`, `.iisacc-temporary.lock`, `.iifile-stage-*`, `.society-extract-*`는 provider의 예약된 제어 이름이므로 모든 깊이의 인벤토리에서 제외한다. 다른 숨김 파일은 기존과 같이 포함하며, 그 외 제외는 호출자가 명시한다. 카탈로그·객체 저장소 조합 회귀 테스트는 실제 원본과 메타데이터가 저장되고 제어 파일이 노출되지 않는지 검증한다.
+
+패키징과 감사는 개별 스냅샷 사이에도 staging 디렉터리의 공유 lease를 작업 전체 동안 유지한다. 새 카탈로그 조합 fixture는 첫 네이티브 스냅샷 뒤 OS provenance 기록이 안정화된 상태에서 검사할 인벤토리를 얻는다. 기존 패키징 fixture 및 런타임 소스 스탬프의 ctime 감지와 변경 거부 조건은 완화하지 않는다.
+
 `iiFileProvider::Objects` 는 C++23/SQLite 타겟이며 Qt 또는 상향 SDK 의존성이 없습니다. 기존 Qt 작성자/파일 어댑터에 추가됩니다. 소비자는 `find_package(iiFileProviderObjects CONFIG REQUIRED)` 와 `<ObjectStore.h>` 를 사용합니다. 설치된 CMake 패키지는 SQLite 와 플랫폼 스레드 타겟을 모두 해결하며, 소비자는 스레드 링커 플래그를 수동으로 추가할 필요가 없습니다. `-DIIFILEPROVIDER_BUILD_QT_API=OFF` 를 Qt 없는 빌드를 위해 구성합니다.
 
 <a id="identity-and-layout"></a>

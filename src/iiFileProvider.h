@@ -6,8 +6,10 @@
 #include "FileLink.h"
 #include "Authorship.h"
 #include "File.h"
+#include "iiFileProviderDevice.h"
 #include "Database.h"
 #include "StagedFile.h"
+#include "FileCatalog.h"
 
 namespace iiFileProvider {
 

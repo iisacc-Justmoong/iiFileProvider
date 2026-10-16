@@ -1,5 +1,7 @@
 #include "native_symlink.h"
 #include "ObjectPackager.h"
+#include "TemporaryLease.h"
+#include "staging_clean.h"
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -18,11 +20,14 @@ int main(){try{
     const auto identity=ObjectSource::inspect(root/"tree/sub/a.txt");
     {
         ObjectSource snapshot(root/"tree/sub/a.txt",root/"stage");
+        TemporaryLease cleaner(root/"stage", TemporaryLease::Mode::TryExclusive);
+        check(!cleaner.locked(),"active object snapshot excludes cleanup for its complete lifetime");
         check(snapshot.identity()==identity && read(snapshot.path())=="before","source snapshot content");
         write(root/"tree/sub/a.txt","after");
         check(read(snapshot.path())=="before" && ObjectSource::inspect(root/"tree/sub/a.txt")!=identity,"snapshot independent of later source edit");
     }
-    check(fs::is_empty(root/"stage"),"owned staging cleaned");
+    check(test_support::staging_clean(root/"stage"),"owned staging cleaned");
+    { TemporaryLease cleaner(root/"stage", TemporaryLease::Mode::TryExclusive); check(cleaner.locked(),"snapshot removal releases cleanup admission"); }
     test_support::create_symlink(root/"tree",root/"redirect", true);
     rejects([&]{ObjectSource::inspect(root/"redirect/sub/a.txt");});
     test_support::create_symlink(root/"tree/sub/a.txt",root/"redirect-file");
@@ -55,7 +60,7 @@ int main(){try{
     const auto after=store.lookup(before.key).value();check(after.version==2 && after.sourceStamp==ObjectSource::inspect(root/"tree/sub/a.txt").stamp,"current source binding");
     store.extract(before.key,1,root/"old");store.extract(before.key,2,root/"new");
     check(read(root/"old")=="after" && read(root/"new")=="latest contents","package history reconstructs file edits");
-    check(fs::is_empty(root/"objects/staging"),"no staging leak");
+    check(test_support::staging_clean(root/"objects/staging"),"no staging leak");
     {
         ObjectStore bulk(root/"bulk","bulk-container",true);ObjectPackager bulkPackager(bulk);
         const auto bulkSession=bulk.beginSession({"local:society","packager","Packager"},"test","small-file batching");
@@ -64,7 +69,7 @@ int main(){try{
             ++callbacks;check(bulk.count()==2,"batch callbacks run only after complete commit");
         },{},ObjectStore::maximumBatchFiles);
         check(bulkResult.imported==2 && bulkResult.issues.empty() && callbacks==2,"small-file batch packaging");
-        check(fs::is_empty(root/"bulk/staging"),"batch snapshots cleaned");
+        check(test_support::staging_clean(root/"bulk/staging"),"batch snapshots cleaned");
         rejects([&]{bulkPackager.package(inventory,bulkSession.key,{}, {}, {}, 0);});
         // Reuse the open store/session: this tests the batch boundary, not
         // another durable database initialization on the fixture volume.
@@ -84,7 +89,7 @@ int main(){try{
             ObjectStore::maximumBatchFiles);
         check(metadataResult.imported==17 && metadataResult.issues.empty() && metadataCallbacks==17,
               "metadata rollover preserves full packaging scope");
-        check(fs::is_empty(root/"bulk/staging"),"metadata rollover snapshots cleaned");
+        check(test_support::staging_clean(root/"bulk/staging"),"metadata rollover snapshots cleaned");
         fs::create_directory(root/"changing-tree");
         write(root/"changing-tree/0","original");write(root/"changing-tree/1","second");
         const auto changing=ObjectPackager::inventory({{"Changing",root/"changing-tree",{}}});
@@ -97,7 +102,7 @@ int main(){try{
             },ObjectStore::maximumBatchFiles);
         check(rejectedBatch.imported==0 && rejectedBatch.issues.size()==2 && bulk.count()==19,
               "snapshot acquisition failure rejects every selected batch member");
-        check(fs::is_empty(root/"bulk/staging"),"failed parallel snapshot batch cleaned");
+        check(test_support::staging_clean(root/"bulk/staging"),"failed parallel snapshot batch cleaned");
         const auto refreshed=ObjectPackager::inventory({{"Changing",root/"changing-tree",{}}});
         const auto retried=bulkPackager.package(refreshed,bulkSession.key,{}, {}, {},ObjectStore::maximumBatchFiles);
         check(retried.imported==2 && retried.issues.empty() && bulk.count()==21,"fresh inventory retries complete rejected batch");

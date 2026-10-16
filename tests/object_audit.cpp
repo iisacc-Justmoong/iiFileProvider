@@ -1,4 +1,5 @@
 #include "ObjectPackager.h"
+#include "staging_clean.h"
 #include <sqlite3.h>
 #include <chrono>
 #include <fstream>
@@ -30,11 +31,11 @@ int main(){try{
         std::size_t callbacks=0;
         auto report=packager.audit(inventory,{},[&](const auto &,const std::string &key){check(!key.empty(),"verified key");++callbacks;});
         check(report.verified==13 && report.issues.empty() && !report.cancelled && callbacks==13,"batch and large streaming audit");
-        check(fs::is_empty(root/"package/staging"),"audit snapshots cleaned");
+        check(test_support::staging_clean(root/"package/staging"),"audit snapshots cleaned");
         std::stop_source stop;
         report=packager.audit(inventory,stop.get_token(),[&](const auto &,const auto &){stop.request_stop();});
         check(report.cancelled && report.verified==1 && report.issues.empty(),"audit cancellation preserves verified prefix");
-        check(fs::is_empty(root/"package/staging"),"cancelled audit snapshots cleaned");
+        check(test_support::staging_clean(root/"package/staging"),"cancelled audit snapshots cleaned");
         const auto moving=store.lookupPath("Files/1").value();bool moved=false;
         report=packager.audit(inventory,{},[&](const auto &entry,const auto &){
             if(entry.logicalPath=="Files/0" && !moved){store.move(moving.key,"Files/renamed",1,session.key);moved=true;}
@@ -56,7 +57,7 @@ int main(){try{
         sql(database,"UPDATE objects SET head=head WHERE object_key='"+first.key+"'");
         sql(database,"UPDATE chunks SET data=zeroblob(length(data)) WHERE sha256='"+first.sha256+"'");
         report=packager.audit(inventory);check(report.verified==12 && report.issues.size()==1,"stored payload corruption detected");
-        check(fs::is_empty(root/"package/staging") && store.count()==13,"audit does not mutate objects or retain staging");
+        check(test_support::staging_clean(root/"package/staging") && store.count()==13,"audit does not mutate objects or retain staging");
         store.endSession(session.key);
     }
     fs::remove_all(root);std::cout<<"Bounded audit, large streaming, cancellation, head/source changes and index/payload corruption passed\n";return 0;

@@ -2,6 +2,7 @@
 #include "ObjectBatchRead.h"
 #include "ObjectHash.h"
 #include "ObjectSnapshotBatch.h"
+#include "TemporaryLease.h"
 #include <fstream>
 #include <stdexcept>
 
@@ -32,6 +33,7 @@ ObjectAuditReport ObjectPackager::audit(const ObjectInventory &inventory,std::st
     ObjectAuditReport report;report.issues=inventory.issues;
     if(!report.issues.empty())return report;
     const auto staging=stagingDirectory();
+    TemporaryLease stagingLease(staging, TemporaryLease::Mode::Shared);
     const auto stopped=[&]{if(cancellation.stop_requested()){report.cancelled=true;return true;}return false;};
     const auto prepare=[&](const ObjectPackagingEntry &entry){
         const auto record=m_store.lookupPath(entry.logicalPath);

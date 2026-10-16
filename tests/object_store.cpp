@@ -1,6 +1,7 @@
 #include "native_symlink.h"
 #include "ObjectStore.h"
 #include "ObjectHash.h"
+#include "TemporaryLease.h"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -58,6 +59,28 @@ int main() {try {
         store.extract(key,1,root/"restored-v1");store.extract(key,2,root/"restored-v2");
         require(read(root/"restored-v1")==original && read(root/"restored-v2")==changed,"reversible versions");
         rejected([&]{store.extract(key,1,source);});require(read(source)==changed,"never overwrite original");
+        {
+            const auto race=root/"extract-race";fs::create_directory(race);
+            auto cleaner=std::make_unique<TemporaryLease>(race,TemporaryLease::Mode::TryExclusive);
+            require(cleaner->locked(),"extraction fixture cleanup lease");
+            std::promise<void> entered;
+            auto extraction=std::async(std::launch::async,[&]{
+                entered.set_value();
+                try{store.extract(key,1,race/"result");return true;}catch(const std::exception &){return false;}
+            });
+            entered.get_future().wait();
+            require(extraction.wait_for(std::chrono::milliseconds(50))==std::future_status::timeout,
+                "extraction waits until the cleaner leaves the output directory");
+            write(race/"result","other writer");cleaner.reset();
+            require(extraction.wait_for(std::chrono::seconds(5))==std::future_status::ready && !extraction.get(),
+                "racing output creation rejects atomic extraction publication");
+            require(read(race/"result")=="other writer","failed extraction preserves racing output");
+            for(const auto &entry:fs::directory_iterator(race))
+                require(entry.path().filename()=="result" || entry.path().filename()==".iisacc-temporary.lock",
+                    "failed publication removes every extraction temporary");
+            TemporaryLease cleanup(race,TemporaryLease::Mode::TryExclusive);
+            require(cleanup.locked(),"failed extraction releases its temporary lease after removal");
+        }
         auto moved=store.move(key,"Published/renamed.bin",2,session.key);
         require(moved.key==key && moved.version==3 && store.diff(key,3).empty(),"move independent identity");
         require(!store.lookupPath("Files/文書.bin"),"old path removed");

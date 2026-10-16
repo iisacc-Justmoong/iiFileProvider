@@ -1,7 +1,12 @@
 @PACKAGE_INIT@
-
+set(iiFileProvider_ANDROID_SOURCE_DIRECTORY "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATADIR@/iiFileProvider/android/src")
+include("${CMAKE_CURRENT_LIST_DIR}/iiFileProviderAndroid.cmake")
 include(CMakeFindDependencyMacro)
-find_dependency(Qt6 6.8.3 EXACT COMPONENTS Core)
+find_dependency(iiFileProviderCatalog @PROJECT_VERSION@ CONFIG HINTS "${CMAKE_CURRENT_LIST_DIR}/../iiFileProviderCatalog")
+find_dependency(iiFileProviderTemporary CONFIG HINTS "${CMAKE_CURRENT_LIST_DIR}/../iiFileProviderTemporary")
+if(NOT TARGET Qt6::Core)
+    find_dependency(Qt6 6.8.3 EXACT COMPONENTS Core)
+endif()
 include("${CMAKE_CURRENT_LIST_DIR}/iiFileProviderTargets.cmake")
 if(APPLE)
     # Private consumers may build with their install RPATH, and ambient library

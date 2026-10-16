@@ -1,0 +1,52 @@
+{
+  "utf8proc": "2.11.3",
+  "nlohmann-json": "3.12.0",
+  "files": [
+    {
+      "file": "utf8proc/utf8proc.c",
+      "source": "https://raw.githubusercontent.com/JuliaStrings/utf8proc/v2.11.3/utf8proc.c",
+      "sha256": "edf80118fd34796bcabef4567cc684adebc7058f2afe8cfdc11b7a78e383ed84"
+    },
+    {
+      "file": "utf8proc/utf8proc.h",
+      "source": "https://raw.githubusercontent.com/JuliaStrings/utf8proc/v2.11.3/utf8proc.h",
+      "sha256": "a4e498b7392c383cf3b22e662da21e0b48f1264806235d87b5d8bd166232f658"
+    },
+    {
+      "file": "utf8proc/utf8proc_data.c",
+      "source": "https://raw.githubusercontent.com/JuliaStrings/utf8proc/v2.11.3/utf8proc_data.c",
+      "sha256": "950e549dbfc853c4304425f3af1875e72fa9fc9697c273c763400c2da4e380a7"
+    },
+    {
+      "file": "utf8proc/LICENSE.md",
+      "source": "https://raw.githubusercontent.com/JuliaStrings/utf8proc/v2.11.3/LICENSE.md",
+      "sha256": "3b510150d34f248a221bb88e1d811238d6c6c18b51231822c42974c39bb07256"
+    },
+    {
+      "file": "nlohmann/json.hpp",
+      "source": "https://raw.githubusercontent.com/nlohmann/json/v3.12.0/single_include/nlohmann/json.hpp",
+      "sha256": "aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63"
+    },
+    {
+      "file": "licenses/nlohmann-json/LICENSE.MIT",
+      "source": "https://raw.githubusercontent.com/nlohmann/json/v3.12.0/LICENSE.MIT",
+      "sha256": "46a65cffd1ea955132d95a8dd921640714a8d6b537d2e4e482d31145ae95b603"
+    },
+    {
+      "file": "stb/stb_image.h",
+      "source": "https://raw.githubusercontent.com/nothings/stb/2c980bb59875b0d32144a71867fbdebb2f77cd20/stb_image.h",
+      "sha256": "594c2fe35d49488b4382dbfaec8f98366defca819d916ac95becf3e75f4200b3"
+    },
+    {
+      "file": "stb/stb_image_write.h",
+      "source": "https://raw.githubusercontent.com/nothings/stb/2c980bb59875b0d32144a71867fbdebb2f77cd20/stb_image_write.h",
+      "sha256": "cbd5f0ad7a9cf4468affb36354a1d2338034f2c12473cf1a8e32053cb6914a05"
+    },
+    {
+      "file": "stb/LICENSE",
+      "source": "https://raw.githubusercontent.com/nothings/stb/2c980bb59875b0d32144a71867fbdebb2f77cd20/LICENSE",
+      "sha256": "bebfe904b14301657e4e5d655c811d51fd31b97c455b9cc2d8600d6bac6cff63"
+    }
+  ],
+  "stb": "2c980bb59875b0d32144a71867fbdebb2f77cd20"
+}

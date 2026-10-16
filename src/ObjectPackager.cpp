@@ -1,5 +1,6 @@
 #include "ObjectPackager.h"
 #include "ObjectSnapshotBatch.h"
+#include "TemporaryLease.h"
 #include <algorithm>
 #include <atomic>
 #include <limits>
@@ -32,7 +33,13 @@ ObjectInventory ObjectPackager::inventory(const std::vector<ObjectTreeMapping> &
         while(it!=end){
             if(cancellation.stop_requested())throw std::runtime_error("object inventory cancelled");
             const auto path=it->path();const auto relative=path.lexically_relative(root);const auto first=utf8(*relative.begin());
-            if(std::find(mapping.excludedTopLevel.begin(),mapping.excludedTopLevel.end(),first)!=mapping.excludedTopLevel.end())it.disable_recursion_pending();
+            auto name=utf8(path.filename());
+            for(auto &c:name)if(c>='A' && c<='Z')c=char(c-'A'+'a');
+            const bool providerControl=name==".iisacc-temporary.lock" || name==".iisacc-file-provider"
+                || name.starts_with(".iifile-stage-") || name.starts_with(".society-extract-");
+            // Catalog databases, live stages and coordination locks are private
+            // provider state. Portable .iisacc.json companions remain payloads.
+            if(providerControl || std::find(mapping.excludedTopLevel.begin(),mapping.excludedTopLevel.end(),first)!=mapping.excludedTopLevel.end())it.disable_recursion_pending();
             else {
                 const auto logical=mapping.prefix+"/"+utf8(relative);
                 try{
@@ -89,6 +96,7 @@ ObjectPackagingReport ObjectPackager::package(const ObjectInventory &inventory,c
     // An incomplete inventory must never look like a complete drive migration.
     if(!result.issues.empty())return result;
     const auto staging=stagingDirectory();
+    TemporaryLease stagingLease(staging, TemporaryLease::Mode::Shared);
     const auto work=m_store.session(session);if(work.endedAtNs)throw std::runtime_error("package work session is closed");
     for(std::size_t cursor=0;cursor<inventory.entries.size();){
         if(cancellation.stop_requested()){result.cancelled=true;break;}

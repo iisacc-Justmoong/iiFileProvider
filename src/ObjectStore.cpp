@@ -1,6 +1,7 @@
 #include "ObjectStore.h"
 #include "ObjectHash.h"
 #include "ObjectBatchRead.h"
+#include "TemporaryLease.h"
 #include <sqlite3.h>
 #include <algorithm>
 #include <chrono>
@@ -520,6 +521,7 @@ void ObjectStore::extract(const std::string &key,std::uint64_t version,const fs:
     if(!m_impl->validate(key,version,true))fail("object integrity validation failed");
     const auto r=m_impl->get(key,version);if(!r || r->deleted)fail("cannot extract absent object content");
     const auto output=directPath(destination,false);if(fs::exists(output))fail("extraction destination exists");
+    TemporaryLease lease(output.parent_path(),TemporaryLease::Mode::Shared);
     const auto temporary=output.parent_path()/uniqueKey(m_impl->db,".society-extract-");
     FILE *raw=exclusiveFile(temporary);if(!raw)fail("cannot stage object extraction");
     struct Cleanup {fs::path path;FILE *file;~Cleanup(){if(file)std::fclose(file);std::error_code ec;fs::remove(path,ec);}} cleanup{temporary,raw};

@@ -5,7 +5,7 @@
 #include <cstring>
 #include <iostream>
 
-static_assert(__cplusplus >= 202002L, "C++20 or newer is required");
+static_assert(__cplusplus > 202002L, "C++23 or newer is required");
 static_assert(QT_VERSION == QT_VERSION_CHECK(6, 8, 3), "Qt 6.8.3 is required");
 
 int main()

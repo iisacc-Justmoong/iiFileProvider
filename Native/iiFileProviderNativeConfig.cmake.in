@@ -1,0 +1,18 @@
+@PACKAGE_INIT@
+set(iiFileProviderNative_PYTHON_DIRECTORY "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATADIR@/iiFileProvider/python")
+set(iiFileProviderNative_LICENSE_DIRECTORY "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATADIR@/licenses/iiFileProviderNative")
+include(CMakeFindDependencyMacro)
+find_dependency(SQLite3 3.27)
+find_dependency(Threads)
+include("${CMAKE_CURRENT_LIST_DIR}/iiFileProviderNativeTargets.cmake")
+if(APPLE)
+    get_filename_component(_native_library_directory "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+    list(FIND CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES "${_native_library_directory}" _native_implicit_index)
+    if(NOT _native_implicit_index EQUAL -1)
+        set_property(TARGET iiFileProvider::Native APPEND PROPERTY
+            INTERFACE_LINK_OPTIONS "LINKER:-rpath,${_native_library_directory}")
+    endif()
+    unset(_native_library_directory)
+    unset(_native_implicit_index)
+endif()
+check_required_components(iiFileProviderNative)

@@ -1,5 +1,7 @@
 # 파일 CRUD 소유권
 
+0.6부터 이 정책은 iisacc의 공통 파일 생성·제공 경계이다. 네이티브 메타데이터·키워드·별점·색상·컬렉션·저장 필터·검색은 Qt가 없는 `iiFileProvider::Catalog`가 제공한다. [분류 API](FILE_CATALOG.md)와 [공통 소유권](FILE_OWNERSHIP.md)에 파일별 동반 메타데이터 및 적용 범위를 명시한다. 기존 문서 코덱은 아래 파일 API를 계속 사용한다.
+
 `iiFileProvider` 0.5부터 iisacc 문서 파일의 실제 생성·읽기·갱신·삭제 주체는 `iiFileProvider::File`이다. 확장자와 바이트 형식을 해석하지 않는다. `Authorship`과 `FileLink` 바이트도 그대로 보존한다. 포맷 검증, 객체 편집, 직렬화는 해당 도메인 SDK의 책임이다.
 
 의존성은 `제품 → 문서 SDK → iiFileProvider → Qt Core / SQLite`이다. `iiFileProvider`는 다른 iisacc SDK의 헤더·CMake 패키지·모델·렌더러를 참조하지 않는다. 새 포맷을 추가해도 provider에 해당 SDK를 연결하지 않고, 도메인 코덱의 바이트 또는 `QIODevice`를 전달한다.
@@ -12,6 +14,7 @@
 - `File::update(path, expected, replacement)`는 현재 바이트를 비교한 뒤 교체한다. provider를 사용하는 프로세스끼리는 경로 잠금으로 직렬화한다. provider를 거치지 않는 외부 프로그램과의 동시 저장은 애플리케이션 차원의 조정이 필요하다.
 - `File::remove`는 일반 파일만 삭제한다. 없는 파일은 false이며 디렉터리나 심볼릭 링크를 재귀 삭제하지 않는다.
 - `File::copy`는 스트리밍 복사, `publish`는 검증된 임시 파일의 최종 교체, `publishDirectory`는 완성된 패키지 디렉터리의 배타적 공개를 담당한다. `createDirectories`는 출력 부모 디렉터리를 준비한다.
+- `File::copyToUrl(device, url)`은 읽기 장치를 로컬 파일 URL에 원자적으로 공개한다. 입력 오류는 기존 목적지를 보존한다. Android의 사용자가 선택한 `content:` 문서는 OS 제공 스트림으로 기록하므로 동일한 sibling rename 보장을 제공하지 않는다. 그 외 URL은 거절한다.
 - `StagedFile`은 libzip·FFmpeg처럼 경로를 요구하는 외부 코덱에 provider가 소유하는 임시 파일을 빌려준다. 코덱은 이 임시 경로만 쓰며, 최종 파일의 공개·실패 정리는 provider가 처리한다.
 - `Database`, `Statement`, `Transaction`은 SQLite 핸들을 외부에 노출하지 않는다. 스키마·레코드 의미는 상위 SDK가 정의하고, 연결·쿼리 실행·즉시 트랜잭션·BLOB 부분 갱신·일관된 백업은 provider가 수행한다. `Statement::bytes`의 span은 다음 step 또는 statement 파괴 전까지만 유효하다. 외부 BLOB/파일 변경 충돌 정책은 도메인이 revision과 data_version으로 결정한다.
 
@@ -26,6 +29,7 @@
 | iiCSMIDI | MIDI 생성·읽기·바이트 비교 후 갱신 | SMF 이벤트와 작성자 메타데이터 |
 | iiPaintEngine | 이미지 읽기 장치, 이미지 writer의 원자 출력 | 래스터 편집·색 공간·이미지 코덱 |
 | iiXml | 두 파일 파서의 파일 읽기 | XML 토큰화·검증 |
+| iiSocietyHelper | 미디어 원본 읽기, 선택된 URL로 스트리밍 내보내기 | 이미지/MP4 유효성 검사, 내보내기 위치·사용자 오류 표시 |
 | iiHtmlBlock | 선택된 iiXml 패키지를 유지하여 provider 의존성이 이전 설치로 바뀌지 않도록 함 | HTML 블록 모델·문자열 변환 |
 | Congregation | `.iisc` 및 `.vrc` 읽기·원자 저장·최근 문서 삭제 | iiSharedCanvas 및 최근 작업 코덱, 세션 복구 검증, owner-only 권한 정책 |
 

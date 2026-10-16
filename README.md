@@ -1,5 +1,29 @@
 # iiFileProvider
 
+The optional [Core I/O adapter](CoreIO/README.md) composes iiSDKCore 0.13 with
+Native file creation, atomic saves and post-close details/previews. Build it
+separately from `CoreIO/` or enable `IIFILEPROVIDER_BUILD_CORE_IO=ON`. Its
+`iiFileProvider::CoreIO` target sits above both independent libraries; the base
+Native provider has no Core dependency.
+
+Version 0.7.0 is the common iisacc file creation/provision module. Native
+`iiFileProvider::Catalog` adds editable titles/descriptions, Unicode keywords,
+0–5 ratings, color labels, custom fields, virtual collections, saved filters,
+indexed search and bounded file provision. UTF-8 companions preserve metadata
+without changing original media bytes, with a SQLite pending-publication journal.
+
+Use `find_package(iiFileProviderCatalog 0.6.0 CONFIG REQUIRED)` and link
+`iiFileProvider::Catalog` for the Qt-free C++23 API. The compiled
+`ii-file-provider` CLI exposes creation/import, metadata edits and queries to
+other callers. See [the catalog contract](docs/FILE_CATALOG.md) and
+[the common file ownership policy](docs/FILE_OWNERSHIP.md).
+
+Complete app saves and external Society intake now generate persistent file
+details and bounded content previews. The native presentation component embeds
+the document in file attributes/streams and a portable hidden companion while
+preserving the source data fork. See [file presentation](docs/FILE_PRESENTATION.md)
+for supported formats, lifecycle hooks, native platform adapters and verification.
+
 ## C++23 Society object store
 
 `iiFileProvider::Objects` provides a Qt-independent transactional object package:
@@ -7,6 +31,20 @@ stable object/index keys, directory-path projections, SHA-256, attribution,
 versioned binary diffs, mutation journals and work sessions. See
 [the object-store contract and integration boundaries](docs/OBJECT_STORE.md).
 The existing Qt APIs below are preserved; this new target does not depend on them.
+
+`iiFileProvider::Temporary` is a separate Qt-independent C++23 target, available
+through `find_package(iiFileProviderTemporary CONFIG REQUIRED)`. Its move-only
+`TemporaryLease(directory, Mode::Shared)` protects managed temporary files before
+creation until after removal. `Mode::TryExclusive` gives a cleaner a nonblocking
+exclusive lease; `locked() == false` means that active writers or another cleaner
+must be left alone. Invalid, missing, symbolic-link or reparse-point directories
+and redirected lock files throw standard exceptions. The directory must be an
+absolute normalized existing path. `StagedFile`, `ObjectSource`, and
+`ObjectStore::extract()` hold writer leases for their complete staging lifetimes. The zero-byte
+`.iisacc-temporary.lock` sentinel remains in each participating directory so that
+concurrent processes always lock the same file. It is metadata, not a temporary
+payload to delete. The lease uses `flock` on POSIX and `LockFileEx` on Windows;
+cleanup policy and ownership of user files remain the caller's responsibility.
 
 A dynamic library, version 0.5.0, using C++20 and Qt 6.8.3 Core. `File` handles format-independent file CRUD, and `Database` handles SQLite storage transactions. `FileAuthor` extends the iisacc.com account model and records a file author's identity, detailed profile, contributions, and authoring device. `Authorship` keeps one initial editor and the subsequent editing-participant list as persistent metadata. `FileLink` represents an optional file link as a name/URL pair, while `AuthenticationToken` holds a separate runtime authentication token. Metadata value objects do not perform file I/O directly. Login HTTP requests and JWT signature verification are outside this SDK's role.
 
@@ -92,13 +130,13 @@ The following bootstrap API is also maintained for compatibility with existing c
 const QString message = iiFileProvider::helloWorld();
 ```
 
-`[[nodiscard]] QString iiFileProvider::helloWorld()` returns `Hello world!` on every call. Public headers and implementation are placed together in the source root. External dependencies are the existing Qt 6.8.3 Core, and no new external libraries were introduced. Qt usage and distribution conditions follow the installed Qt license.
+`[[nodiscard]] QString iiFileProvider::helloWorld()` returns `Hello world!` on every call. Public headers and implementation are placed together in the source root. The existing adapter uses Qt 6.8.3 Core. Native APIs use SQLite; Catalog also reuses the pinned JSON/utf8proc sources under `Native/third_party`. Qt usage and distribution conditions follow the installed Qt license.
 
 <a id="빌드-테스트-설치"></a>
 
 ## Build, test, install
 
-CMake 3.24 or higher, C++20 compiler, and Qt 6.8.3 are required. macOS automatically adds `/Volumes/Storage/Qt/6.8.3/macos` to the search path if it exists.
+CMake 3.24+, a C++23 compiler and SQLite 3.27+ with FTS5 are required. The default legacy adapter additionally requires Qt 6.8.3 Core. Set `IIFILEPROVIDER_BUILD_QT_API=OFF` to build Catalog, Objects, Temporary and their native tools without Qt. Use `QT_PREFIX_PATH` to select Qt when running the installer.
 
 ```sh
 ./install.sh
@@ -106,7 +144,7 @@ CMake 3.24 or higher, C++20 compiler, and Qt 6.8.3 are required. macOS automatic
 
 When configured as a standalone project, the default installation path is set, so the installation path of the parent project included via `add_subdirectory()` is maintained.
 
-The script executes Release build and CTest from `build/`, installs to the default path `~/.local/SDK/iiFileProvider`, and builds and tests a separate executable that uses only the installed CMake package from `build/consumer/build/`. The bootstrap test checks return strings, C++20 compile settings, Qt 6.8.3 header version, and runtime version. The author contract test checks account mapping, detailed metadata round-trip, Unicode, invalid formats, session expiration, token binding, original exclusion, and atomic updates from both source and installed consumers. The `Authorship` test checks initial editor fixation, participant order, duplicate prevention, profile update, query copy, file restore after save, schema 1, 2 compatibility, invalid role reference, and record preservation on failure and limit exceedance from both sides. `FileLink` tests verify atomic recording of various schemes, relative addresses, string/JSON/file round-trips, encoding, additional arguments, link omission, clearing, and list preservation. Only Qt Test is used for test builds.
+The script executes Release build and CTest from `build/`, installs to the default path `~/.local/SDK/iiFileProvider`, and builds and tests a separate executable that uses only the installed CMake package from `build/consumer/build/`. The bootstrap test checks return strings, C++23 compile settings, Qt 6.8.3 header version, and runtime version. The author contract test checks account mapping, detailed metadata round-trip, Unicode, invalid formats, session expiration, token binding, original exclusion, and atomic updates from both source and installed consumers. The `Authorship` test checks initial editor fixation, participant order, duplicate prevention, profile update, query copy, file restore after save, schema 1, 2 compatibility, invalid role reference, and record preservation on failure and limit exceedance from both sides. `FileLink` tests verify atomic recording of various schemes, relative addresses, string/JSON/file round-trips, encoding, additional arguments, link omission, clearing, and list preservation. Tests include native C++ executables, Python CLI/dependency checks and the existing Qt Test suites. The installer also verifies separate Catalog and Objects consumers without loading Qt.
 
 The installer consumer configuration explicitly specifies the package directory of the current installation path, so changing `INSTALL_PREFIX` and re-running does not reuse the previous package cache.
 
@@ -176,3 +214,23 @@ Since 0.5, this SDK owns file creation, reading, updating, deletion, and SQLite 
 ## Source layout
 
 Implementation files and their headers live together under `src/`. Existing feature and platform subdirectories retain their responsibilities. Build configuration, tests, documentation, resources, and maintenance scripts remain at the project root. Configure and build using the repository-local `build/` directory.
+
+
+## Standard C++23 native component
+
+`Native/` provides the independent `iiFileProviderNative` package and
+`iiFileProvider::Native` target for standard strings/maps, file access, staged
+publication, scoped temporary directories and compatible author metadata.
+It can be configured directly into `build/native` without loading Qt or the
+legacy provider package. See [the Native component](Native/README.md).
+
+## Workspace file creation ownership
+
+Application and SDK file factories, including AI model workers, use the native,
+Qt-device, Python C ABI, Swift and Android adapters described in
+[FILE_OWNERSHIP.md](docs/FILE_OWNERSHIP.md). Native consumers use
+`find_package(iiFileProviderNative 0.6 CONFIG REQUIRED)` and
+`iiFileProvider::Native`; they import no Qt runtime. The workspace audit is
+`python3 tools/audit_file_creation.py --check`.
+The [migration validation](docs/FILE_CREATION_VALIDATION.md) records source,
+installed-package, AI worker and platform compilation evidence and its limits.

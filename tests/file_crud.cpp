@@ -1,5 +1,7 @@
 #include "iiFileProvider.h"
+#include "TemporaryLease.h"
 #include <QCoreApplication>
+#include <QBuffer>
 #include <QDir>
 #include <QFile>
 #include <QLockFile>
@@ -17,6 +19,19 @@ template<class F> void fails(FileCode code, F action) {
     }
     require(false, "operation unexpectedly succeeded");
 }
+class BrokenInput final : public QIODevice {
+    bool delivered = false;
+public:
+    BrokenInput() { open(QIODevice::ReadOnly); }
+    bool isSequential() const override { return true; }
+    bool atEnd() const override { return false; }
+protected:
+    qint64 readData(char *data, qint64 maximum) override {
+        if (!delivered && maximum > 0) { delivered = true; *data = 'x'; return 1; }
+        setErrorString("synthetic read failure"); return -1;
+    }
+    qint64 writeData(const char *, qint64) override { return -1; }
+};
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
     QTemporaryDir directory;
@@ -25,6 +40,8 @@ int main(int argc, char **argv) {
     QString abandonedStage;
     {
         StagedFile staged(path);
+        TemporaryLease cleaner(std::filesystem::path(QFileInfo(directory.path()).canonicalFilePath().toStdU16String()), TemporaryLease::Mode::TryExclusive);
+        require(!cleaner.locked(), "live staged codec output is protected from cleanup");
         abandonedStage = staged.path();
         const auto moved = abandonedStage + ".moved";
         require(QFile::rename(abandonedStage, moved), "stage releases native file handle");
@@ -73,6 +90,15 @@ int main(int argc, char **argv) {
     const auto copy = directory.filePath("copy.iisc");
     File::copy(path, copy);
     require(File::read(copy) == "complete", "copy bytes");
+    QBuffer input; input.setData(initial); require(input.open(QIODevice::ReadOnly), "input device");
+    File::copyToUrl(input, QUrl::fromLocalFile(copy));
+    require(File::read(copy) == initial, "provider publishes an opaque stream to a selected native URL");
+    BrokenInput broken;
+    fails(FileCode::IoError, [&] { File::copyToUrl(broken, QUrl::fromLocalFile(copy)); });
+    require(File::read(copy) == initial, "source read error must preserve existing destination");
+    fails(FileCode::InvalidPath, [&] { File::copyToUrl(input, QUrl("https://example.invalid/output")); });
+    QBuffer closed;
+    fails(FileCode::InvalidPath, [&] { File::copyToUrl(closed, QUrl::fromLocalFile(copy)); });
     require(File::remove(copy) && !File::remove(copy), "delete and missing delete");
     fails(FileCode::InvalidPath, [&] { File::create({}, {}); });
     fails(FileCode::InvalidPath, [&] { File::write(QString::fromUtf8("a\0b", 3), {}); });
@@ -85,6 +111,10 @@ int main(int argc, char **argv) {
     File::createDirectories(stageDirectory);
     fails(FileCode::AlreadyExists, [&] { File::publishDirectory(stageDirectory, finalDirectory); });
     fails(FileCode::NotFound, [&] { (void)File::read(path); });
-    require(QDir(directory.path()).entryList(QDir::Files | QDir::Hidden | QDir::NoDotAndDotDot).isEmpty(),
-            "no abandoned temporary or lock files");
+    const auto remaining = QDir(directory.path()).entryList(QDir::Files | QDir::Hidden | QDir::NoDotAndDotDot);
+    require(remaining == QStringList{".iisacc-temporary.lock"}
+            && QFileInfo(directory.filePath(".iisacc-temporary.lock")).size() == 0,
+            "no abandoned temporary payloads; only persistent empty lease metadata remains");
+    TemporaryLease cleaner(std::filesystem::path(QFileInfo(directory.path()).canonicalFilePath().toStdU16String()), TemporaryLease::Mode::TryExclusive);
+    require(cleaner.locked(), "staged file cleanup releases its directory lease");
 }

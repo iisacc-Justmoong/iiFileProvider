@@ -1,4 +1,5 @@
 #include "File.h"
+#include "Presentation_p.h"
 #include <QFileInfo>
 #include <QLockFile>
 
@@ -194,6 +195,7 @@ AtomicFileCommitResult File::publish(
             "The validated temporary file could not replace its destination atomically: "
                 + error.message()};
     }
+    detail::presentLater(destination);
     return {true, {}, {}};
 }
 

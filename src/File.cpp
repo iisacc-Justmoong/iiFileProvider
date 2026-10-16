@@ -1,5 +1,6 @@
 #include "File.h"
 #include "StagedFile.h"
+#include "Presentation_p.h"
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -22,6 +23,7 @@
 #endif
 
 namespace iiFileProvider {
+QByteArray File::imageFormat(const QString &path) { return QFileInfo(path).suffix().toLatin1(); }
 FileError::FileError(FileCode code, const std::string &message)
     : std::runtime_error(message), m_code(code) {}
 FileCode FileError::code() const noexcept { return m_code; }
@@ -47,12 +49,18 @@ void writeUnlocked(const QString &path, const std::function<void(QIODevice &)> &
     if (!file.open(QIODevice::WriteOnly)) fail(FileCode::IoError, file.errorString());
     encode(file);
     if (!file.commit()) fail(FileCode::IoError, file.errorString());
+    detail::presentLater(std::filesystem::path(path.toStdU16String()));
 }
 void transfer(QIODevice &input, QIODevice &output) {
-    while (!input.atEnd()) {
-        const auto bytes = input.read(1024 * 1024);
-        if (bytes.isEmpty()) fail(FileCode::IoError, input.errorString());
-        if (output.write(bytes) != bytes.size()) fail(FileCode::IoError, output.errorString());
+    QByteArray buffer(1024 * 1024, Qt::Uninitialized);
+    for (;;) {
+        const auto count = input.read(buffer.data(), buffer.size());
+        if (count < 0) fail(FileCode::IoError, input.errorString());
+        if (!count) {
+            if (input.atEnd()) return;
+            fail(FileCode::IoError, input.errorString());
+        }
+        if (output.write(buffer.constData(), count) != count) fail(FileCode::IoError, output.errorString());
     }
 }
 }
@@ -103,6 +111,16 @@ QByteArray File::readPrefix(const QString &path, qint64 count) {
     if (bytes.size() < count && !file->atEnd()) fail(FileCode::IoError, file->errorString());
     return bytes;
 }
+bool File::prepareDatabase(const QString &path) {
+    try {
+        const auto target = destination(path);
+        if (!QFileInfo::exists(target)) {
+            try { create(target, {}); }
+            catch (const FileError &error) { if (error.code() != FileCode::AlreadyExists) throw; }
+        }
+        return QFileInfo(target).isFile() && !QFileInfo(target).isSymLink();
+    } catch (const FileError &) { return false; }
+}
 void File::writeWith(const QString &path, const std::function<void(QIODevice &)> &encode) {
     const auto target = destination(path);
     QLockFile guard(target + ".iisacc-lock"); lock(guard);
@@ -145,8 +163,10 @@ bool File::remove(const QString &path) {
     QLockFile guard(target + ".iisacc-lock"); lock(guard);
     (void)destination(target);
     if (!QFileInfo::exists(target)) return false;
+    detail::cancelPresentation(std::filesystem::path(target.toStdU16String()));
     QFile file(target);
     if (!file.remove()) fail(FileCode::IoError, file.errorString());
+    detail::removePresentation(std::filesystem::path(target.toStdU16String()));
     return true;
 }
 void File::copy(const QString &source, const QString &target, bool overwrite) {
@@ -167,6 +187,26 @@ void File::copy(const QString &source, const QString &target, bool overwrite) {
 }
 void File::createDirectories(const QString &path) {
     if (!QDir().mkpath(absolutePath(path))) fail(FileCode::IoError, "cannot create directory");
+}
+
+void File::copyToUrl(QIODevice &source, const QUrl &target) {
+    if (!source.isOpen() || !source.isReadable()) fail(FileCode::InvalidPath, "a readable provider device is required");
+    if (target.isLocalFile()) {
+        writeWith(target.toLocalFile(), [&](QIODevice &output) { transfer(source, output); });
+        return;
+    }
+#ifdef Q_OS_ANDROID
+    if (target.scheme() == "content" && !target.authority().isEmpty()) {
+        QSaveFile output(target.toString());
+        // A granted DocumentsProvider URI cannot publish by sibling rename.
+        output.setDirectWriteFallback(true);
+        if (!output.open(QIODevice::WriteOnly)) fail(FileCode::IoError, output.errorString());
+        transfer(source, output);
+        if (!output.commit()) fail(FileCode::IoError, output.errorString());
+        return;
+    }
+#endif
+    fail(FileCode::InvalidPath, "a native file URL or granted Android document URI is required");
 }
 void File::publishDirectory(const QString &temporary, const QString &path) {
     const auto source = absolutePath(temporary), target = absolutePath(path);

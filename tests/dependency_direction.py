@@ -9,8 +9,17 @@ for name, project in projects.items():
     files = [project / "CMakeLists.txt", *project.glob("cmake/*Config.cmake.in")]
     content = "\n".join(p.read_text() for p in files)
     references = set(re.findall(r"find_(?:package|dependency)\(\s*(\w+)", content))
+    if references & {"iiFileProviderNative", "iiFileProviderCatalog", "iiFileProviderTemporary", "iiFileProviderObjects", "iiFileProviderSwift"}:
+        references.add("iiFileProvider")
     graph[name] = sorted((references & projects.keys()) - {name})
 assert graph["iiFileProvider"] == [], "iiFileProvider must not depend on another iisacc SDK"
+assert graph["iiSDKCore"] == [], "Core must not depend on a feature SDK"
+adapter = root / "iiFileProvider/CoreIO"
+if adapter.exists():
+    references = set(re.findall(r"find_(?:package|dependency)\(\s*(\w+)",
+        (adapter / "iiFileProviderCoreIOConfig.cmake.in").read_text()))
+    assert references == {"iiSDKCore", "iiFileProviderNative"}, "CoreIO must sit above both independent libraries"
+    graph["iiFileProviderCoreIO"] = ["iiSDKCore", "iiFileProvider"]
 active, complete, order = [], set(), []
 
 def visit(name):
@@ -29,17 +38,24 @@ for name in sorted(graph):
 provider = projects["iiFileProvider"]
 for file in [*provider.glob("src/**/*.h"), *provider.glob("src/**/*.cpp")]:
     includes = re.findall(r'#include\s*[<"](ii\w+)', file.read_text())
-    assert all(name == "iiFileProvider" for name in includes), f"upward include: {file}"
+    assert all(name.startswith("iiFileProvider") for name in includes), f"upward include: {file}"
+for file in [*adapter.glob("src/**/*.h"), *adapter.glob("src/**/*.cpp")]:
+    includes = re.findall(r'#include\s*[<"](ii\w+)', file.read_text())
+    assert all(name.startswith(("iiSDKCore", "iiFileProvider")) for name in includes), f"unexpected adapter dependency: {file}"
 for relative in [
     "iiSharedCanvas/src/File/DocumentFile.cpp", "iiSharedCanvas/tools/IiscInput.cpp",
     "iiSharedCanvas/src/Media/MediaIo.cpp", "iiCSMIDI/src/MidiDocument.cpp",
     "iiPaintEngine/src/BitmapFile/BitmapFile.cpp", "iiXml/Src/Input/GetFile.cpp",
     "iiXml/Src/Parser/FileParser.cpp", "iiGeneralDocument/src/Pdf/PdfDocumentReader.cpp",
     "iiGeneralDocument/src/Pdf/PdfDocumentWriter.cpp",
+    "iiSocietyHelper/src/MediaExport.cpp",
 ]:
     file = root / relative
     if file.exists():
         source = file.read_text()
         assert not re.search(r'#include\s*[<"](?:QFile|QSaveFile|fstream|sqlite3.h)[>"]', source), f"storage bypass: {file}"
+for relative in ("src/FileCatalog.h", "src/FileCatalog.cpp", "tools/FileProvider.cpp"):
+    source = (provider / relative).read_text()
+    assert not re.search(r'#include\s*[<"](?:Qt\w*|Q[A-Z]\w*)', source), f"native catalog imports Qt: {relative}"
 print(f"{len(graph)} SDK dependency declarations form a DAG; iiFileProvider has no upward SDK edges.")
 print("Build order: " + " -> ".join(order))

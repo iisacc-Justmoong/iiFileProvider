@@ -1,5 +1,6 @@
 #include "native_symlink.h"
 #include "ObjectSnapshotBatch.h"
+#include "staging_clean.h"
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -29,14 +30,14 @@ int main(){try{
             check(read(batch.path(3))==std::string(3*107,'d'),"snapshot isolated from later writes");
             rejects([&]{batch.path(requests.size());});
         }
-        check(fs::is_empty(root/"stage"),"all batch-owned staging removed before return");
+        check(test_support::staging_clean(root/"stage"),"all batch-owned staging removed before return");
         write(requests[3].source,std::string(3*107,'d'));requests[3].identity=ObjectSource::inspect(requests[3].source);
     }
     auto invalid=requests;invalid[5].identity.stamp="stale";
     rejects([&]{ObjectSource source(invalid[5].source,root/"stage",{},invalid[5].identity);});
-    check(fs::is_empty(root/"stage"),"expected identity checked before staging allocation");
+    check(test_support::staging_clean(root/"stage"),"expected identity checked before staging allocation");
     rejects([&]{detail::ObjectSnapshotBatch batch(invalid,root/"stage",{},4);});
-    check(fs::is_empty(root/"stage"),"stale member failure cleans every captured snapshot");
+    check(test_support::staging_clean(root/"stage"),"stale member failure cleans every captured snapshot");
     std::stop_source cancellation;cancellation.request_stop();
     rejects([&]{detail::ObjectSnapshotBatch batch(requests,root/"stage",cancellation.get_token(),4);});
     rejects([&]{detail::ObjectSnapshotBatch batch({},root/"stage");});
@@ -47,10 +48,10 @@ int main(){try{
     invalid=requests;invalid[7].source=root/"absent";
     rejects([&]{detail::ObjectSnapshotBatch batch(invalid,root/"stage",{},1);});
     rejects([&]{detail::ObjectSnapshotBatch batch(invalid,root/"stage",{},4);});
-    check(fs::is_empty(root/"stage"),"failed acquisition leaves no owned staging");
+    check(test_support::staging_clean(root/"stage"),"failed acquisition leaves no owned staging");
     test_support::create_symlink(requests[0].source,root/"link");invalid=requests;invalid[6].source=root/"link";
     rejects([&]{detail::ObjectSnapshotBatch batch(invalid,root/"stage",{},4);});
-    check(fs::is_empty(root/"stage"),"redirected acquisition cleans successful workers");
+    check(test_support::staging_clean(root/"stage"),"redirected acquisition cleans successful workers");
     write(root/"stage/unrelated","preserve");
     {detail::ObjectSnapshotBatch batch(requests,root/"stage",{},4);}
     check(read(root/"stage/unrelated")=="preserve","cleanup only removes batch-owned snapshots");

@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
-project(iiFileProvider VERSION 0.5.0 LANGUAGES CXX)
+project(iiFileProvider VERSION 0.7.1 LANGUAGES C CXX)
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
 
 if(PROJECT_IS_TOP_LEVEL AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     if(DEFINED ENV{HOME} AND NOT "$ENV{HOME}" STREQUAL "")
@@ -14,17 +17,111 @@ endif()
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
+install(DIRECTORY platform/android/src/ DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/android/src)
+install(FILES cmake/iiFileProviderAndroid.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProvider)
+install(FILES swift/IisaccFileProvider.swift DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/swift)
+configure_package_config_file(cmake/iiFileProviderSwiftConfig.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderSwiftConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderSwift)
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderSwiftConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion ARCH_INDEPENDENT)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderSwiftConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderSwiftConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderSwift)
 include(CTest)
+option(IIFILEPROVIDER_BUILD_NATIVE_API "Build the Qt-free streaming and C adapters" ON)
+if(IIFILEPROVIDER_BUILD_NATIVE_API)
+    add_subdirectory(Native)
+    install(DIRECTORY python/ii_file_provider DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/python PATTERN __pycache__ EXCLUDE)
+endif()
+option(IIFILEPROVIDER_BUILD_CORE_IO "Build the optional adapter above Native and iiSDKCore" OFF)
+if(IIFILEPROVIDER_BUILD_CORE_IO)
+    add_subdirectory(CoreIO)
+endif()
 option(IIFILEPROVIDER_BUILD_QT_API "Build the existing Qt value/file adapters" ON)
 function(_iifileprovider_find_sqlite)
     set(CMAKE_FIND_FRAMEWORK LAST)
-    find_package(SQLite3 3.26 REQUIRED)
+    find_package(SQLite3 3.27 REQUIRED)
 endfunction()
 _iifileprovider_find_sqlite()
 find_package(Threads REQUIRED)
 if(NOT TARGET SQLite3::SQLite3)
     add_library(SQLite3::SQLite3 ALIAS SQLite::SQLite3)
 endif()
+
+add_library(iiFileProviderTemporary STATIC src/TemporaryLease.cpp)
+add_library(iiFileProvider::Temporary ALIAS iiFileProviderTemporary)
+set_target_properties(iiFileProviderTemporary PROPERTIES EXPORT_NAME Temporary POSITION_INDEPENDENT_CODE ON CXX_EXTENSIONS OFF)
+target_compile_features(iiFileProviderTemporary PUBLIC cxx_std_23)
+target_include_directories(iiFileProviderTemporary PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+install(TARGETS iiFileProviderTemporary EXPORT iiFileProviderTemporaryTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES src/TemporaryLease.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(EXPORT iiFileProviderTemporaryTargets NAMESPACE iiFileProvider:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderTemporary)
+configure_package_config_file(cmake/iiFileProviderTemporaryConfig.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderTemporaryConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderTemporary)
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderTemporaryConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderTemporaryConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderTemporaryConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderTemporary)
+
+# Native classification and provisioning reuse this SDK's already-vendored
+# JSON and Unicode implementations; neither target imports a higher SDK or Qt.
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/Native/third_party/dependencies.json" _catalog_dependencies)
+string(JSON _catalog_dependency_count LENGTH "${_catalog_dependencies}" files)
+math(EXPR _catalog_dependency_last "${_catalog_dependency_count}-1")
+foreach(_index RANGE 0 ${_catalog_dependency_last})
+    string(JSON _file GET "${_catalog_dependencies}" files ${_index} file)
+    string(JSON _expected GET "${_catalog_dependencies}" files ${_index} sha256)
+    file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/Native/third_party/${_file}" _actual)
+    if(NOT _actual STREQUAL _expected)
+        message(FATAL_ERROR "Pinned Catalog dependency mismatch: ${_file}")
+    endif()
+endforeach()
+add_library(iiFileProviderCatalog STATIC src/FileCatalog.cpp Native/third_party/utf8proc/utf8proc.c)
+add_library(iiFileProvider::Catalog ALIAS iiFileProviderCatalog)
+set_target_properties(iiFileProviderCatalog PROPERTIES EXPORT_NAME Catalog POSITION_INDEPENDENT_CODE ON
+    CXX_EXTENSIONS OFF C_VISIBILITY_PRESET hidden)
+target_compile_features(iiFileProviderCatalog PUBLIC cxx_std_23)
+target_compile_definitions(iiFileProviderCatalog PRIVATE UTF8PROC_STATIC)
+target_include_directories(iiFileProviderCatalog PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE Native/third_party Native/third_party/utf8proc)
+target_link_libraries(iiFileProviderCatalog PRIVATE SQLite3::SQLite3 Threads::Threads iiFileProvider::Temporary)
+if(TARGET iiFileProviderNative)
+    target_link_libraries(iiFileProviderCatalog PRIVATE iiFileProvider::Native)
+    target_compile_definitions(iiFileProviderCatalog PRIVATE IIFILEPROVIDER_HAS_PRESENTATION)
+endif()
+install(TARGETS iiFileProviderCatalog EXPORT iiFileProviderCatalogTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES src/FileCatalog.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(EXPORT iiFileProviderCatalogTargets NAMESPACE iiFileProvider:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderCatalog)
+configure_package_config_file(cmake/iiFileProviderCatalogConfig.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderCatalogConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderCatalog)
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderCatalogConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderCatalogConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderCatalogConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderCatalog)
+install(FILES Native/third_party/licenses/nlohmann-json/LICENSE.MIT
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/iiFileProviderCatalog/nlohmann-json)
+install(FILES Native/third_party/utf8proc/LICENSE.md
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/iiFileProviderCatalog/utf8proc)
+install(FILES docs/FILE_CATALOG.md docs/FILE_OWNERSHIP.md docs/FILE_CRUD.md docs/FILE_PRESENTATION.md docs/FILE_PRESENTATION_VALIDATION.md
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs)
+install(FILES README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider)
+add_executable(iiFileProviderCli tools/FileProvider.cpp)
+set_target_properties(iiFileProviderCli PROPERTIES OUTPUT_NAME ii-file-provider CXX_EXTENSIONS OFF)
+target_include_directories(iiFileProviderCli PRIVATE Native/third_party)
+target_link_libraries(iiFileProviderCli PRIVATE iiFileProvider::Catalog)
+if(MINGW)
+    target_link_options(iiFileProviderCli PRIVATE -municode)
+endif()
+install(TARGETS iiFileProviderCli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_library(iiFileProviderObjects STATIC src/ObjectStore.cpp src/ObjectHash.cpp src/ObjectSource.cpp src/ObjectBatchRead.cpp src/ObjectSnapshotBatch.cpp src/ObjectPackager.cpp src/ObjectAudit.cpp)
 add_library(iiFileProvider::Objects ALIAS iiFileProviderObjects)
@@ -33,11 +130,39 @@ target_compile_features(iiFileProviderObjects PUBLIC cxx_std_23)
 target_include_directories(iiFileProviderObjects PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_link_libraries(iiFileProviderObjects PRIVATE SQLite3::SQLite3 Threads::Threads)
+target_link_libraries(iiFileProviderObjects PRIVATE SQLite3::SQLite3 Threads::Threads iiFileProvider::Temporary)
 add_executable(iiFileProviderObjectPackage tools/ObjectPackage.cpp tools/ObjectPackageOptions.cpp)
 target_link_libraries(iiFileProviderObjectPackage PRIVATE iiFileProvider::Objects)
 install(TARGETS iiFileProviderObjectPackage RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 if(BUILD_TESTING)
+    if(TARGET iiFileProviderNative)
+        add_executable(iiFileProvider_presentation_catalog tests/presentation_catalog.cpp)
+        target_include_directories(iiFileProvider_presentation_catalog PRIVATE Native/third_party)
+        target_link_libraries(iiFileProvider_presentation_catalog PRIVATE iiFileProvider::Catalog iiFileProvider::Native)
+        add_test(NAME iiFileProvider.presentation_catalog COMMAND iiFileProvider_presentation_catalog "${CMAKE_CURRENT_BINARY_DIR}")
+    endif()
+    add_executable(iiFileProvider_file_catalog tests/file_catalog.cpp)
+    target_compile_definitions(iiFileProvider_file_catalog PRIVATE CATALOG_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
+    target_link_libraries(iiFileProvider_file_catalog PRIVATE iiFileProvider::Catalog SQLite3::SQLite3)
+    add_test(NAME iiFileProvider.file_catalog COMMAND iiFileProvider_file_catalog)
+    set_tests_properties(iiFileProvider.file_catalog PROPERTIES TIMEOUT 120)
+    foreach(_test IN ITEMS file_catalog_index file_catalog_safety)
+        add_executable(iiFileProvider_${_test} tests/${_test}.cpp)
+        target_compile_definitions(iiFileProvider_${_test} PRIVATE CATALOG_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
+        target_link_libraries(iiFileProvider_${_test} PRIVATE iiFileProvider::Catalog SQLite3::SQLite3 Threads::Threads)
+        add_test(NAME iiFileProvider.${_test} COMMAND iiFileProvider_${_test})
+        set_tests_properties(iiFileProvider.${_test} PROPERTIES TIMEOUT 180)
+    endforeach()
+    add_executable(iiFileProvider_file_catalog_objects tests/file_catalog_objects.cpp)
+    target_compile_definitions(iiFileProvider_file_catalog_objects PRIVATE CATALOG_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
+    target_compile_definitions(iiFileProvider_file_catalog_objects PRIVATE IIFILEPROVIDER_TEST_PRESENTATION=$<BOOL:${IIFILEPROVIDER_BUILD_NATIVE_API}>)
+    target_link_libraries(iiFileProvider_file_catalog_objects PRIVATE iiFileProvider::Catalog iiFileProvider::Objects)
+    add_test(NAME iiFileProvider.file_catalog_objects COMMAND iiFileProvider_file_catalog_objects)
+    set_tests_properties(iiFileProvider.file_catalog_objects PROPERTIES TIMEOUT 120)
+    add_executable(iiFileProvider_temporary_lease tests/temporary_lease.cpp)
+    target_link_libraries(iiFileProvider_temporary_lease PRIVATE iiFileProvider::Temporary Threads::Threads)
+    add_test(NAME iiFileProvider.temporary_lease COMMAND iiFileProvider_temporary_lease)
+    set_tests_properties(iiFileProvider.temporary_lease PROPERTIES TIMEOUT 30)
     add_executable(iiFileProvider_object_read_only tests/object_read_only.cpp)
     target_compile_definitions(iiFileProvider_object_read_only PRIVATE OBJECT_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
     target_link_libraries(iiFileProvider_object_read_only PRIVATE iiFileProvider::Objects SQLite3::SQLite3)
@@ -72,6 +197,17 @@ if(BUILD_TESTING)
     add_test(NAME iiFileProvider.object_batch COMMAND iiFileProvider_object_batch)
     set_tests_properties(iiFileProvider.object_batch PROPERTIES TIMEOUT 240)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    add_test(NAME iiFileProvider.creation_audit COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/creation_audit.py ${CMAKE_CURRENT_BINARY_DIR})
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../Product" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../iiSDKCore")
+        add_test(NAME iiFileProvider.workspace_creation COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_file_creation.py --check)
+        set_tests_properties(iiFileProvider.workspace_creation PROPERTIES TIMEOUT 120)
+    endif()
+    add_test(NAME iiFileProvider.file_catalog_cli
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/file_catalog_cli.py
+                $<TARGET_FILE:iiFileProviderCli> ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(iiFileProvider.file_catalog_cli PROPERTIES TIMEOUT 180)
     add_test(NAME iiFileProvider.object_package_cli
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/object_package_cli.py $<TARGET_FILE:iiFileProviderObjectPackage>)
     set_tests_properties(iiFileProvider.object_package_cli PROPERTIES TIMEOUT 300)
@@ -99,18 +235,45 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderObjectsConfig.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderObjects)
 install(FILES docs/OBJECT_STORE.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs)
 
+if(BUILD_TESTING AND IIFILEPROVIDER_BUILD_NATIVE_API AND NOT CMAKE_CROSSCOMPILING)
+    add_test(NAME iiFileProvider.python_adapter COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/python_adapter.py $<TARGET_FILE:iiFileProviderNative> ${CMAKE_CURRENT_BINARY_DIR})
+endif()
 if(IIFILEPROVIDER_BUILD_QT_API)
 find_package(Qt6 6.8.3 EXACT REQUIRED COMPONENTS Core)
 
 add_library(iiFileProvider SHARED src/iiFileProvider.h src/iiFileProvider.cpp
     src/Export.h src/AuthenticationToken.h src/AuthenticationToken.cpp src/FileAuthor.h src/FileAuthor.cpp src/JsonContract.h
     src/Authorship.h src/Authorship.cpp src/FileLink.h src/FileLink.cpp src/File.h src/File.cpp src/AtomicFileCommit.cpp
-    src/Database.h src/Database.cpp src/StagedFile.h src/StagedFile.cpp)
+    src/Database.h src/Database.cpp src/StagedFile.h src/StagedFile.cpp src/iiFileProviderDevice.h src/FileDevice.cpp)
 add_library(iiFileProvider::iiFileProvider ALIAS iiFileProvider)
-target_compile_features(iiFileProvider PUBLIC cxx_std_20)
+if(BUILD_TESTING)
+    find_package(Qt6 6.8.3 EXACT REQUIRED COMPONENTS Gui)
+    if(APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "iOS")
+        foreach(dependency WrapOpenGL::WrapOpenGL Qt6::Gui)
+            if(TARGET ${dependency})
+                foreach(property INTERFACE_LINK_LIBRARIES INTERFACE_LINK_OPTIONS)
+                    get_target_property(links ${dependency} ${property})
+                    if(links)
+                        list(FILTER links EXCLUDE REGEX "AGL")
+                        set_property(TARGET ${dependency} PROPERTY ${property} "${links}")
+                    endif()
+                endforeach()
+            endif()
+        endforeach()
+    endif()
+    add_executable(iiFileProvider_file_devices tests/file_devices.cpp)
+    target_link_libraries(iiFileProvider_file_devices PRIVATE iiFileProvider Qt6::Gui)
+    add_test(NAME iiFileProvider.file_devices COMMAND iiFileProvider_file_devices ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+target_compile_features(iiFileProvider PUBLIC cxx_std_23)
 target_compile_definitions(iiFileProvider PRIVATE IIFILEPROVIDER_BUILDING_LIBRARY)
-target_link_libraries(iiFileProvider PUBLIC Qt6::Core)
-target_link_libraries(iiFileProvider PRIVATE SQLite3::SQLite3)
+target_link_libraries(iiFileProvider PUBLIC Qt6::Core iiFileProvider::Catalog)
+target_link_libraries(iiFileProvider PRIVATE SQLite3::SQLite3 iiFileProvider::Temporary)
+if(TARGET iiFileProviderNative)
+    target_link_libraries(iiFileProvider PRIVATE iiFileProvider::Native)
+    target_compile_definitions(iiFileProvider PRIVATE IIFILEPROVIDER_HAS_PRESENTATION)
+endif()
 target_include_directories(iiFileProvider PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -137,7 +300,7 @@ if(BUILD_TESTING)
     target_link_libraries(iiFileProvider_database PRIVATE iiFileProvider::iiFileProvider)
     add_test(NAME iiFileProvider.database COMMAND iiFileProvider_database)
     add_executable(iiFileProvider_file_crud tests/file_crud.cpp)
-    target_link_libraries(iiFileProvider_file_crud PRIVATE iiFileProvider::iiFileProvider)
+    target_link_libraries(iiFileProvider_file_crud PRIVATE iiFileProvider::iiFileProvider iiFileProvider::Temporary)
     add_test(NAME iiFileProvider.file_crud COMMAND iiFileProvider_file_crud)
     find_package(Qt6 6.8.3 EXACT REQUIRED COMPONENTS Test)
     add_executable(iiFileProvider_authorship tests/authorship.cpp)
@@ -176,16 +339,14 @@ install(TARGETS iiFileProvider EXPORT iiFileProviderTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES src/iiFileProvider.h src/Export.h src/AuthenticationToken.h src/FileAuthor.h src/Authorship.h src/FileLink.h src/File.h src/Database.h src/StagedFile.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES src/iiFileProvider.h src/Export.h src/AuthenticationToken.h src/FileAuthor.h src/Authorship.h src/FileLink.h src/File.h src/iiFileProviderDevice.h src/Database.h src/StagedFile.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT iiFileProviderTargets NAMESPACE iiFileProvider:: DESTINATION "${_package_dir}")
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderConfig.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderConfigVersion.cmake"
     DESTINATION "${_package_dir}"
 )
-install(FILES README.md DESTINATION "${CMAKE_INSTALL_DATADIR}/iiFileProvider")
 install(FILES docs/FILE_AUTHOR_CONTRACT.md DESTINATION "${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs")
 install(FILES docs/FILE_LINKS.md DESTINATION "${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs")
 
-install(FILES docs/FILE_CRUD.md DESTINATION "${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs")
 endif()

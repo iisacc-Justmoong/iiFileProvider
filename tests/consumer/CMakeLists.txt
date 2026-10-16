@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(iiFileProviderInstalledConsumer LANGUAGES CXX)
 
-find_package(iiFileProvider 0.5.0 CONFIG REQUIRED)
+find_package(iiFileProvider 0.6.0 CONFIG REQUIRED)
 find_package(Qt6 6.8.3 EXACT REQUIRED COMPONENTS Test)
 add_executable(iiFileProvider_installed_consumer ../hello_world.cpp)
 target_link_libraries(iiFileProvider_installed_consumer PRIVATE iiFileProvider::iiFileProvider)
@@ -28,6 +28,11 @@ set_tests_properties(iiFileProvider.installed_file_links PROPERTIES TIMEOUT 30)
 
 foreach(contract file_crud database)
     add_executable(installed_${contract} ../${contract}.cpp)
-    target_link_libraries(installed_${contract} PRIVATE iiFileProvider::iiFileProvider)
+    target_link_libraries(installed_${contract} PRIVATE iiFileProvider::iiFileProvider iiFileProvider::Temporary)
     add_test(NAME installed.${contract} COMMAND installed_${contract})
 endforeach()
+
+add_executable(installed_catalog ../file_catalog.cpp)
+target_compile_definitions(installed_catalog PRIVATE CATALOG_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
+target_link_libraries(installed_catalog PRIVATE iiFileProvider::Catalog)
+add_test(NAME installed.catalog COMMAND installed_catalog)
