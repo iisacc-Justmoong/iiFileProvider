@@ -12,6 +12,18 @@ TEST_ROOT = sys.argv.pop(1)
 
 
 class ProviderTest(unittest.TestCase):
+    def test_atomic_change_token_distinguishes_content_from_provider_metadata(self):
+        with provider.TemporaryDirectory(dir=TEST_ROOT) as root:
+            path = Path(root) / "change-token.txt"
+            path.write_bytes(b"original")
+            before = provider.cache_change_token(path)
+            provider.presentation(path, prepare=True)
+            self.assertEqual(provider.cache_change_token(path), before)
+            state = path.stat()
+            path.write_bytes(b"modified")
+            os.utime(path, ns=(state.st_atime_ns, state.st_mtime_ns))
+            self.assertNotEqual(provider.cache_change_token(path), before)
+
     @unittest.skipIf(os.name == "nt", "POSIX pinned-stat identity")
     def test_preview_publication_does_not_invalidate_but_external_edits_do(self):
         with provider.TemporaryDirectory(dir=TEST_ROOT) as root:

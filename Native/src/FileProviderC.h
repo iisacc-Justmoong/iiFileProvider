@@ -23,6 +23,8 @@ IIFILEPROVIDER_NATIVE_EXPORT int iifp_present(const char *path);
 IIFILEPROVIDER_NATIVE_EXPORT const char *iifp_presentation(const char *path);
 IIFILEPROVIDER_NATIVE_EXPORT int iifp_presentation_wait(int timeout_ms);
 IIFILEPROVIDER_NATIVE_EXPORT void iifp_presentation_cancel(const char *path);
+// Atomic native identity/change snapshot, serialized with preview metadata writes.
+IIFILEPROVIDER_NATIVE_EXPORT const char *iifp_cache_change_token(const char *path);
 // Pinned native stat identity; normalizes only this process's preview writes.
 IIFILEPROVIDER_NATIVE_EXPORT const char *iifp_normalize_change_time(uint64_t device, uint64_t index, int64_t seconds, int64_t nanoseconds);
 #ifdef __cplusplus

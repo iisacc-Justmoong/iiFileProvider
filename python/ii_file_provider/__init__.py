@@ -64,6 +64,9 @@ def _native():
             library.iifp_presentation_wait.argtypes = [ctypes.c_int]
             library.iifp_presentation_cancel.argtypes = [ctypes.c_char_p]
             library.iifp_presentation_cancel.restype = None
+            if hasattr(library, "iifp_cache_change_token"):
+                library.iifp_cache_change_token.argtypes = [ctypes.c_char_p]
+                library.iifp_cache_change_token.restype = ctypes.c_char_p
             if hasattr(library, "iifp_normalize_change_time"):
                 library.iifp_normalize_change_time.argtypes = [ctypes.c_uint64, ctypes.c_uint64, ctypes.c_int64, ctypes.c_int64]
                 library.iifp_normalize_change_time.restype = ctypes.c_char_p
@@ -118,6 +121,17 @@ def normalize_change_time(device, index, seconds, nanoseconds):
     if not hasattr(library, "iifp_normalize_change_time"):
         raise RuntimeError("Native iiFileProvider >= 0.8.1 is required for change-time normalization")
     value = library.iifp_normalize_change_time(device, index, seconds, nanoseconds)
+    if value is None:
+        _check(-1)
+    return value.decode("utf-8")
+
+
+def cache_change_token(path):
+    """Snapshot native change identity atomically with preview metadata writes."""
+    library = _native()
+    if not hasattr(library, "iifp_cache_change_token"):
+        raise RuntimeError("Native iiFileProvider >= 0.8.2 is required for atomic change tokens")
+    value = library.iifp_cache_change_token(_path(path))
     if value is None:
         _check(-1)
     return value.decode("utf-8")

@@ -1,5 +1,11 @@
 # Windows 검증
 
+Native 0.8.2 exposes `cache_change_token(path)` in the Python adapter and
+`iifp_cache_change_token` in its C ABI. Identity and change time are read under
+the same lock as preview metadata publication, avoiding intermediate NTFS change
+times and mismatched Win32/Python volume identifiers. The adapter regression
+preserves tokens across a preview and invalidates them after a restored-mtime edit.
+
 Windows에서 Unicode 경로의 패키지 생성은 `_wsopen_s`의 `_O_EXCL`로 원자적으로 수행한다. 기존 패키지 덮어쓰기는 거부하며 `object_store` 런타임 테스트가 이를 검증한다.
 # 소스 경로 검사
 

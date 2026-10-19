@@ -83,6 +83,11 @@ const char *iifp_presentation(const char *p) {
 }
 int iifp_presentation_wait(int timeout) { return iiFileProvider::native::Presentation::waitForIdle(std::chrono::milliseconds(std::max(0,timeout))) ? 1 : 0; }
 void iifp_presentation_cancel(const char *p) { try { iiFileProvider::native::Presentation::cancelPending(path(p)); } catch (...) {} }
+const char *iifp_cache_change_token(const char *p) {
+    thread_local std::string token;
+    if (status([&] { token=iiFileProvider::native::Presentation::cacheChangeToken(path(p)); }) < 0) return nullptr;
+    return token.c_str();
+}
 const char *iifp_normalize_change_time(uint64_t device, uint64_t index, int64_t seconds, int64_t nanoseconds) {
     thread_local std::string token;
     if(status([&] { token = iiFileProvider::native::Presentation::normalizeChangeTime(device, index, seconds, nanoseconds); }) < 0) return nullptr;
