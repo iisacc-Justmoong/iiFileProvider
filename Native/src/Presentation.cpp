@@ -155,25 +155,23 @@ fs::path sourcePath(const fs::path &input) {
     return p;
 }
 std::string prefix(const fs::path &path, std::uint64_t length) {
-    std::ifstream in(path, std::ios::binary);
-    if (!in) fail("Cannot read presentation source");
+    ReadFile in(path);
     std::string bytes(static_cast<std::size_t>(std::min<std::uint64_t>(length, 256 * 1024)), '\0');
-    if (!in.read(bytes.data(), static_cast<std::streamsize>(bytes.size()))) fail("Presentation source changed during reading");
+    if (in.read(bytes.data(), static_cast<std::int64_t>(bytes.size())) != static_cast<std::int64_t>(bytes.size())) fail("Presentation source changed during reading");
     return bytes;
 }
 std::string version(const fs::path &path, const Source &state) {
     // Native identity + size + high resolution mtime, plus two bounded samples.
     // Attribute writes change ctime, so ctime cannot key an embedded document.
-    std::ifstream in(path, std::ios::binary);
-    if (!in) fail("Cannot read presentation fingerprint");
+    ReadFile in(path);
     const auto amount = static_cast<std::size_t>(std::min<std::uint64_t>(state.size, 32 * 1024));
     std::string bytes(amount, '\0');
-    if (!in.read(bytes.data(), static_cast<std::streamsize>(amount))) fail("Unstable presentation fingerprint");
+    if (in.read(bytes.data(), static_cast<std::int64_t>(amount)) != static_cast<std::int64_t>(amount)) fail("Unstable presentation fingerprint");
     if (state.size > amount) {
         const auto tail = std::min<std::uint64_t>(32 * 1024, state.size - amount);
-        in.seekg(static_cast<std::streamoff>(state.size - tail));
+        if (!in.seek(state.size - tail)) fail("Unstable presentation fingerprint");
         const auto at = bytes.size(); bytes.resize(at + static_cast<std::size_t>(tail));
-        if (!in.read(bytes.data() + at, static_cast<std::streamsize>(tail))) fail("Unstable presentation fingerprint");
+        if (in.read(bytes.data() + at, static_cast<std::int64_t>(tail)) != static_cast<std::int64_t>(tail)) fail("Unstable presentation fingerprint");
     }
     if (inspect(path).stamp != state.stamp) fail("Source changed during presentation fingerprinting");
     auto result = "1:" + state.stamp + ":" + sha256(bytes);
@@ -398,9 +396,13 @@ bool embed(const fs::path &path, const std::string &data) {
     if (!GetFileTime(metadata, nullptr, nullptr, &modified)) { CloseHandle(metadata); return false; }
     // Named streams cannot be staged by renaming another NTFS stream. Write the
     // bounded derived document; checksum + source version reject torn writes.
-    std::ofstream output(stream, std::ios::binary | std::ios::trunc);
-    output.write(data.data(), static_cast<std::streamsize>(data.size())); output.flush();
-    const bool written = bool(output); output.close();
+    const auto output = CreateFileW(stream.c_str(), GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    DWORD count = 0;
+    const bool written = output != INVALID_HANDLE_VALUE &&
+        WriteFile(output, data.data(), static_cast<DWORD>(data.size()), &count, nullptr) &&
+        count == data.size() && FlushFileBuffers(output);
+    if (output != INVALID_HANDLE_VALUE) CloseHandle(output);
     // NTFS streams share file timestamps. Keep the data fork's original mtime;
     // the native change time still journals this metadata publication.
     const bool restored = SetFileTime(metadata, nullptr, nullptr, &modified); CloseHandle(metadata);

@@ -57,6 +57,17 @@ int main(int argc, char **argv) {
         require((fs::status(Presentation::companionPath(file)).permissions() & (fs::perms::group_read | fs::perms::others_read)) == fs::perms::none, "derived content does not broaden source access");
 #endif
         require(Presentation::prepare(file).cacheHit, "an unchanged file reuses its embedded preview");
+#ifdef _WIN32
+        // Preview reads and NTFS stream writes must coexist with deletion rights.
+        const auto deleteAccess = CreateFileW(file.c_str(), DELETE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        require(deleteAccess != INVALID_HANDLE_VALUE, "source deletion rights can be reserved");
+        fs::remove(Presentation::companionPath(file));
+        try {
+            require(Presentation::prepare(file).embedded, "preview publication shares deletion access");
+        } catch (...) { CloseHandle(deleteAccess); throw; }
+        CloseHandle(deleteAccess);
+#endif
 #ifndef _WIN32
         const auto clockFile = temporary.path() / "pinned-time.txt";
         { std::ofstream external(clockFile); external << "original"; }
