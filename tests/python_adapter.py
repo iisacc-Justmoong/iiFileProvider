@@ -109,6 +109,20 @@ class ProviderTest(unittest.TestCase):
             self.assertEqual(details["preview"]["kind"], "text")
             self.assertFalse(list(Path(root).glob(".iifile-stage-*")))
 
+    def test_directory_publication_and_rollback_drain_nested_presentations(self):
+        with provider.TemporaryDirectory(dir=TEST_ROOT) as root:
+            directory = Path(root) / "frames"
+            backup = Path(root) / "previous"
+            provider.mkdir(directory)
+            for index in range(24):
+                provider.write_text(directory / f"frame-{index}.json", '{"status":"old"}')
+            provider.replace(directory, backup)
+            provider.replace(backup, directory)
+            self.assertTrue(provider.wait_for_presentations())
+            self.assertEqual(len(list(directory.glob("frame-*.json"))), 24)
+            self.assertEqual((directory / "frame-0.json").read_text(), '{"status":"old"}')
+            self.assertFalse(backup.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

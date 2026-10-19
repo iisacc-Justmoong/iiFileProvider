@@ -57,7 +57,7 @@ int iifp_publish(const char *s,const char *d,int overwrite) { return status([&] 
     if (overwrite) {
         // Publication across private staging subdirectories on one filesystem
         // retains os.replace semantics used by existing model pipelines.
-        std::filesystem::rename(path(s),path(d));
+        iiFileProvider::native::renameFile(path(s),path(d));
     } else { std::filesystem::create_hard_link(path(s),path(d)); }
     iiFileProvider::native::Presentation::enqueue(path(d));
 }); }

@@ -4,3 +4,10 @@ Windows에서 Unicode 경로의 패키지 생성은 `_wsopen_s`의 `_O_EXCL`로 
 # 소스 경로 검사
 
 Windows에서는 파일과 모든 상위 경로의 reparse point를 네이티브 속성 조회로 검사한다. MinGW의 `canonical()` 결과만으로 디렉터리 심볼릭 링크를 판별하지 않는다. 패키징 테스트는 파일 링크와 상위 디렉터리 링크를 각각 생성하여 거부 동작을 검증한다.
+# Directory publication
+
+The Python `replace`/`rename` bridge uses native storage rename. On Windows it
+drains presentation work for both paths, including children of a renamed
+directory, before publication or rollback. The Python adapter regression moves
+a directory with queued child previews and restores all of its original files.
+
