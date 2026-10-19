@@ -21,3 +21,5 @@ drains presentation work for both paths, including children of a renamed
 directory, before publication or rollback. The Python adapter regression moves
 a directory with queued child previews and restores all of its original files.
 
+
+최신 구성·실행 결과와 복구 조치는 [Windows 빌드 및 실행](WindowsBuildAndRun.md)에 기록한다.

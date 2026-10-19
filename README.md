@@ -1,5 +1,7 @@
 # iiFileProvider
 
+[Windows 빌드 및 실행](docs/WindowsBuildAndRun.md)
+
 Android, iOS and WebAssembly builds compile pinned public-domain SQLite 3.49.1
 with FTS5 from the verified official amalgamation. Host builds retain system
 SQLite by default; `IIFILEPROVIDER_USE_BUNDLED_SQLITE=ON` exercises the portable
