@@ -88,3 +88,10 @@ The catalog safety test verifies Windows denial when an open SQLite connection
 prevents renaming its state directory and checks that the original catalog stays
 intact. Filesystems that allow the rename retain the foreign-directory identity
 rejection check.
+Windows stream renames also drain pending presentation work for both paths; the
+native contract closes an OutputFile and immediately replaces an existing file.
+The public storage header forward-declares NT syscall pointer types. Only the
+implementation includes winternl.h, so consumers can include Dokan's NT types.
+Windows installations also colocate an external SQLite DLL with the native
+provider when it is available beside the imported SQLite library. The installed
+runtime test loads a staged Native DLL with Python's normal safe DLL search mode.

@@ -2,6 +2,7 @@
 #include <iiFileProviderNative.h>
 #include <iostream>
 #include <iiFileProviderPresentation.h>
+#include <iiFileProviderStorage.h>
 #include <stdexcept>
 #include <atomic>
 #include <thread>
@@ -52,6 +53,10 @@ int main(int argc, char **argv) try {
     File::write(path, "replacement");
     check(input->read(7)=="changed");
     check(File::read(path) == "replacement");
+    const auto renameSource=directory.path()/"rename-source.bin";
+    { OutputFile output(renameSource,std::ios::binary|std::ios::out);output<<"renamed";output.close();check(bool(output)); }
+    renameFile(renameSource,path);
+    check(!std::filesystem::exists(renameSource) && File::read(path)=="renamed");
     auto missing = directory.path() / "uncommitted";
     {
         StagedFile staged(missing);

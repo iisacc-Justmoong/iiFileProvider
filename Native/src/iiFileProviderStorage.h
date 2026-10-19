@@ -10,7 +10,11 @@ struct sqlite3;
 #define NOMINMAX
 #endif
 #include <windows.h>
-#include <winternl.h>
+using NTSTATUS = LONG;
+struct _OBJECT_ATTRIBUTES;
+struct _IO_STATUS_BLOCK;
+using POBJECT_ATTRIBUTES = _OBJECT_ATTRIBUTES *;
+using PIO_STATUS_BLOCK = _IO_STATUS_BLOCK *;
 #else
 #include <sys/types.h>
 #endif

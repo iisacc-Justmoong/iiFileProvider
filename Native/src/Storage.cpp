@@ -3,6 +3,7 @@
 #include <sqlite3.h>
 #ifdef _WIN32
 #include <windows.h>
+#include <winternl.h>
 #else
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -42,8 +43,18 @@ bool createDirectories(const std::filesystem::path &p) { return std::filesystem:
 bool createDirectories(const std::filesystem::path &p, std::error_code &e) { return std::filesystem::create_directories(p,e); }
 bool copyFile(const std::filesystem::path &s, const std::filesystem::path &d, std::filesystem::copy_options o) { const bool copied=std::filesystem::copy_file(s,d,o); if (copied) Presentation::enqueue(d); return copied; }
 bool copyFile(const std::filesystem::path &s, const std::filesystem::path &d, std::filesystem::copy_options o, std::error_code &e) { const bool copied=std::filesystem::copy_file(s,d,o,e); if (copied && !e) Presentation::enqueue(d); return copied; }
-void renameFile(const std::filesystem::path &s,const std::filesystem::path &d) { std::filesystem::rename(s,d); Presentation::enqueue(d); }
-void renameFile(const std::filesystem::path &s,const std::filesystem::path &d,std::error_code &e) { std::filesystem::rename(s,d,e); if (!e) Presentation::enqueue(d); }
+void renameFile(const std::filesystem::path &s,const std::filesystem::path &d) {
+#ifdef _WIN32
+    Presentation::cancelPending(s); Presentation::cancelPending(d);
+#endif
+    std::filesystem::rename(s,d); Presentation::enqueue(d);
+}
+void renameFile(const std::filesystem::path &s,const std::filesystem::path &d,std::error_code &e) {
+#ifdef _WIN32
+    Presentation::cancelPending(s); Presentation::cancelPending(d);
+#endif
+    std::filesystem::rename(s,d,e); if (!e) Presentation::enqueue(d);
+}
 void createHardLink(const std::filesystem::path &s,const std::filesystem::path &d) { std::filesystem::create_hard_link(s,d); }
 #ifndef _WIN32
 int openFile(const char *p,int f,mode_t m) { return ::open(p,f,m); }
