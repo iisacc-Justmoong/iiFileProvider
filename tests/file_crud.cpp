@@ -32,7 +32,7 @@ protected:
     }
     qint64 writeData(const char *, qint64) override { return -1; }
 };
-int main(int argc, char **argv) {
+int main(int argc, char **argv) try {
     QCoreApplication app(argc, argv);
     QTemporaryDir directory;
     require(directory.isValid(), "temporary directory");
@@ -77,7 +77,8 @@ int main(int argc, char **argv) {
     {
         StagedFile staged(path);
         File::write(staged.path(), "validated codec output");
-        require(staged.publish().succeeded, "publish provider-owned stage");
+        const auto published=staged.publish();
+        require(published.succeeded, published.message.c_str());
     }
     require(File::read(path) == "validated codec output", "stage reaches final path");
     File::write(path, "complete");
@@ -117,4 +118,7 @@ int main(int argc, char **argv) {
             "no abandoned temporary payloads; only persistent empty lease metadata remains");
     TemporaryLease cleaner(std::filesystem::path(QFileInfo(directory.path()).canonicalFilePath().toStdU16String()), TemporaryLease::Mode::TryExclusive);
     require(cleaner.locked(), "staged file cleanup releases its directory lease");
+} catch (const std::exception &error) {
+    std::cerr << error.what() << '\n';
+    return 1;
 }

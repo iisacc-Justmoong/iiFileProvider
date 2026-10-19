@@ -24,7 +24,12 @@ bool FileDevice::rename(const QString &source,const QString &destination) { cons
 bool FileDevice::rename(const QString &destination) { const bool renamed=QFile::rename(destination); if (renamed) present(destination); return renamed; }
 bool FileDevice::resize(const QString &path,qint64 size) { return QFile::resize(path,size); }
 bool FileDevice::resize(qint64 size) { return QFile::resize(size); }
-bool SaveFile::open(OpenMode mode) { return QSaveFile::open(mode); }
+bool SaveFile::open(OpenMode mode) {
+#ifdef _WIN32
+    detail::cancelPresentation(std::filesystem::path(fileName().toStdU16String()));
+#endif
+    return QSaveFile::open(mode);
+}
 bool SaveFile::commit() { const auto path=fileName(); const bool committed=QSaveFile::commit(); if (committed) present(path); return committed; }
 bool TemporaryFile::open() { return QTemporaryFile::open(); }
 TemporaryDirectory::TemporaryDirectory() = default;

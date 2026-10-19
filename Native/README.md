@@ -67,3 +67,24 @@ Python, Swift and Android support together.
 The native package exports `iiFileProviderNative_PYTHON_DIRECTORY` and
 `iiFileProviderNative_LICENSE_DIRECTORY` for runtime packaging. Existing 0.5
 native consumers remain compatible; new storage adapters require 0.6.
+
+On MSVC, each exported `Authorship` compile-time limit has its own declaration.
+`Native.AuthorLinks` checks the byte and link limits at compile time as well as
+exercising author metadata through the imported native library.
+The relocated bundled-SQLite consumer test prepends its own installed `bin/`
+directory on Windows so DLL loading also exercises the relocated package.
+Unicode filesystem fixtures use UTF-8 path literals explicitly on Windows.
+Native and device contract executables print caught failures before returning a
+nonzero status, so Windows test logs retain the original error information.
+Windows native read handles share deletion, allowing an atomic replacement while
+existing readers retain the old file. The native contract checks both old-reader
+bytes and replacement bytes. Existing Windows files use `ReplaceFileW` to retain
+that behavior with a live reader. Windows writes drain pending presentation work for
+the destination before replacement so NTFS metadata streams cannot block commit.
+The presentation contract compares source and derived-file Windows DACLs; POSIX
+builds retain the owner-only mode check. Windows permission bits do not represent
+NTFS access-control entries.
+The catalog safety test verifies Windows denial when an open SQLite connection
+prevents renaming its state directory and checks that the original catalog stays
+intact. Filesystems that allow the rename retain the foreign-directory identity
+rejection check.

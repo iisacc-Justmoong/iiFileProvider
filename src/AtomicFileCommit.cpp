@@ -109,6 +109,10 @@ AtomicFileCommitResult File::publish(
         sourcePath = absolutePath(pathString(temporary));
     }
     catch (const std::exception &error) { return {false, "invalid_path", error.what()}; }
+#ifdef _WIN32
+    detail::cancelPresentation(temporary);
+    detail::cancelPresentation(destination);
+#endif
     QLockFile lock(target + ".iisacc-lock");
     if (!lock.tryLock(0)) return {false, "file_busy", "another file operation owns this path"};
     const QFileInfo info(target);

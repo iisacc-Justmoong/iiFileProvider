@@ -75,9 +75,20 @@ int main() {
         require(!fs::exists(root / "source/new.bin"), "symlink escape modified outside data");
 #endif
         const auto state = root / "destination/.iisacc-file-provider";
-        fs::rename(state, root / "destination/saved-state"); fs::create_directory(state);
+        std::error_code replacementError;
+        fs::rename(state, root / "destination/saved-state", replacementError);
+#ifdef _WIN32
+        if (replacementError) {
+            require(replacementError==std::errc::permission_denied,"live Windows catalog rejects directory replacement");
+            require(destination.count()==1,"rejected directory replacement preserves the active catalog");
+        } else
+#endif
+        {
+        if (replacementError) throw fs::filesystem_error("rename catalog fixture",state,replacementError);
+        fs::create_directory(state);
         rejects([&] { (void)destination.search(); }, "replaced catalog directory accepted");
         fs::remove(state); fs::rename(root / "destination/saved-state", state);
+        }
 
         {
             FileCatalog settings(root / "settings");

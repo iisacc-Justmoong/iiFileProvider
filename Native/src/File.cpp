@@ -57,7 +57,12 @@ void writeStaged(const std::filesystem::path &path,std::string_view bytes) {
 }
 } // namespace
 struct ReadFile::Impl {
+#ifdef _WIN32
+    HANDLE handle=INVALID_HANDLE_VALUE;
+    ~Impl() { if (handle!=INVALID_HANDLE_VALUE) CloseHandle(handle); }
+#else
     std::ifstream stream;
+#endif
     std::uint64_t size{}, position{};
 };
 ReadFile::ReadFile(const std::filesystem::path &path) : impl_(std::make_unique<Impl>()) {
@@ -67,9 +72,15 @@ ReadFile::ReadFile(const std::filesystem::path &path) : impl_(std::make_unique<I
     if (error)
         throw FileError("Cannot inspect input file: " + error.message());
     impl_->size = size;
+#ifdef _WIN32
+    impl_->handle=CreateFileW(target.c_str(),GENERIC_READ,
+        FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);
+    if (impl_->handle==INVALID_HANDLE_VALUE) throw FileError("Cannot open input file");
+#else
     impl_->stream.open(target, std::ios::binary);
     if (!impl_->stream)
         throw FileError("Cannot open input file");
+#endif
 }
 ReadFile::~ReadFile() = default;
 std::int64_t ReadFile::read(char *data, std::int64_t count) {
@@ -78,10 +89,15 @@ std::int64_t ReadFile::read(char *data, std::int64_t count) {
     auto amount = std::min<std::uint64_t>(
         static_cast<std::uint64_t>(count),
         static_cast<std::uint64_t>(std::numeric_limits<std::streamsize>::max()));
+#ifdef _WIN32
+    DWORD read=0;
+    if (!::ReadFile(impl_->handle,data,static_cast<DWORD>(std::min<std::uint64_t>(amount,MAXDWORD)),&read,nullptr)) return -1;
+#else
     impl_->stream.read(data, static_cast<std::streamsize>(amount));
     auto read = impl_->stream.gcount();
     if (impl_->stream.bad())
         return -1;
+#endif
     impl_->position += static_cast<std::uint64_t>(read);
     return static_cast<std::int64_t>(read);
 }
@@ -98,10 +114,15 @@ std::string ReadFile::read(std::int64_t count) {
 bool ReadFile::seek(std::uint64_t offset) {
     if (offset > static_cast<std::uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
+#ifdef _WIN32
+    LARGE_INTEGER target{};target.QuadPart=static_cast<LONGLONG>(offset);
+    if (!SetFilePointerEx(impl_->handle,target,nullptr,FILE_BEGIN)) return false;
+#else
     impl_->stream.clear();
     impl_->stream.seekg(static_cast<std::streamoff>(offset));
     if (!impl_->stream)
         return false;
+#endif
     impl_->position = offset;
     return true;
 }
@@ -131,6 +152,10 @@ void File::createDirectories(const std::filesystem::path &path) {
 PublishResult File::publish(const std::filesystem::path &temporary,
                             const std::filesystem::path &destination) {
     try {
+#ifdef _WIN32
+        Presentation::cancelPending(temporary);
+        Presentation::cancelPending(destination);
+#endif
         if (std::filesystem::weakly_canonical(parentOf(temporary)) !=
             std::filesystem::weakly_canonical(parentOf(destination)))
             return {false, "cross_directory",
@@ -144,9 +169,11 @@ PublishResult File::publish(const std::filesystem::path &temporary,
         if (std::filesystem::exists(status))
             std::filesystem::permissions(temporary, status.permissions());
 #ifdef _WIN32
-        if (!MoveFileExW(temporary.c_str(), destination.c_str(),
-                         MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
-            return {false, "rename_failed", "Native file replacement failed"};
+        const bool replaced=std::filesystem::exists(status)
+            ? ReplaceFileW(destination.c_str(),temporary.c_str(),nullptr,0,nullptr,nullptr)
+            : MoveFileExW(temporary.c_str(),destination.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH);
+        if (!replaced)
+            return {false, "rename_failed", "Native file replacement failed: "+std::system_category().message(static_cast<int>(GetLastError()))};
 #else
         if (::rename(temporary.c_str(), destination.c_str()) != 0)
             return {false, "rename_failed", std::system_category().message(errno)};

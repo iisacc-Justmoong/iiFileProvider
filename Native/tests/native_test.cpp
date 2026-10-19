@@ -12,7 +12,7 @@ void check(bool value) {
     if (!value)
         throw std::runtime_error("Native provider contract failed: "+std::to_string(checks));
 }
-int main(int argc, char **argv) {
+int main(int argc, char **argv) try {
     check(sha256("abc") == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
     auto author = FileAuthor::fromIisaccAccount(
         {{"sub", "subject"}, {"email", "fixture@example.com"}, {"displayName", "작성자 📄"}},
@@ -48,7 +48,9 @@ int main(int argc, char **argv) {
     check(input->seek(2) && input->read(5) == "anged");
     std::filesystem::permissions(path, std::filesystem::perms::owner_read |
                                            std::filesystem::perms::owner_write);
+    check(input->seek(0));
     File::write(path, "replacement");
+    check(input->read(7)=="changed");
     check(File::read(path) == "replacement");
     auto missing = directory.path() / "uncommitted";
     {
@@ -103,4 +105,7 @@ int main(int argc, char **argv) {
     check(File::remove(alias) && File::read(race)==winner);
 #endif
     return 0;
+} catch (const std::exception &error) {
+    std::cerr << error.what() << '\n';
+    return 1;
 }

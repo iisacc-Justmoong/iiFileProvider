@@ -39,4 +39,7 @@ run_checked("${CMAKE_COMMAND}" -S "${_root}/consumer" -B "${_root}/consumer/buil
     "-DCMAKE_PREFIX_PATH=${_root}/relocated" -DCMAKE_BUILD_TYPE=Release
     -DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF)
 run_checked("${CMAKE_COMMAND}" --build "${_root}/consumer/build" --parallel 2)
+if(WIN32)
+    set(ENV{PATH} "${_root}/relocated/bin;$ENV{PATH}")
+endif()
 run_checked("${CTEST_COMMAND}" --test-dir "${_root}/consumer/build" --output-on-failure)

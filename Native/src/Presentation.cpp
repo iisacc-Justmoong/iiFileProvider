@@ -589,7 +589,10 @@ public:
     }
     bool idle(std::chrono::milliseconds timeout) { std::unique_lock lock(mutex); return changed.wait_for(lock, timeout, [&] { return queue.empty() && !active; }); }
     void cancel(const fs::path &root) {
+        // A metadata publication can retire its stage while executing intake.
+        // The worker already owns that operation and must not wait for itself.
         std::unique_lock lock(mutex);
+        if (thread.get_id()==std::this_thread::get_id()) return;
         for (auto it = queue.begin(); it != queue.end();) {
             if (within(*it, root)) { queued.erase(*it); it = queue.erase(it); } else ++it;
         }

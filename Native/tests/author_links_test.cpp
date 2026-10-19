@@ -3,6 +3,8 @@
 #include <nlohmann/json.hpp>
 #include <stdexcept>
 using namespace iiFileProvider::native;
+static_assert(Authorship::MaximumBytes == 2 * 1024 * 1024);
+static_assert(Authorship::MaximumLinks == 64);
 void check(bool value) {
     if (!value)
         throw std::runtime_error("Native author/link compatibility contract failed");

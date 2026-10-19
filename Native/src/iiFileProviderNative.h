@@ -52,7 +52,8 @@ struct IIFILEPROVIDER_NATIVE_EXPORT FileLink {
 class IIFILEPROVIDER_NATIVE_EXPORT Authorship final {
   public:
     static constexpr int SchemaVersion = 3;
-    static constexpr std::size_t MaximumBytes = 2 * 1024 * 1024, MaximumLinks = 64;
+    static constexpr std::size_t MaximumBytes = 2 * 1024 * 1024;
+    static constexpr std::size_t MaximumLinks = 64;
     static constexpr const char *MetadataKey = "iisacc:authorship";
     Authorship();
     [[nodiscard]] static std::optional<Authorship> fromDump(std::string_view bytes);

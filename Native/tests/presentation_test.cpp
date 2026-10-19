@@ -5,6 +5,10 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#ifdef _WIN32
+#include <windows.h>
+#include <cstring>
+#endif
 #ifndef _WIN32
 #include <sys/xattr.h>
 #include <sys/stat.h>
@@ -12,6 +16,20 @@
 using namespace iiFileProvider::native;
 namespace fs = std::filesystem;
 static void require(bool v, const char *message) { if (!v) throw std::runtime_error(message); }
+#ifdef _WIN32
+static std::vector<unsigned char> dacl(const fs::path &path) {
+    DWORD size=0;
+    GetFileSecurityW(path.c_str(),DACL_SECURITY_INFORMATION,nullptr,0,&size);
+    require(size!=0,"DACL size is available");
+    std::vector<unsigned char> descriptor(size);
+    require(GetFileSecurityW(path.c_str(),DACL_SECURITY_INFORMATION,descriptor.data(),size,&size),"DACL is readable");
+    PACL acl=nullptr;BOOL present=FALSE,defaulted=FALSE;
+    require(GetSecurityDescriptorDacl(descriptor.data(),&present,&acl,&defaulted) && present,"DACL is present");
+    if (!acl) return {};
+    const auto *bytes=reinterpret_cast<const unsigned char *>(acl);
+    return {bytes,bytes+acl->AclSize};
+}
+#endif
 int main(int argc, char **argv) {
     try {
         require(argc == 2, "fixture directory required");
@@ -21,7 +39,7 @@ int main(int argc, char **argv) {
             ~Fixture() { std::error_code ec; fs::remove_all(value, ec); }
             const fs::path &path() const { return value; }
         } temporary(fs::absolute(argv[1]));
-        const auto file = temporary.path() / "문서.txt";
+        const auto file = temporary.path() / u8"문서.txt";
         File::write(file, "A real preview <script> & original\nSecond line");
         require(Presentation::waitForIdle(std::chrono::seconds(15)), "creation queue drained");
         auto record = Presentation::load(file);
@@ -33,7 +51,11 @@ int main(int argc, char **argv) {
         const auto portable = nlohmann::json::parse(File::read(Presentation::companionPath(file)));
         require(portable.at("preview").contains("data"), "preview bytes embedded in portable document");
         require(portable.at("details").at("name") == "문서.txt", "Unicode detail name");
+#ifdef _WIN32
+        require(dacl(Presentation::companionPath(file))==dacl(file),"derived content preserves the source Windows DACL");
+#else
         require((fs::status(Presentation::companionPath(file)).permissions() & (fs::perms::group_read | fs::perms::others_read)) == fs::perms::none, "derived content does not broaden source access");
+#endif
         require(Presentation::prepare(file).cacheHit, "an unchanged file reuses its embedded preview");
 #ifndef _WIN32
         const auto clockFile = temporary.path() / "pinned-time.txt";

@@ -3,8 +3,12 @@
 #include <QCoreApplication>
 #include <QImage>
 #include <stdexcept>
-static void check(bool value) { if (!value) throw std::runtime_error("Provider device contract failed"); }
-int main(int argc,char **argv) {
+#include <iostream>
+#include <source_location>
+static void check(bool value, const std::source_location where = std::source_location::current()) {
+    if (!value) throw std::runtime_error("Provider device contract failed at line " + std::to_string(where.line()));
+}
+int main(int argc,char **argv) try {
     QCoreApplication app(argc,argv);
     iiFileProvider::TemporaryDirectory directory(QString::fromLocal8Bit(argv[1])+"/devices-XXXXXX");
     check(directory.isValid());
@@ -23,4 +27,7 @@ int main(int argc,char **argv) {
     const auto png=directory.filePath("generated.png");
     check(iiFileProvider::File::saveImage(image,png));check(QImage(png)==image);
     QImage invalid;check(!iiFileProvider::File::saveImage(invalid,png));check(QImage(png)==image);
+} catch (const std::exception &error) {
+    std::cerr << error.what() << '\n';
+    return 1;
 }

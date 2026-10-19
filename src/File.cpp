@@ -44,6 +44,9 @@ void lock(QLockFile &file) {
 }
 void writeUnlocked(const QString &path, const std::function<void(QIODevice &)> &encode) {
     if (!encode) fail(FileCode::InvalidPath, "a file encoder is required");
+#ifdef _WIN32
+    detail::cancelPresentation(std::filesystem::path(path.toStdU16String()));
+#endif
     QSaveFile file(path);
     file.setDirectWriteFallback(false);
     if (!file.open(QIODevice::WriteOnly)) fail(FileCode::IoError, file.errorString());
