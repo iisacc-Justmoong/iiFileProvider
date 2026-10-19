@@ -64,6 +64,9 @@ def _native():
             library.iifp_presentation_wait.argtypes = [ctypes.c_int]
             library.iifp_presentation_cancel.argtypes = [ctypes.c_char_p]
             library.iifp_presentation_cancel.restype = None
+            if hasattr(library, "iifp_normalize_change_time"):
+                library.iifp_normalize_change_time.argtypes = [ctypes.c_uint64, ctypes.c_uint64, ctypes.c_int64, ctypes.c_int64]
+                library.iifp_normalize_change_time.restype = ctypes.c_char_p
             _library = library
             return library
     raise RuntimeError("iiFileProvider native library >= 0.7 is required; set IIFILEPROVIDER_NATIVE_LIBRARY")
@@ -107,6 +110,17 @@ def presentation(path, *, prepare=False):
 
 def wait_for_presentations(timeout=15.0):
     return bool(_native().iifp_presentation_wait(max(0, int(timeout * 1000))))
+
+
+def normalize_change_time(device, index, seconds, nanoseconds):
+    """Normalize our own preview attribute writes over a pinned native stat."""
+    library = _native()
+    if not hasattr(library, "iifp_normalize_change_time"):
+        raise RuntimeError("Native iiFileProvider >= 0.8.1 is required for change-time normalization")
+    value = library.iifp_normalize_change_time(device, index, seconds, nanoseconds)
+    if value is None:
+        _check(-1)
+    return value.decode("utf-8")
 
 
 def open(file, mode="r", buffering=-1, encoding=None, errors=None, newline=None,

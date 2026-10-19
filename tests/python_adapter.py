@@ -12,6 +12,23 @@ TEST_ROOT = sys.argv.pop(1)
 
 
 class ProviderTest(unittest.TestCase):
+    @unittest.skipIf(os.name == "nt", "POSIX pinned-stat identity")
+    def test_preview_publication_does_not_invalidate_but_external_edits_do(self):
+        with provider.TemporaryDirectory(dir=TEST_ROOT) as root:
+            path = Path(root) / "identity.txt"
+            path.write_bytes(b"original")
+            def token():
+                state = path.stat()
+                seconds, nanos = divmod(state.st_ctime_ns, 1_000_000_000)
+                return provider.normalize_change_time(state.st_dev, state.st_ino, seconds, nanos)
+            before = token()
+            provider.presentation(path, prepare=True)
+            self.assertEqual(token(), before)
+            state = path.stat()
+            path.write_bytes(b"modified")
+            os.utime(path, ns=(state.st_atime_ns, state.st_mtime_ns))
+            self.assertNotEqual(token(), before)
+
     @unittest.skipUnless(sys.platform == "darwin", "macOS application bundle layout")
     def test_bundled_worker_discovers_its_native_library_without_a_global_sdk(self):
         # Imported runtime installation includes SONAME files, not the unversioned

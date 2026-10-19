@@ -1,0 +1,11 @@
+{
+  "url": "https://www.sqlite.org/2025/sqlite-amalgamation-3490100.zip",
+  "archiveSha256": "6cebd1d8403fc58c30e93939b246f3e6e58d0765a5cd50546f16c00fd805d2c3",
+  "files": {
+    "sqlite3.c": "ff80c36ef1bb44eb357c7ff1d15be77540d41c28fb671088215a6cd12785c5d3",
+    "sqlite3.h": "88da6f1963bc192dfa18a3a48b423cf1fbbb04f903202efe9a78e3a597473e18"
+  },
+  "version": "3.49.1",
+  "license": "Public domain",
+  "licenseUrl": "https://www.sqlite.org/copyright.html"
+}

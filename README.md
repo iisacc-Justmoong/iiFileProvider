@@ -1,5 +1,42 @@
 # iiFileProvider
 
+Android, iOS and WebAssembly builds compile pinned public-domain SQLite 3.49.1
+with FTS5 from the verified official amalgamation. Host builds retain system
+SQLite by default; `IIFILEPROVIDER_USE_BUNDLED_SQLITE=ON` exercises the portable
+path. Installed Native, Catalog and Objects packages export the same SQLite
+target after relocation. iOS and WebAssembly use static file-adapter libraries.
+The `iiFileProvider.portable_sqlite` regression builds and relocates a Qt-free
+installation, then runs metadata, search, collections and persistence through
+an independent installed-package consumer.
+`IIFILEPROVIDER_BUILD_TOOLS` defaults to ON for desktop hosts and OFF for
+iOS, Android and WASM library packages. The catalog and object-store libraries
+remain available on these targets; the desktop command-line tools are not
+installed as unsigned mobile application bundles.
+WebAssembly uses Emscripten pthreads and exports the flag to consumers for the
+native worker and standard cancellation types. Use a multithread Qt WASM kit
+and cross-origin-isolated browser hosting. Android requires an NDK whose libc++
+ships the standard stop-token header; NDK r30 was validated for this release.
+The LLVM libc++ bundled with the Qt-compatible Emscripten release exposes stop
+tokens through `-fexperimental-library`; the WASM exports carry this C++ flag.
+A compiled WebAssembly cancellation callback was executed successfully with
+that toolchain before validating the complete provider libraries.
+C and Python adapters expose `normalize_change_time` over pinned stat values.
+Consumers can keep hash/cache identities stable across provider-owned preview
+attributes while still detecting external edits with restored modification time.
+Private object batches use standard threads with a scope join guard because the
+Qt-compatible Emscripten libc++ has stop tokens but no jthread implementation.
+All workers still join on success, cancellation and thread-creation failure;
+the caller's standard stop token and batch concurrency/memory limits are retained.
+When the Qt WASM kit omits its timezone database, author metadata validates IANA
+zones through the browser's native Intl API; UTC and bounded fixed offsets are
+validated directly. Invalid zones are rejected. Desktop timezone validation
+continues to use its platform-backed Qt timezone provider.
+
+Package release: **0.7.2** (2026-10-19). This patch packages the current
+source snapshot; build, test and installation evidence is recorded in the SDK
+patch-release report. Earlier versioned feature notes remain historical.
+
+
 The optional [Core I/O adapter](CoreIO/README.md) composes iiSDKCore 0.13 with
 Native file creation, atomic saves and post-close details/previews. Build it
 separately from `CoreIO/` or enable `IIFILEPROVIDER_BUILD_CORE_IO=ON`. Its

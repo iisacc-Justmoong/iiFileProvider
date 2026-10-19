@@ -1,4 +1,5 @@
 #include "ObjectBatchRead.h"
+#include "ObjectThreadJoin.h"
 #include <algorithm>
 #include <atomic>
 #include <exception>
@@ -27,8 +28,9 @@ std::vector<PreparedObjectSource> readObjectBatch(const std::vector<ObjectImport
     std::atomic_size_t cursor=0;
     std::atomic_bool failed=false;
     std::vector<std::exception_ptr> errors(files.size());
-    std::vector<std::jthread> workers;
+    std::vector<std::thread> workers;
     workers.reserve(concurrency);
+    ObjectThreadJoin joined(workers);
     for(std::size_t worker=0;worker<concurrency;++worker)workers.emplace_back([&]{
         while(!failed.load()){
             const auto index=cursor.fetch_add(1);
@@ -56,9 +58,8 @@ std::vector<PreparedObjectSource> readObjectBatch(const std::vector<ObjectImport
             }catch(...){errors[index]=std::current_exception();failed.store(true);}
         }
     });
-    // Explicitly join before examining errors or moving the buffers. jthread
-    // also joins during unwinding if allocating/starting a later worker fails.
-    workers.clear();
+    // Join before examining results; the guard also joins during unwinding.
+    joined.join();
     for(const auto &error:errors)if(error)std::rethrow_exception(error);
     return prepared;
 }

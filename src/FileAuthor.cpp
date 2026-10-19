@@ -5,10 +5,35 @@
 #include <QtCore/QTimeZone>
 
 #include <utility>
+#if defined(__EMSCRIPTEN__) && !QT_CONFIG(timezone)
+#include <emscripten.h>
+EM_JS(int, iifp_author_iana_zone_available, (const char *zone), {
+    try { new Intl.DateTimeFormat("en", {timeZone: UTF8ToString(zone)}); return 1; }
+    catch (error) { return 0; }
+});
+#endif
 
 namespace iiFileProvider {
 namespace {
 using namespace detail;
+bool validTimeZone(const QString &zone) {
+#if QT_CONFIG(timezone)
+    return QTimeZone(zone.toUtf8()).isValid();
+#else
+    if(zone == "UTC") return true;
+    const QRegularExpression fixed(QStringLiteral("\\AUTC[+-]([0-9]{2}):([0-9]{2})\\z"));
+    const auto match = fixed.match(zone);
+    if(match.hasMatch()) {
+        const auto hours = match.captured(1).toInt(), minutes = match.captured(2).toInt();
+        return hours <= 14 && minutes < 60 && (hours != 14 || minutes == 0);
+    }
+#if defined(__EMSCRIPTEN__)
+    return iifp_author_iana_zone_available(zone.toUtf8().constData()) != 0;
+#else
+    return false; // This kit has neither a timezone database nor a platform provider.
+#endif
+#endif
+}
 
 const QStringList membershipNames{"Free", "Plus", "Pro", "Enterprise"};
 QString membershipName(SocietyCloudMembership membership)
@@ -90,7 +115,7 @@ AuthorDetails readDetails(const QJsonObject& json)
     if (!details.contactEmail.isEmpty()) details.contactEmail = email(details.contactEmail, "contactEmail");
     require(details.locale.isEmpty() || matches(details.locale, "\\A[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*\\z"), "locale");
     require(details.countryCode.isEmpty() || matches(details.countryCode, "\\A[A-Z]{2}\\z"), "countryCode");
-    require(details.timeZone.isEmpty() || QTimeZone(details.timeZone.toUtf8()).isValid(), "timeZone");
+    require(details.timeZone.isEmpty() || validTimeZone(details.timeZone), "timeZone");
     for (const auto* key : {"links", "identifiers"}) {
         const auto value = json.value(key);
         if (value.isUndefined()) continue;

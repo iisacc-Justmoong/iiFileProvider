@@ -105,6 +105,7 @@ int main(int argc, char **argv) {
         require(rejected && File::read(file) == before, "invalid supplied preview preserves original");
         const auto unknown = temporary.path() / "unknown.bin";
         File::write(unknown, std::string("\0\1\2", 3));
+        require(Presentation::waitForIdle(std::chrono::seconds(15)), "unknown file intake drained before bridge cache replacement");
         const auto fallback = Presentation::prepare(unknown);
         require(fallback.preview.kind == "information", "unsupported content has honest information card");
         auto bridgeFallback = nlohmann::json::parse(fallback.document);

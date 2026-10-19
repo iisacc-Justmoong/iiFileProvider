@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(Threads)
+if(NOT TARGET SQLite3::SQLite3)
+    include("${CMAKE_CURRENT_LIST_DIR}/iiFileProviderSQLite3Targets.cmake")
+endif()
+if(NOT TARGET SQLite::SQLite3)
+    add_library(SQLite::SQLite3 ALIAS SQLite3::SQLite3)
+endif()

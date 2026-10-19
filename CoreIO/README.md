@@ -1,5 +1,8 @@
 # iiFileProvider Core I/O adapter
 
+Version 0.1.1 is the maintenance release accompanying iiFileProvider 0.7.2
+and Native 0.8.1. Its existing I/O and dependency contracts are unchanged.
+
 This optional C++23 component depends on iiSDKCore 0.13 and iiFileProvider Native
 0.7. The Core runtime and the base Native provider remain independently usable.
 Neither imports this adapter or each other. Qt is not used.

@@ -1,4 +1,5 @@
 #include "ObjectPackager.h"
+#include "ObjectThreadJoin.h"
 #include "ObjectSnapshotBatch.h"
 #include "TemporaryLease.h"
 #include <algorithm>
@@ -59,7 +60,8 @@ ObjectInventory ObjectPackager::inventory(const std::vector<ObjectTreeMapping> &
         concurrency?concurrency:std::thread::hardware_concurrency(),1,64));
     std::atomic_size_t next=0;std::vector<std::string> failures(result.entries.size());
     {
-        std::vector<std::jthread> workers;workers.reserve(count);
+        std::vector<std::thread> workers;workers.reserve(count);
+        detail::ObjectThreadJoin joined(workers);
         for(std::size_t worker=0;worker<count;++worker)workers.emplace_back([&]{
             while(!cancellation.stop_requested()){
                 const auto index=next.fetch_add(1,std::memory_order_relaxed);

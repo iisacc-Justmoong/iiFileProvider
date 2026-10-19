@@ -1,0 +1,42 @@
+cmake_minimum_required(VERSION 3.31)
+set(_root "${BINARY_ROOT}/portable-sqlite")
+file(LOCK "${_root}.lock" GUARD PROCESS TIMEOUT 300)
+set(_stage "${_root}/installed")
+function(run_checked)
+    execute_process(COMMAND ${ARGV} RESULT_VARIABLE result
+        OUTPUT_VARIABLE output ERROR_VARIABLE errors)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR "Portable SQLite validation failed (${result}):\n${output}\n${errors}")
+    endif()
+endfunction()
+run_checked("${CMAKE_COMMAND}" -S "${SOURCE_ROOT}" -B "${_root}/build"
+    -DIIFILEPROVIDER_USE_BUNDLED_SQLITE=ON -DIIFILEPROVIDER_BUILD_QT_API=OFF
+    -DIIFILEPROVIDER_BUILD_CORE_IO=OFF -DBUILD_TESTING=OFF
+    "-DCMAKE_CXX_COMPILER=${CXX_COMPILER}" -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_INSTALL_PREFIX=${_stage}")
+run_checked("${CMAKE_COMMAND}" --build "${_root}/build" --parallel 2)
+run_checked("${CMAKE_COMMAND}" --install "${_root}/build")
+file(MAKE_DIRECTORY "${_root}/consumer")
+file(WRITE "${_root}/consumer/CMakeLists.txt" [=[
+cmake_minimum_required(VERSION 3.31)
+project(PortableProviderConsumer LANGUAGES CXX)
+find_package(iiFileProviderCatalog CONFIG REQUIRED)
+get_target_property(_sqlite SQLite3::SQLite3 IMPORTED_LOCATION_RELEASE)
+if(NOT _sqlite MATCHES "iiFileProviderSQLite3")
+    message(FATAL_ERROR "The installed provider selected host SQLite: ${_sqlite}")
+endif()
+add_executable(consumer "${SOURCE_ROOT}/tests/file_catalog.cpp")
+target_link_libraries(consumer PRIVATE iiFileProvider::Catalog)
+target_compile_definitions(consumer PRIVATE CATALOG_TEST_DIRECTORY="${CMAKE_BINARY_DIR}")
+enable_testing()
+add_test(NAME portable-sqlite-consumer COMMAND consumer)
+]=])
+# Relocation proves that exported targets do not refer back to source/build paths.
+file(REMOVE_RECURSE "${_root}/relocated")
+file(RENAME "${_stage}" "${_root}/relocated")
+run_checked("${CMAKE_COMMAND}" -S "${_root}/consumer" -B "${_root}/consumer/build"
+    "-DSOURCE_ROOT=${SOURCE_ROOT}" "-DCMAKE_CXX_COMPILER=${CXX_COMPILER}"
+    "-DCMAKE_PREFIX_PATH=${_root}/relocated" -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF)
+run_checked("${CMAKE_COMMAND}" --build "${_root}/consumer/build" --parallel 2)
+run_checked("${CTEST_COMMAND}" --test-dir "${_root}/consumer/build" --output-on-failure)

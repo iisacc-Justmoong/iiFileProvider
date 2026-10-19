@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.31)
-project(iiFileProviderCoreIO VERSION 0.1.0 LANGUAGES CXX)
+project(iiFileProviderCoreIO VERSION 0.1.1 LANGUAGES CXX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CTest)

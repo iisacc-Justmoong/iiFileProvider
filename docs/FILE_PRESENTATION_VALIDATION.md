@@ -164,3 +164,9 @@ Society drive was restarted, migrated or replaced to obtain these fixture result
 ## Alright App Store Swift 6 consumer — 2026-10-15 UTC
 
 The Alright Release consumer compiles the installed Swift source with `-swift-version 6`. That consumer exposed a strict-concurrency error on the mutable `pendingPreviews` set. Every access already holds `previewLock`; the declaration now documents that external synchronization with `nonisolated(unsafe)` and retains the lock. The workspace-local presentation install contains the exact corrected source. The existing Swift adapter compiled in Swift 6 mode and passed its real file, collision, traversal, persistence and presentation checks; Alright passed all eight CTest suites. Evidence and the previous Swift source are retained in `Product/Utility/Alright/build/verification/icon-submission-20261015/`. This is source-consumer and test evidence, not App Store review approval.
+# Deterministic bridge cache validation
+
+The native presentation regression drains the automatic creation queue before
+replacing an unsupported file's information card with a source-only bridge
+record. This isolates the subsequent synchronous upgrade/cache assertions from
+the legitimate asynchronous intake of that same newly created file.

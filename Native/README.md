@@ -1,6 +1,10 @@
 # iiFileProvider native component
 
-Version 0.8.0 adds `File::create`, `File::update` and `File::remove` for the Qt-free
+The C++23 build uses headers and translation units, with named-module scanning
+disabled. This supports Android NDK toolchains that do not ship clang-scan-deps;
+it does not change the language level or runtime behavior.
+
+Version 0.8.1 retains `File::create`, `File::update` and `File::remove` for the Qt-free
 iiCSMIDI document consumer. `create` writes complete staged bytes, then publishes
 with an exclusive same-directory hard link: an existing file/symlink/directory
 is never replaced. Filesystems lacking hard links fail explicitly; no partial or

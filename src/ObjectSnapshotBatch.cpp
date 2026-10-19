@@ -1,5 +1,6 @@
 #include "ObjectSnapshotBatch.h"
 #include "ObjectStore.h"
+#include "ObjectThreadJoin.h"
 #include <algorithm>
 #include <atomic>
 #include <exception>
@@ -24,7 +25,8 @@ ObjectSnapshotBatch::ObjectSnapshotBatch(const std::vector<ObjectSnapshotRequest
         std::atomic_bool failed=false;
         std::vector<std::exception_ptr> errors(requests.size());
         {
-            std::vector<std::jthread> workers;workers.reserve(m_concurrency);
+            std::vector<std::thread> workers;workers.reserve(m_concurrency);
+            ObjectThreadJoin joined(workers);
             for(std::size_t worker=0;worker<m_concurrency;++worker)workers.emplace_back([&]{
                 while(!failed.load()){
                     const auto index=cursor.fetch_add(1);
@@ -56,7 +58,8 @@ void ObjectSnapshotBatch::clear() noexcept {
     std::atomic_size_t cursor=0;
     const auto clean=[&]{for(;;){const auto index=cursor.fetch_add(1);if(index>=m_sources.size())return;m_sources[index].reset();}};
     {
-        std::vector<std::jthread> workers;
+        std::vector<std::thread> workers;
+        ObjectThreadJoin joined(workers);
         try{
             workers.reserve(m_concurrency-1);
             for(std::size_t worker=1;worker<m_concurrency;++worker)workers.emplace_back(clean);
