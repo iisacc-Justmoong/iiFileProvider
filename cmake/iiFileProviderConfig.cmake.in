@@ -2,6 +2,7 @@
 set(iiFileProvider_ANDROID_SOURCE_DIRECTORY "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATADIR@/iiFileProvider/android/src")
 include("${CMAKE_CURRENT_LIST_DIR}/iiFileProviderAndroid.cmake")
 include(CMakeFindDependencyMacro)
+find_dependency(iiFileProviderNative 0.8.3 CONFIG HINTS "${CMAKE_CURRENT_LIST_DIR}/../iiFileProviderNative")
 find_dependency(iiFileProviderCatalog @PROJECT_VERSION@ CONFIG HINTS "${CMAKE_CURRENT_LIST_DIR}/../iiFileProviderCatalog")
 find_dependency(iiFileProviderTemporary CONFIG HINTS "${CMAKE_CURRENT_LIST_DIR}/../iiFileProviderTemporary")
 if(NOT TARGET Qt6::Core)

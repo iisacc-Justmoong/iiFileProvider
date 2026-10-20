@@ -43,7 +43,8 @@ constexpr auto attribute =
 #else
     "com.iisacc.file.presentation";
 #endif
-std::array<std::recursive_mutex, 32> entryLocks;
+std::mutex sourceAccessMutex;
+std::map<std::string, std::weak_ptr<std::recursive_mutex>> sourceAccessLocks;
 std::mutex rendererMutex;
 std::map<std::string, Presentation::Renderer> renderers;
 std::atomic_uint64_t rendererRevision{};
@@ -617,6 +618,34 @@ public:
 Worker &worker() { static Worker w; return w; }
 } // namespace
 
+struct SourceAccess::Impl {
+    std::string identity;
+    std::shared_ptr<std::recursive_mutex> mutex;
+    static std::string identify(const fs::path &input) {
+        if (input.empty()) throw FileError("A source path is required", FileCode::InvalidPath);
+        try { return inspect(fs::canonical(input)).identity; }
+        catch (const std::exception &error) { throw FileError(std::string("Cannot identify source access: ") + error.what()); }
+    }
+    static std::shared_ptr<std::recursive_mutex> acquire(const std::string &identity) {
+        std::lock_guard guard(sourceAccessMutex);
+        auto &entry = sourceAccessLocks[identity];
+        auto mutex = entry.lock();
+        if (!mutex) { mutex = std::make_shared<std::recursive_mutex>(); entry = mutex; }
+        return mutex;
+    }
+    explicit Impl(const fs::path &path) : identity(identify(path)), mutex(acquire(identity)) {}
+    ~Impl() {
+        mutex.reset();
+        std::lock_guard guard(sourceAccessMutex);
+        const auto entry = sourceAccessLocks.find(identity);
+        if (entry != sourceAccessLocks.end() && entry->second.expired()) sourceAccessLocks.erase(entry);
+    }
+};
+SourceAccess::SourceAccess(const fs::path &path) : impl_(std::make_unique<Impl>(path)) {}
+SourceAccess::~SourceAccess() = default;
+void SourceAccess::lock() { impl_->mutex->lock(); }
+void SourceAccess::unlock() noexcept { impl_->mutex->unlock(); }
+
 fs::path Presentation::companionPath(const fs::path &p) { auto name = fs::path("."); name += p.filename(); name += suffix; return p.parent_path() / name; }
 bool Presentation::isControlFile(const fs::path &p) noexcept { try { return providerControl(p); } catch (...) { return true; } }
 std::string Presentation::cacheChangeToken(const fs::path &input) {
@@ -652,10 +681,11 @@ PresentationRecord Presentation::prepare(const fs::path &input) {
     const auto p = sourcePath(input);
     if (providerControl(p)) fail("Provider control files do not receive previews");
     const auto identity = inspect(p).identity;
-    std::lock_guard lock(entryLocks[std::hash<std::string>{}(identity) % entryLocks.size()]);
+    SourceAccess access(p);
+    std::unique_lock sourceLock(access);
     Renderer renderer;
     { std::lock_guard registryLock(rendererMutex); const auto it = renderers.find(lower(text(p.extension()))); if (it != renderers.end()) renderer = it->second; }
-    const auto before = inspect(p);
+    auto before = inspect(p);
     if (before.identity != identity) fail("Source was replaced before presentation");
     if (auto r = loadAt(p, before)) {
         // Source-only platform bridges may have fewer decoders. Give a cached
@@ -663,12 +693,26 @@ PresentationRecord Presentation::prepare(const fs::path &input) {
         if (r->preview.kind != "information" || (!renderer && Json::parse(r->document).value("generator", std::string{}) == "iiFileProvider.Native/0.7")) return *r;
     }
     const auto stamp = version(p, before);
+    const auto initialChangeToken = cacheChangeToken(p);
     const auto bytes = prefix(p, before.size);
     auto details = detailsFor(p, before, bytes);
     std::optional<FilePreview> preview;
     if (renderer && before.size <= maximumSourceBytes) {
+        // Domain readers coordinate their source copy. Their detached rendering
+        // must not retain ownership of the file while an editor needs to write.
+        sourceLock.unlock();
         try { preview = renderer(p, details.properties); } catch (...) {}
+        sourceLock.lock();
+        const auto current = inspect(p);
+        if (current.identity != before.identity || current.stamp != before.stamp
+            || version(p, current) != stamp || cacheChangeToken(p) != initialChangeToken)
+            fail("Source changed during preview rendering");
         if (preview) { try { validatePreview(*preview); } catch (...) { preview.reset(); } }
+        if (auto cached = loadAt(p, current);
+            cached && (cached->preview.kind != "information" || !preview)) return *cached;
+        // Another renderer may have published attributes while this one worked.
+        // Only our own normalized metadata changes are accepted above.
+        before = current;
     }
     if (!preview) preview = wave(bytes, details);
 #ifdef __APPLE__
@@ -708,7 +752,8 @@ PresentationRecord Presentation::attach(const fs::path &input, const FilePreview
     if (properties.size() > 64) fail("Too many presentation properties");
     for (const auto &[key, value] : properties) if (key.empty() || key.size() > 256 || value.size() > 8192) fail("Presentation property exceeds limits");
     const auto p = sourcePath(input); if (providerControl(p)) fail("Cannot attach a preview to provider controls");
-    std::lock_guard lock(entryLocks[std::hash<std::string>{}(text(p)) % entryLocks.size()]);
+    SourceAccess access(p);
+    std::lock_guard sourceLock(access);
     const auto before = inspect(p); auto details = detailsFor(p, before, prefix(p, before.size)); details.properties = properties;
     return persist(p, before, version(p, before), preview, std::move(details));
 }

@@ -1,6 +1,7 @@
 #include "File.h"
 #include "StagedFile.h"
 #include "Presentation_p.h"
+#include <iiFileProviderNative.h>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -9,6 +10,7 @@
 #include <QTemporaryFile>
 #include <algorithm>
 #include <cerrno>
+#include <mutex>
 #if defined(__APPLE__)
 #include <stdio.h>
 #elif defined(__linux__)
@@ -30,6 +32,39 @@ FileCode FileError::code() const noexcept { return m_code; }
 namespace {
 [[noreturn]] void fail(FileCode code, const QString &message) {
     throw FileError(code, message.toStdString());
+}
+class CoordinatedReadFile final : public QFile {
+public:
+    explicit CoordinatedReadFile(const QString &path)
+        : QFile(path), m_access(std::filesystem::path(path.toStdU16String())) {}
+    ~CoordinatedReadFile() override { close(); }
+    native::SourceAccess &sourceAccess() { return m_access; }
+    bool open(OpenMode mode) override { std::lock_guard lock(m_access); return QFile::open(mode); }
+    void close() override {
+        if (!isOpen()) return;
+        std::lock_guard lock(m_access); QFile::close();
+    }
+    bool seek(qint64 offset) override { std::lock_guard lock(m_access); return QFile::seek(offset); }
+protected:
+    qint64 readData(char *bytes, qint64 count) override {
+        std::lock_guard lock(m_access); return QFile::readData(bytes, count);
+    }
+    qint64 readLineData(char *bytes, qint64 count) override {
+        std::lock_guard lock(m_access); return QFile::readLineData(bytes, count);
+    }
+private:
+    native::SourceAccess m_access;
+};
+std::unique_ptr<CoordinatedReadFile> openSource(const QString &path) {
+    const auto absolute = File::absolutePath(path);
+    const QFileInfo info(absolute);
+    if (!info.exists()) fail(FileCode::NotFound, "file does not exist");
+    if (!info.isFile()) fail(FileCode::InvalidPath, "input must be a regular file");
+    try {
+        auto file = std::make_unique<CoordinatedReadFile>(absolute);
+        if (!file->open(QIODevice::ReadOnly)) fail(FileCode::IoError, file->errorString());
+        return file;
+    } catch (const native::FileError &error) { fail(FileCode::IoError, QString::fromUtf8(error.what())); }
 }
 QString destination(const QString &path) {
     const auto absolute = File::absolutePath(path);
@@ -85,18 +120,13 @@ QString File::absolutePath(const QString &path) {
     return QFileInfo(path).absoluteFilePath();
 }
 std::unique_ptr<QIODevice> File::openRead(const QString &path) {
-    const auto absolute = absolutePath(path);
-    const QFileInfo info(absolute);
-    if (!info.exists()) fail(FileCode::NotFound, "file does not exist");
-    if (!info.isFile()) fail(FileCode::InvalidPath, "input must be a regular file");
-    auto file = std::make_unique<QFile>(absolute);
-    if (!file->open(QIODevice::ReadOnly)) fail(FileCode::IoError, file->errorString());
-    return file;
+    return openSource(path);
 }
 QByteArray File::read(const QString &path, qint64 maximumBytes) {
     if (maximumBytes < 0 || maximumBytes >= std::numeric_limits<qsizetype>::max())
         fail(FileCode::LimitExceeded, "invalid file read limit");
-    auto file = openRead(path);
+    auto file = openSource(path);
+    std::lock_guard access(file->sourceAccess());
     if (file->size() > maximumBytes) fail(FileCode::LimitExceeded, "file exceeds read limit");
     QByteArray bytes;
     while (!file->atEnd()) {
@@ -109,7 +139,8 @@ QByteArray File::read(const QString &path, qint64 maximumBytes) {
 }
 QByteArray File::readPrefix(const QString &path, qint64 count) {
     if (count < 0) fail(FileCode::LimitExceeded, "negative prefix size");
-    auto file = openRead(path);
+    auto file = openSource(path);
+    std::lock_guard access(file->sourceAccess());
     const auto bytes = file->read(count);
     if (bytes.size() < count && !file->atEnd()) fail(FileCode::IoError, file->errorString());
     return bytes;

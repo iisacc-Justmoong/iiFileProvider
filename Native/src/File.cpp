@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <fstream>
 #include <limits>
+#include <mutex>
 #include <random>
 #include <system_error>
 #ifdef _WIN32
@@ -57,16 +58,29 @@ void writeStaged(const std::filesystem::path &path,std::string_view bytes) {
 }
 } // namespace
 struct ReadFile::Impl {
+    // Retain identity, but lock only actual I/O. An idle stream cannot block
+    // presentation intake or unrelated authoring indefinitely.
+    std::unique_ptr<SourceAccess> access;
 #ifdef _WIN32
     HANDLE handle=INVALID_HANDLE_VALUE;
-    ~Impl() { if (handle!=INVALID_HANDLE_VALUE) CloseHandle(handle); }
 #else
     std::ifstream stream;
 #endif
+    ~Impl() {
+        if (!access) return;
+        std::lock_guard lock(*access);
+#ifdef _WIN32
+        if (handle!=INVALID_HANDLE_VALUE) CloseHandle(handle);
+#else
+        if (stream.is_open()) stream.close();
+#endif
+    }
     std::uint64_t size{}, position{};
 };
 ReadFile::ReadFile(const std::filesystem::path &path) : impl_(std::make_unique<Impl>()) {
     const auto target=checkedPath(path);
+    impl_->access=std::make_unique<SourceAccess>(target);
+    std::lock_guard lock(*impl_->access);
     std::error_code error;
     auto size = std::filesystem::file_size(target, error);
     if (error)
@@ -84,6 +98,7 @@ ReadFile::ReadFile(const std::filesystem::path &path) : impl_(std::make_unique<I
 }
 ReadFile::~ReadFile() = default;
 std::int64_t ReadFile::read(char *data, std::int64_t count) {
+    std::lock_guard lock(*impl_->access);
     if (count < 0)
         return -1;
     auto amount = std::min<std::uint64_t>(
@@ -112,6 +127,7 @@ std::string ReadFile::read(std::int64_t count) {
     return data;
 }
 bool ReadFile::seek(std::uint64_t offset) {
+    std::lock_guard lock(*impl_->access);
     if (offset > static_cast<std::uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
 #ifdef _WIN32

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.31)
-project(iiFileProviderNative VERSION 0.8.2 LANGUAGES C CXX)
+project(iiFileProviderNative VERSION 0.8.3 LANGUAGES C CXX)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -71,6 +71,7 @@ configure_package_config_file(iiFileProviderNativeConfig.cmake.in "${CMAKE_CURRE
 write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderNativeConfigVersion.cmake" VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderNativeConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderNativeConfigVersion.cmake" DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderNative)
 install(DIRECTORY third_party/licenses/ DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/iiFileProviderNative)
+install(FILES ../docs/PERFORMANCE.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProviderNative/docs)
 install(FILES third_party/utf8proc/LICENSE.md DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/iiFileProviderNative/utf8proc)
 install(FILES third_party/stb/LICENSE third_party/stb/provenance.json DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/iiFileProviderNative/stb)
 install(FILES ../LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/iiFileProviderNative)
@@ -81,6 +82,10 @@ install(FILES ../docs/FILE_PRESENTATION.md ../docs/FILE_PRESENTATION_VALIDATION.
 install(DIRECTORY ../python/ DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/python
     FILES_MATCHING PATTERN "*.py" PATTERN "__pycache__" EXCLUDE)
 if(BUILD_TESTING)
+ add_executable(iiFileProviderSourceAccessTest tests/source_access_test.cpp)
+ target_link_libraries(iiFileProviderSourceAccessTest PRIVATE iiFileProvider::Native Threads::Threads)
+ add_test(NAME iiFileProvider.Native.SourceAccess COMMAND iiFileProviderSourceAccessTest "${CMAKE_CURRENT_BINARY_DIR}")
+ set_tests_properties(iiFileProvider.Native.SourceAccess PROPERTIES TIMEOUT 20)
  if(WIN32)
   find_package(Python3 COMPONENTS Interpreter REQUIRED)
   add_test(NAME iiFileProvider.Native.InstalledRuntime COMMAND ${CMAKE_COMMAND}

@@ -11,6 +11,17 @@ WORK = Path(sys.argv.pop(1))
 
 
 class CreationAuditTest(unittest.TestCase):
+    def test_batched_native_reader_preserves_unicode_newlines_and_errors(self):
+        if not audit.shutil.which("rg"): self.skipTest("Native rg is optional")
+        with tempfile.TemporaryDirectory(dir=WORK) as folder:
+            root=Path(folder)
+            first=root/"한글.cpp";first.write_bytes('const char* s="한글";\nQSaveFile out(path);'.encode())
+            empty=root/"empty.cpp";empty.write_bytes(b"")
+            invalid=root/"invalid.cpp";invalid.write_bytes(b"QSaveFile out(path);\xff")
+            results={path.name:(value,error) for path,value,error in audit.rg_sources([first,empty,invalid])}
+            self.assertEqual(results[first.name],(first.read_text(),None))
+            self.assertEqual(results[empty.name],("",None))
+            self.assertIsNotNone(results[invalid.name][1])
     def test_native_qt_python_swift_and_android_factories(self):
         self.assertEqual(audit.category(Path("SDK/iiServerHost/tools/ftp_server.py")), "runtime")
         self.assertEqual(audit.category(Path("SDK/Example/src/runtimes/worker.py")), "runtime")

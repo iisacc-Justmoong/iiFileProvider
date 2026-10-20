@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(iiFileProvider VERSION 0.7.2 LANGUAGES C CXX)
+project(iiFileProvider VERSION 0.7.3 LANGUAGES C CXX)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF) # NDK kits omit clang-scan-deps; no named modules are used.
 if(MSVC)
     add_compile_options(/utf-8)
@@ -200,6 +200,10 @@ if(BUILD_TESTING)
     target_compile_definitions(iiFileProvider_object_audit PRIVATE OBJECT_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
     add_test(NAME iiFileProvider.object_audit COMMAND iiFileProvider_object_audit)
     set_tests_properties(iiFileProvider.object_audit PROPERTIES TIMEOUT 360)
+    add_executable(iiFileProvider_object_snapshot_identity tests/object_snapshot_identity.cpp)
+    target_link_libraries(iiFileProvider_object_snapshot_identity PRIVATE iiFileProvider::Objects)
+    target_compile_definitions(iiFileProvider_object_snapshot_identity PRIVATE OBJECT_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
+    add_test(NAME iiFileProvider.object_snapshot_identity COMMAND iiFileProvider_object_snapshot_identity)
     add_executable(iiFileProvider_object_snapshot_batch tests/object_snapshot_batch.cpp)
     target_link_libraries(iiFileProvider_object_snapshot_batch PRIVATE iiFileProvider::Objects)
     target_compile_definitions(iiFileProvider_object_snapshot_batch PRIVATE OBJECT_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
@@ -224,7 +228,7 @@ if(BUILD_TESTING)
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../Product" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../iiSDKCore")
         add_test(NAME iiFileProvider.workspace_creation COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_file_creation.py --check)
-        set_tests_properties(iiFileProvider.workspace_creation PROPERTIES TIMEOUT 120)
+        set_tests_properties(iiFileProvider.workspace_creation PROPERTIES TIMEOUT 600 LABELS "workspace;source-boundary")
     endif()
     if(IIFILEPROVIDER_BUILD_TOOLS)
     add_test(NAME iiFileProvider.file_catalog_cli
@@ -265,6 +269,9 @@ if(BUILD_TESTING AND IIFILEPROVIDER_BUILD_NATIVE_API AND NOT CMAKE_CROSSCOMPILIN
 endif()
 if(IIFILEPROVIDER_BUILD_QT_API)
 find_package(Qt6 6.8.3 EXACT REQUIRED COMPONENTS Core)
+if(NOT TARGET iiFileProvider::Native)
+    find_package(iiFileProviderNative 0.8.3 CONFIG REQUIRED)
+endif()
 
 set(_iifp_qt_library_kind SHARED)
 if(EMSCRIPTEN OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
@@ -301,10 +308,8 @@ if(_iifp_qt_library_kind STREQUAL "STATIC")
 endif()
 target_link_libraries(iiFileProvider PUBLIC Qt6::Core iiFileProvider::Catalog)
 target_link_libraries(iiFileProvider PRIVATE SQLite3::SQLite3 iiFileProvider::Temporary)
-if(TARGET iiFileProviderNative)
-    target_link_libraries(iiFileProvider PRIVATE iiFileProvider::Native)
-    target_compile_definitions(iiFileProvider PRIVATE IIFILEPROVIDER_HAS_PRESENTATION)
-endif()
+target_link_libraries(iiFileProvider PRIVATE iiFileProvider::Native)
+target_compile_definitions(iiFileProvider PRIVATE IIFILEPROVIDER_HAS_PRESENTATION)
 target_include_directories(iiFileProvider PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -321,6 +326,10 @@ set_target_properties(iiFileProvider PROPERTIES
 
 if(BUILD_TESTING)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    add_executable(iiFileProvider_source_access tests/source_access.cpp)
+    target_link_libraries(iiFileProvider_source_access PRIVATE iiFileProvider::iiFileProvider iiFileProvider::Native Threads::Threads)
+    add_test(NAME iiFileProvider.source_access COMMAND iiFileProvider_source_access ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(iiFileProvider.source_access PROPERTIES TIMEOUT 20)
     add_executable(iiFileProvider_object_authorship tests/object_authorship.cpp)
     target_compile_definitions(iiFileProvider_object_authorship PRIVATE OBJECT_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
     target_link_libraries(iiFileProvider_object_authorship PRIVATE iiFileProvider::Objects iiFileProvider::iiFileProvider)
@@ -379,5 +388,6 @@ install(FILES
 )
 install(FILES docs/FILE_AUTHOR_CONTRACT.md DESTINATION "${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs")
 install(FILES docs/FILE_LINKS.md DESTINATION "${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs")
+install(FILES docs/PERFORMANCE.md DESTINATION "${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs")
 
 endif()

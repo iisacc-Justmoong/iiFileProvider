@@ -1,5 +1,16 @@
 # iiFileProvider native component
 
+Version 0.8.3 adds `SourceAccess`, an in-process native-identity access token for
+in-place writers and read/copy scopes. Nested same-thread reads and hard links
+share access; unrelated files remain independent. Idle streams do not hold it.
+Domain renderers acquire access only for their source reads, then render detached
+data. Presentation releases its intake scope across a renderer callback, reacquires
+it before publication, and rejects changed source versions. A regression pauses a
+renderer, accepts a concurrent scoped write and rejects its obsolete preview.
+Concurrent requests for the same unchanged source can reuse the first completed
+projection. Normalized provider attribute changes are distinguished from external
+edits; they do not cause a valid second preview request to fail.
+
 The C++23 build uses headers and translation units, with named-module scanning
 disabled. This supports Android NDK toolchains that do not ship clang-scan-deps;
 it does not change the language level or runtime behavior.
@@ -95,3 +106,23 @@ implementation includes winternl.h, so consumers can include Dokan's NT types.
 Windows installations also colocate an external SQLite DLL with the native
 provider when it is available beside the imported SQLite library. The installed
 runtime test loads a staged Native DLL with Python's normal safe DLL search mode.
+## Coordinated source access
+
+`SourceAccess` is a native C++23 access token for an existing regular file. A
+document owner uses `std::lock_guard<SourceAccess>` across an in-place authoring
+transaction; provider `ReadFile` operations and `Presentation::prepare/attach`
+use the same source identity. Idle open streams do not retain a lock. Hard
+links share ownership, nested reads on one thread are allowed, and unrelated
+files use independent locks. Weak identity entries are retired after their last
+token, keeping the registry bounded by live access tokens.
+
+The scope does not replace operating-system database locks or coordinate other
+processes. Document adapters must opt into it for their writes; a provider read
+scope alone cannot coordinate an unadapted external writer. This prevents the
+provider's own preview reads and descriptor closes from overlapping an opted-in
+authoring transaction. SQLite documents why raw descriptor closes during an open
+transaction are unsafe in its [locking guidance](https://sqlite.org/howtocorrupt.html#posix_advisory_locks_canceled_by_a_separate_thread_doing_close).
+
+`iiFileProvider.Native.SourceAccess` exercises blocked same-file reads,
+independent other-file reads, reentrancy, hard-link identity and completion after
+the authoring scope is released. It runs without Qt.

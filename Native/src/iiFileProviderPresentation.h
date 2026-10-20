@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -27,6 +28,22 @@ struct PresentationRecord {
     bool embedded = false; // Native extended attribute / NTFS stream succeeded.
     bool cacheHit = false;
 };
+// In-process access token for an existing source identity. Use std::lock_guard
+// across an in-place transaction to exclude native reads and presentation intake.
+// Nested reads on the same thread are supported; unrelated files remain independent.
+// This supplements, and never replaces, the storage format's OS locks.
+class IIFILEPROVIDER_NATIVE_EXPORT SourceAccess final {
+public:
+    explicit SourceAccess(const std::filesystem::path &);
+    ~SourceAccess();
+    void lock();
+    void unlock() noexcept;
+    SourceAccess(const SourceAccess &) = delete;
+    SourceAccess &operator=(const SourceAccess &) = delete;
+private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
 // Native C++23 file presentation. The source data fork is never rewritten.
 // A single portable companion embeds details and bounded preview bytes; native
 // attributes additionally carry the same document where supported. Unsupported
@@ -41,6 +58,8 @@ public:
     [[nodiscard]] static PresentationRecord prepare(const std::filesystem::path &);
     // A domain SDK registers its existing read-only decoder through this lower
     // interface. Empty unregisters; the provider never links that SDK upward.
+    // The callback acquires SourceAccess for actual reads/copying and renders
+    // detached data after release. Publication rejects a changed source.
     static void setRenderer(std::string extension, Renderer);
     // Document/renderer SDKs supply their own PNG through this lower interface.
     // The provider neither imports document SDKs nor opens documents for editing.

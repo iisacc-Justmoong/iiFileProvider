@@ -105,10 +105,10 @@ int digits(std::string_view value) {
     return result;
 }
 Timestamp timestamp(std::string_view raw) {
+    static const std::regex pattern("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,3})?(Z|[+-][0-9]{2}:[0-9]{2})");
     require(
         std::regex_match(raw.begin(), raw.end(),
-                         std::regex("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-"
-                                    "9]{1,3})?(Z|[+-][0-9]{2}:[0-9]{2})")));
+                         pattern));
     using namespace std::chrono;
     year_month_day day{year{digits(raw.substr(0, 4))},
                        month{static_cast<unsigned>(digits(raw.substr(5, 2)))},
@@ -262,7 +262,8 @@ bool validTimeZone(const std::string &value) {
     }
     if (value == "UTC" || value == "GMT")
         return true;
-    if (std::regex_match(value, std::regex("UTC[+-][0-9]{2}:[0-9]{2}")))
+    static const std::regex offsetPattern("UTC[+-][0-9]{2}:[0-9]{2}");
+    if (std::regex_match(value, offsetPattern))
         return digits(std::string_view(value).substr(4, 2)) <= 14 &&
                digits(std::string_view(value).substr(7, 2)) < 60;
     return false;
@@ -288,6 +289,13 @@ const std::map<std::string, std::size_t> detailLimits{
     {"phoneNumber", 64}, {"locale", 64},      {"timeZone", 128},      {"countryCode", 2},
     {"region", 160},     {"city", 160}};
 Json profile(Json value) {
+    static const std::regex subjectPattern("[A-Za-z0-9_-]{1,128}");
+    static const std::regex emailPattern("[^\\s@]+@[^\\s@]+\\.[^\\s@]+");
+    static const std::regex userPattern("@[a-z0-9_]{3,30}");
+    static const std::regex avatarPattern("/media/avatars/[a-f0-9]{64}\\.webp");
+    static const std::regex countryPattern("[A-Z]{2}");
+    static const std::regex localePattern("[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*");
+    static const std::regex devicePattern("[a-f0-9]{64}");
     require(value.dump().size() <= 131072);
     keys(value, {"schemaVersion", "account", "details", "attribution", "serviceOrigin",
                  "capturedAt", "device"});
@@ -298,12 +306,12 @@ Json profile(Json value) {
     auto account = value.at("account");
     keys(account, {"sub", "email", "displayName", "userId", "societyCloudMembership", "avatarUrl"});
     auto sub = text(account, "sub", 128, true);
-    require(std::regex_match(sub, std::regex("[A-Za-z0-9_-]{1,128}")));
+    require(std::regex_match(sub, subjectPattern));
     auto mail = normalize(text(account, "email", 254, true), true, true);
-    require(std::regex_match(mail, std::regex("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) &&
+    require(std::regex_match(mail, emailPattern) &&
             mail.find('@') <= 64);
     auto user = text(account, "userId", 31);
-    require(user.empty() || std::regex_match(user, std::regex("@[a-z0-9_]{3,30}")));
+    require(user.empty() || std::regex_match(user, userPattern));
     auto membership = account.value("societyCloudMembership", std::string("Free"));
     require(membership == "Free" || membership == "Plus" || membership == "Pro" ||
             membership == "Enterprise");
@@ -315,7 +323,7 @@ Json profile(Json value) {
             url = service + url;
         require(url.starts_with(service + "/media/avatars/"));
         require(std::regex_match(url.substr(service.size()),
-                                 std::regex("/media/avatars/[a-f0-9]{64}\\.webp")));
+                                 avatarPattern));
         avatar = url;
     }
     value["account"] = {{"sub", sub},
@@ -333,15 +341,15 @@ Json profile(Json value) {
     for (const auto &[key, maximum] : detailLimits)
         details[key] = text(details, key.c_str(), maximum, false, key == "biography");
     auto country = details["countryCode"].get<std::string>();
-    require(country.empty() || std::regex_match(country, std::regex("[A-Z]{2}")));
+    require(country.empty() || std::regex_match(country, countryPattern));
     auto locale = details["locale"].get<std::string>();
     require(locale.empty() ||
-            std::regex_match(locale, std::regex("[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*")));
+            std::regex_match(locale, localePattern));
     require(validTimeZone(details["timeZone"].get<std::string>()));
     auto email = details["contactEmail"].get<std::string>();
     if (!email.empty()) {
         email = normalize(email, true, true);
-        require(std::regex_match(email, std::regex("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")));
+        require(std::regex_match(email, emailPattern));
         details["contactEmail"] = email;
     }
     for (const auto *name : {"links", "identifiers"}) {
@@ -403,7 +411,7 @@ Json profile(Json value) {
             {"osVersion", 80}, {"appId", 128}, {"appVersion", 40}};
         for (const auto &[key, maximum] : limits)
             device[key] = text(device, key.c_str(), maximum, true);
-        require(std::regex_match(device.value("id", std::string()), std::regex("[a-f0-9]{64}")) &&
+        require(std::regex_match(device.value("id", std::string()), devicePattern) &&
                 (device.value("type", "") == "pc" || device.value("type", "") == "tablet"));
     }
     value["device"] = device;
@@ -611,7 +619,8 @@ std::optional<Authorship> Authorship::fromDump(std::string_view bytes) {
             keys(value, {"schemaVersion", "revision", "modifiedAt", "authors", "lastAuthor",
                          "firstEditor", "participants", "links"});
         auto raw = text(value, "revision", 20, true);
-        require(std::regex_match(raw, std::regex("0|[1-9][0-9]*")));
+        static const std::regex revisionPattern("0|[1-9][0-9]*");
+        require(std::regex_match(raw, revisionPattern));
         Authorship result;
         auto parsed = std::from_chars(raw.data(), raw.data() + raw.size(), result.revision_);
         require(parsed.ec == std::errc{} && parsed.ptr == raw.data() + raw.size());

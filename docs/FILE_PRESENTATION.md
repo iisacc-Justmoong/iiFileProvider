@@ -159,6 +159,20 @@ PNG bytes. The existing Helper preview URL remains a private runtime cache URL,
 now populated from the provider's embedded result. Canvas edits enqueue a fresh
 projection after closing their working file.
 
+Native 0.8.3 exposes `SourceAccess`, a standard-C++ token keyed by the existing
+file's native identity. A scoped lock coordinates in-place transactions with
+actual native/GUI reads and descriptor closure; an idle stream holds no lock.
+Presentation intake releases this access across a domain renderer callback. The
+callback acquires access for copying/reading its source, releases it before
+rendering detached data, and never writes the source. Presentation reacquires
+access and validates the original source version before publishing. If editing
+changed the source meanwhile, the obsolete result is rejected. Unrelated files
+and hard links are covered by the source-access regression; a paused renderer
+must allow a scoped writer and must not publish its old snapshot.
+Concurrent renderers may reuse a current validated projection. Only this
+provider's normalized attribute publications are accepted as unchanged source
+metadata; external changes still invalidate the in-flight result.
+
 Society's file inspector reads these details asynchronously. In the file list or
 grid, Space opens/closes the LVRS preview surface; Escape closes it and Open
 retains normal file activation. Only a validated selected local child is read;

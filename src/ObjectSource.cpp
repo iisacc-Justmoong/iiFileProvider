@@ -15,9 +15,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#ifdef __APPLE__
-#include <sys/clonefile.h>
-#endif
 #endif
 
 namespace iiFileProvider {
@@ -148,12 +145,10 @@ ObjectSource::ObjectSource(const fs::path &input,const fs::path &staging,std::st
 #ifdef _WIN32
     if(!CopyFileW(sourcePath.c_str(),m_impl->file.c_str(),TRUE))error("cannot copy stable object source");
 #else
-    bool cloned=false;
-#if defined(__APPLE__) && !defined(IIFILEPROVIDER_TEST_COPY_SNAPSHOTS)
-    Handle directory;directory.value=openDirect(m_impl->directory,O_RDONLY|O_DIRECTORY);
-    cloned=fclonefileat(source.value,directory.value,"payload",CLONE_NOOWNERCOPY)==0;
-#endif
-    if(!cloned){
+    // A clone can change APFS source ctime when shared extents are materialized
+    // or retired. Capture through the pinned read descriptor without mutating
+    // the source identity used by inventory, resume and audit.
+    {
         Handle output;output.value=::open(m_impl->file.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);
         if(output.value<0)error("cannot create snapshot payload");
         // Heap storage is required on native worker threads whose stacks can be
@@ -174,7 +169,9 @@ ObjectSource::ObjectSource(const fs::path &input,const fs::path &staging,std::st
             }
             copied+=static_cast<std::uint64_t>(count);
         }
-        if(::fsync(output.value)!=0)error("cannot synchronize source snapshot");
+        // This is disposable input, not a published object. Import persists the
+        // payload in its own durable transaction; syncing this temporary copy
+        // adds a disk barrier per file without improving committed durability.
     }
 #endif
     fs::permissions(m_impl->file,fs::perms::owner_read|fs::perms::owner_write,fs::perm_options::replace);

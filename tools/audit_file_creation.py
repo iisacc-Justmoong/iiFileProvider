@@ -10,6 +10,7 @@ file factories. This is a source boundary gate, not a syscall sandbox.
 from __future__ import annotations
 import argparse
 import ast
+import base64
 from collections import Counter
 import json
 import os
@@ -142,6 +143,41 @@ def inspect(path, source):
     return found
 
 
+def rg_sources(paths):
+    """Read bounded batches exactly once; retain bytes/newlines and fail closed."""
+    for offset in range(0, len(paths), 64):
+        batch = paths[offset:offset+64]
+        values, errors = {}, {}
+        try:
+            result = subprocess.run(["rg", "--text", "--multiline", "--json", "--no-ignore",
+                                     r"(?s)\A.*\z", "--", *(str(path) for path in batch)],
+                                    capture_output=True, timeout=30)
+            if result.returncode not in (0, 1, 2):
+                raise OSError(result.stderr.decode("utf-8", "replace"))
+            for line in result.stdout.splitlines():
+                item = json.loads(line)
+                if item["type"] != "match": continue
+                data = item["data"]
+                name = data["path"]
+                name = name.get("text") or base64.b64decode(name["bytes"]).decode("utf-8")
+                body = data["lines"]
+                try:
+                    values[name] = body["text"] if "text" in body else base64.b64decode(body["bytes"]).decode("utf-8")
+                except UnicodeError as error:
+                    errors[name] = str(error)
+            for path in batch:
+                name = str(path)
+                if name in errors: yield path, None, errors[name]
+                elif name in values: yield path, values[name], None
+                else:
+                    try:
+                        if path.stat().st_size == 0: yield path, "", None
+                        else: yield path, None, result.stderr.decode("utf-8", "replace") or "source was not returned by native scanner"
+                    except OSError as error: yield path, None, str(error)
+        except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+            for path in batch: yield path, None, str(error)
+
+
 def audit(root):
     root = root.resolve()
     counts = Counter()
@@ -162,6 +198,7 @@ def audit(root):
         if result.returncode not in (0, 1):
             return {"counts": {}, "violations": [], "unreadable": [result.stderr]}
         candidates = {str(root / path) for path in result.stdout.splitlines()}
+    selected = []
     for path in sources(root):
         relative = path.relative_to(root)
         kind = category(relative)
@@ -174,19 +211,21 @@ def audit(root):
             info = path.lstat()
             if not stat.S_ISREG(info.st_mode) or info.st_size > 4_000_000:
                 unreadable.append(str(relative)); continue
-            if candidates is not None:
-                # Use the native scanner for source reads as well; this avoids
-                # long mapped-file waits on active external-storage checkouts.
-                read = subprocess.run(["rg", "--text", "--no-heading", "--no-line-number",
-                    "--color", "never", "^", str(path)], capture_output=True, timeout=20)
-                if read.returncode not in (0, 1):
-                    raise OSError(read.stderr.decode("utf-8", "replace"))
-                value = read.stdout.decode("utf-8")
+            if candidates is not None: selected.append(path)
             else:
                 value = path.read_text(encoding="utf-8")
+                for line, text in inspect(path, value):
+                    violations.append({"path": str(relative), "line": line, "writer": text})
+        except (OSError, UnicodeError, SyntaxError, subprocess.TimeoutExpired) as error:
+            unreadable.append(f"{relative}: {error}")
+    for path, value, error in rg_sources(selected):
+        relative = path.relative_to(root)
+        if error:
+            unreadable.append(f"{relative}: {error}"); continue
+        try:
             for line, text in inspect(path, value):
                 violations.append({"path": str(relative), "line": line, "writer": text})
-        except (OSError, UnicodeError, SyntaxError, subprocess.TimeoutExpired) as error:
+        except (UnicodeError, SyntaxError) as error:
             unreadable.append(f"{relative}: {error}")
     return {"counts": dict(counts), "violations": violations, "unreadable": unreadable}
 

@@ -14,8 +14,10 @@ struct ObjectSourceIdentity {
 };
 
 // Stable staging input for the object package, not a replacement for the source.
-// Apple uses a descriptor-based clone where supported. Fallback copies reject a
-// changed source identity/size/mtime/ctime. All source ancestors reject symlinks.
+// POSIX captures from a pinned read descriptor without changing source ctime.
+// Copies reject a changed source identity/size/mtime/ctime. Temporary bytes are
+// not crash-durable; the importing store owns durable publication. All source
+// ancestors reject symlinks.
 class ObjectSource final {
 public:
     static ObjectSourceIdentity inspect(const std::filesystem::path &source);

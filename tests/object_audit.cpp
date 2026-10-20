@@ -30,6 +30,10 @@ int main(){try{
         check(packaged.imported==13 && packaged.issues.empty(),"audit fixture packaged");
         std::size_t callbacks=0;
         auto report=packager.audit(inventory,{},[&](const auto &,const std::string &key){check(!key.empty(),"verified key");++callbacks;});
+        if (report.verified!=13 || !report.issues.empty()) {
+            std::cerr << "verified=" << report.verified << " callbacks=" << callbacks << '\n';
+            for (const auto& issue:report.issues) std::cerr << issue.path << ": " << issue.message << '\n';
+        }
         check(report.verified==13 && report.issues.empty() && !report.cancelled && callbacks==13,"batch and large streaming audit");
         check(test_support::staging_clean(root/"package/staging"),"audit snapshots cleaned");
         std::stop_source stop;

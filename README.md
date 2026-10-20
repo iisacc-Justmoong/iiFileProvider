@@ -34,9 +34,9 @@ zones through the browser's native Intl API; UTC and bounded fixed offsets are
 validated directly. Invalid zones are rejected. Desktop timezone validation
 continues to use its platform-backed Qt timezone provider.
 
-Package release: **0.7.2** (2026-10-19). This patch packages the current
-source snapshot; build, test and installation evidence is recorded in the SDK
-patch-release report. Earlier versioned feature notes remain historical.
+Package release: **0.7.3** (2026-10-20). The GUI read adapter coordinates actual
+source reads and descriptor closure with Native 0.8.3 source access. Idle open
+devices do not retain access. Earlier versioned feature notes remain historical.
 
 
 The optional [Core I/O adapter](CoreIO/README.md) composes iiSDKCore 0.13 with
@@ -273,3 +273,16 @@ Qt-device, Python C ABI, Swift and Android adapters described in
 `python3 tools/audit_file_creation.py --check`.
 The [migration validation](docs/FILE_CREATION_VALIDATION.md) records source,
 installed-package, AI worker and platform compilation evidence and its limits.
+## Coordinated GUI file reads
+
+The 0.7.3 Qt value/device adapter requires Native 0.8.3. `File::read` and
+`readPrefix` hold one native source access scope for each complete payload read.
+`openRead` retains the same `QIODevice` API and uses a private QFile adapter that
+coordinates actual open/read/seek/close operations with native document writers.
+Idle open devices retain identity without retaining an access lock. Public file
+and device layouts are unchanged. Source access supplements the file format's
+operating-system locks; the native implementation has no Qt dependency.
+
+`iiFileProvider.source_access` verifies blocked reads and descriptor closure while
+another thread owns the source, retained prefix/content behavior, and presentation
+completion while an idle device remains open.

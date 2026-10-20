@@ -2,6 +2,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <stdexcept>
+#include <future>
 using namespace iiFileProvider::native;
 static_assert(Authorship::MaximumBytes == 2 * 1024 * 1024);
 static_assert(Authorship::MaximumLinks == 64);
@@ -47,6 +48,23 @@ int main() {
                           {"appVersion", "1.0"}};
     auto restored = FileAuthor::fromJsonText(complete.dump());
     check(restored && nlohmann::json::parse(restored->toJsonText()) == complete);
+    const auto validProfile = complete.dump();
+    std::vector<std::future<bool>> readers;
+    for (int worker=0;worker<4;++worker) readers.push_back(std::async(std::launch::async,[validProfile] {
+        for (int i=0;i<64;++i) if (!FileAuthor::fromJsonText(validProfile)) return false;
+        return true;
+    }));
+    for (auto& reader:readers) check(reader.get());
+    for (const auto& [path,value] : std::vector<std::pair<std::string,std::string>>{
+        {"/account/sub","invalid@subject"},{"/account/email","missing-at"},
+        {"/account/userId","@UPPERCASE"},{"/account/avatarUrl","https://iisacc.com/media/avatars/short.webp"},
+        {"/details/countryCode","KOR"},{"/details/locale","ko_kr"},
+        {"/details/contactEmail","invalid"},{"/details/timeZone","UTC+15:00"},
+        {"/capturedAt","2026-10-14T99:00:00Z"},{"/device/id","short"}}) {
+        auto invalid=complete;
+        invalid[nlohmann::json::json_pointer(path)]=value;
+        check(!FileAuthor::fromJsonText(invalid.dump()));
+    }
     complete["details"]["timeZone"] = "Unknown/Invalid";
     check(!FileAuthor::fromJsonText(complete.dump()));
     complete["details"]["timeZone"] = "UTC";
