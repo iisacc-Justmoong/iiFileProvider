@@ -54,7 +54,7 @@ linked into this component. See `../docs/FILE_PRESENTATION.md` in the source tre
 The authored code is C++23 with extensions disabled. nlohmann/json 3.12.0 and
 utf8proc 2.11.3 sources/licenses are vendored and SHA-256 checked during CMake
 configuration. utf8proc retains its upstream C source. The component keeps the
-provider's existing AGPL-3.0-only license; dependency licenses are installed.
+provider's existing MIT license; dependency licenses are installed.
 New POSIX files use ordinary `0666 & umask` permissions; replacement preserves
 the destination's permissions. Directory cleanup is scoped to each owned random
 directory, and staged files participate in the provider's shared temporary lease.
