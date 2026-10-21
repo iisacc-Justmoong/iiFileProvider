@@ -286,3 +286,15 @@ operating-system locks; the native implementation has no Qt dependency.
 `iiFileProvider.source_access` verifies blocked reads and descriptor closure while
 another thread owns the source, retained prefix/content behavior, and presentation
 completion while an idle device remains open.
+
+## Source header layout
+
+The native file compatibility API headers live next to their implementation in `Compatibility/src/`.
+There is no separate authored `include/` tree. Existing public `#include` names
+and exported CMake targets are unchanged; installation still places only public
+headers in the package include directory. Generated export headers belong to
+`build/`, not to the authored source tree.
+
+Validate this layout from the SDK workspace with
+`python3 -B tests/test_source_header_layout.py`. Reconfigure, build, run CTest,
+and verify a staged installed consumer after changing source/header paths.
