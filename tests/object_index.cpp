@@ -39,7 +39,7 @@ int main(){try{
     std::vector<ObjectRecord> imported;std::string session;
     {
         ObjectStore store(package,"index-fixture",true);
-        {Database db(database);require(db.scalar("PRAGMA user_version")==3,"compact index requires schema 3");}
+        {Database db(database);require(db.scalar("PRAGMA user_version")==5,"current package uses schema 5");}
         session=store.beginSession({"local:test","index-fixture","Index test"},"fixture","compact traversal").key;
         std::vector<ObjectImport> input;
         for(int i=0;i<64;++i)input.push_back({source,"Files/"+std::to_string(i),{}});
@@ -81,7 +81,7 @@ int main(){try{
     }
     {
         ObjectStore store(package,"index-fixture");matches(store);
-        {Database db(database);require(db.scalar("PRAGMA user_version")==3,"schema 2 upgraded");}
+        {Database db(database);require(db.scalar("PRAGMA user_version")==5,"schema 2 upgraded");}
         require(store.lookup(imported[3].key)->validationKey==imported[3].validationKey,"migration preserves validation identity");
         require(store.validate(imported[0].key,2) && store.validate(imported[2].key,2),"history and payload remain valid after backfill");
         store.move(imported[3].key,"Files/after-upgrade",1,session);matches(store);

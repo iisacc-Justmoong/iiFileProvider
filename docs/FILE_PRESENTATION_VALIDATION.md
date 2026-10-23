@@ -45,7 +45,7 @@ No running production app, real user container or global installation was change
 | iiSDKCore | Complete native suite: 34/34 passed, including writable Channel enrichment, event-loop I/O and architecture boundaries |
 | iiSocietyContainer | Complete earlier suite: 29/31 passed; the corrected native history and preview cases plus related integration were rechecked in a 7/7 passing run; the added Android bridge/name contract passed 1/1 |
 | iiSocietySync | Complete final normalized-I/O suite: 12/12 passed; strict real TLS synchronization deadlines were preserved |
-| iiServerHost | Hosting, actual local TLS/LAN and transfer: 3/3 passed; includes private-document pagination and automatic upload enrichment |
+| iiWebServer | Hosting, actual local TLS/LAN and transfer: 3/3 passed; includes private-document pagination and automatic upload enrichment |
 | iiSocietyHelper | Final full dependency integration: 11/11 passed, including actual IISC pixels and direct host file access |
 | iiSharedCanvas | Document preview regression: 1/1 passed, including exact native-size mask pixels |
 | Society product GUI source | 20 Qt test cases passed through the installed-SDK consumer, including actual image display and Space/Escape |
@@ -134,7 +134,7 @@ their original assertions and deadlines.
 | iiSocietyHelper full regressions | `build/presentation/tests-final.xml` in iiSocietyHelper |
 | iiSocietyHelper final dependency integration | `build/presentation/tests-last.xml` in iiSocietyHelper |
 | iiSocietySync final full regressions | `build/presentation/tests-normalized.xml` in iiSocietySync |
-| iiServerHost hosting/LAN/transfer regressions | `build/presentation/tests-current.xml` in iiServerHost |
+| iiWebServer hosting/LAN/transfer regressions | `build/presentation/tests-current.xml` in iiWebServer |
 | iiSDKCore full regressions | `build/presentation/tests-final.xml` in iiSDKCore |
 | Final SDK/Product source-creation audit | `build/presentation/ownership-audit-last.json` |
 | iiSharedCanvas document preview regression | `build/presentation/tests.xml` in iiSharedCanvas |

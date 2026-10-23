@@ -1,5 +1,14 @@
 # Native file catalog and classification
 
+Repeated registration of an unchanged file and annotation preserves its revision
+and search cursor. Registration can reconnect a native file identity after its
+old path disappears, preserving the catalog key and rebuilding its search path.
+A copied portable companion forks its key when the source key is already known
+to this catalog; metadata stays intact. Unknown or newer companion ownership
+continues to reject publication. Existing matching companions with a current or
+newer revision can refresh external annotations. `catalog_reconciliation` covers
+no-op registration, native rename and a copied companion.
+
 Version 0.6.0 adds `iiFileProvider::Catalog`: native C++23 file creation, streaming
 import, bounded provision, editable metadata, collections and persistent search.
 It depends on SQLite 3.27+ with FTS5, the standard library, provider TemporaryLease,

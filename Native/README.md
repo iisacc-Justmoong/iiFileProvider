@@ -1,5 +1,11 @@
 # iiFileProvider native component
 
+Version 0.9.0 adds a Qt-free SQLite execution API in `iiFileProviderDatabase.h`:
+owned connections/statements, typed bindings, bounded values, native errors,
+read-only/create modes and RAII transactions. See
+[native database contracts](../docs/NATIVE_DATABASE.md). Existing 0.5 dylib ABI
+and the independently selected legacy Qt API are retained.
+
 Version 0.8.3 adds `SourceAccess`, an in-process native-identity access token for
 in-place writers and read/copy scopes. Nested same-thread reads and hard links
 share access; unrelated files remain independent. Idle streams do not hold it.

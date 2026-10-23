@@ -1,4 +1,5 @@
 @PACKAGE_INIT@
+set(iiFileProviderObjects_DOCUMENT_API_VERSION 1)
 include(CMakeFindDependencyMacro)
 find_dependency(iiFileProviderTemporary CONFIG HINTS "${CMAKE_CURRENT_LIST_DIR}/../iiFileProviderTemporary")
 if(@IIFILEPROVIDER_USE_BUNDLED_SQLITE@)

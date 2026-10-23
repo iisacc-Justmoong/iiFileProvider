@@ -1,8 +1,11 @@
 #pragma once
 
+#include "FileCatalog.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <map>
 #include <memory>
 #include <optional>
 #include <stop_token>
@@ -97,6 +100,59 @@ struct ObjectSession {
     std::int64_t endedAtNs = 0;
 };
 
+// Immutable session context. Authentication credentials do not belong here.
+struct ObjectSessionContext {
+    std::string application, applicationVersion, project, document;
+    std::map<std::string, std::string> attributes;
+    bool operator==(const ObjectSessionContext &) const = default;
+};
+struct WorkSessionRecord {
+    std::int64_t sequence = 0;
+    ObjectSession session;
+    ObjectSessionContext context;
+};
+struct ObjectSessionQuery {
+    std::int64_t afterSequence = 0;
+    std::size_t limit = 64;
+    bool activeOnly = false;
+};
+struct ObjectJournalQuery {
+    std::int64_t afterSequence = 0;
+    std::size_t limit = 256;
+    std::string objectKey, sessionKey;
+};
+// Compact projection; payload, author profiles and annotations are fetched only
+// on demand. sequence is a persistent keyset cursor, not a wall-clock ordering.
+struct ObjectJournalEntry {
+    std::int64_t sequence = 0;
+    std::string objectKey;
+    std::uint64_t version = 0;
+    std::string sessionKey;
+    std::int64_t recordedAtNs = 0;
+    std::string operation, path, sha256;
+    std::uint64_t size = 0;
+    bool deleted = false;
+    std::string validationKey;
+};
+struct RawMetadata {
+    std::string originalName;
+    std::string mediaType = "application/octet-stream";
+    FileMetadata annotations;
+    bool operator==(const RawMetadata &) const = default;
+};
+struct RawEnvelope {
+    ObjectRecord record;
+    RawMetadata metadata;
+};
+struct ObjectDocument {
+    ObjectRecord file; // Mutable working object with its own stable identity.
+    RawEnvelope original; // Immutable original bytes; annotations may be revised.
+};
+struct MetadataChange {
+    std::string pointer; // JSON Pointer relative to the FileMetadata document.
+    std::optional<std::string> beforeJson, afterJson; // Absence differs from null.
+};
+
 // Qt-independent C++23 storage owner. The directory contains a transactional
 // SQLite object package; the source tree remains an ordinary, unmodified tree.
 // One instance serializes its connection. Separate instances support WAL readers.
@@ -112,8 +168,9 @@ public:
                          std::string containerKey, bool create = false);
     ObjectStore(const std::filesystem::path &directory, std::string containerKey,
                 bool create, int walAutoCheckpointPages);
-    // ReadOnly accepts only the current schema and never migrates or configures
-    // writer checkpoints. It cannot create a package or mutate database state.
+    // ReadOnly accepts schemas 3/4/5 and never migrates or configures writer
+    // checkpoints. Journal/RAW/session-context APIs require schema >=4. A writer
+    // migrates earlier packages transactionally, preserving legacy record hashes.
     ObjectStore(const std::filesystem::path &directory, std::string containerKey,
                 Access access, int walAutoCheckpointPages = defaultWalAutoCheckpointPages);
     ~ObjectStore();
@@ -121,9 +178,35 @@ public:
     ObjectStore &operator=(const ObjectStore &) = delete;
 
     ObjectSession beginSession(ObjectAuthor author, std::string device, std::string description);
+    ObjectSession beginSession(ObjectAuthor author, std::string device, std::string description,
+                               const ObjectSessionContext &context);
     void endSession(const std::string &sessionKey);
     ObjectSession session(const std::string &sessionKey) const;
+    WorkSessionRecord workSession(const std::string &sessionKey) const;
+    std::vector<WorkSessionRecord> sessions(const ObjectSessionQuery &query = {}) const;
+    std::vector<ObjectJournalEntry> journal(const ObjectJournalQuery &query = {}) const;
     const std::filesystem::path &directory() const noexcept;
+    const std::string &containerKey() const noexcept;
+    Access access() const noexcept; // Create normalizes to ReadWrite capability.
+
+    // Captures any original byte file, including camera RAW, without decoding or
+    // changing it. Captured payload is immutable; only metadata/move/erase may
+    // produce further revisions. extract() returns the original bytes.
+    ObjectRecord wrapRaw(const std::filesystem::path &source, std::string logicalPath,
+                         const RawMetadata &metadata, const std::string &sessionKey,
+                         const ObjectWriteOptions &options = {});
+    RawEnvelope rawEnvelope(const std::string &key, std::uint64_t version = 0) const;
+    // Atomically capture an immutable RAW original and a mutable working object.
+    // Both reference the same immutable chunks, without a second payload ingest.
+    // The reserved .originals/<working-key> path retains the original after moves
+    // and deletion. Consumers should use original() rather than that path.
+    ObjectDocument importDocument(const std::filesystem::path &source, std::string logicalPath,
+        const RawMetadata &metadata, const std::string &sessionKey,
+        const ObjectWriteOptions &options = {});
+    RawEnvelope original(const std::string &documentKey) const;
+    ObjectRecord reviseMetadata(const std::string &key, const FileMetadata &metadata,
+                               std::uint64_t expectedVersion, const std::string &sessionKey);
+    std::vector<MetadataChange> metadataDiff(const std::string &key, std::uint64_t version) const;
 
     ObjectRecord importFile(const std::filesystem::path &source, std::string logicalPath,
                             const std::string &sessionKey, const ObjectWriteOptions &options = {});
@@ -138,6 +221,10 @@ public:
                             const ObjectWriteOptions &options = {});
     ObjectRecord move(const std::string &key, std::string logicalPath,
                       std::uint64_t expectedVersion, const std::string &sessionKey);
+    // Rebind a caller-verified native relocation without rereading payload.
+    // sourceStamp is caller metadata; it is not a content-verification proof.
+    ObjectRecord move(const std::string &key, std::string logicalPath,
+        std::uint64_t expectedVersion, const std::string &sessionKey, const ObjectWriteOptions &options);
     ObjectRecord erase(const std::string &key, std::uint64_t expectedVersion,
                        const std::string &sessionKey);
 

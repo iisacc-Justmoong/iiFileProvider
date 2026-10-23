@@ -23,7 +23,7 @@ class CreationAuditTest(unittest.TestCase):
             self.assertEqual(results[empty.name],("",None))
             self.assertIsNotNone(results[invalid.name][1])
     def test_native_qt_python_swift_and_android_factories(self):
-        self.assertEqual(audit.category(Path("SDK/iiServerHost/tools/ftp_server.py")), "runtime")
+        self.assertEqual(audit.category(Path("SDK/iiWebServer/tools/ftp_server.py")), "runtime")
         self.assertEqual(audit.category(Path("SDK/Example/src/runtimes/worker.py")), "runtime")
         self.assertTrue(audit.inspect(Path("writer.cpp"), 'std::ofstream output(path);'))
         self.assertTrue(audit.inspect(Path("writer.cpp"), 'QSaveFile output(path);'))

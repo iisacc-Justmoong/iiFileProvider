@@ -34,7 +34,7 @@ def category(path):
         return "provider"
     if any(x.lower() in {"tests", "test", "fixtures"} for x in parts) or path.name.startswith(("tst_", "test_")) or "Tests." in path.name or ".test." in path.name:
         return "fixture"
-    if path.as_posix() in {"SDK/iiServerHost/tools/ftp_server.py", "SDK/iiServerHost/tools/provider_fs.py",
+    if path.as_posix() in {"SDK/iiWebServer/tools/ftp_server.py", "SDK/iiWebServer/tools/provider_fs.py",
             "SDK/iiLocalDiffusion/reference/generate.py", "SDK/iiLocalDiffusion/reference/merge.py",
             "SDK/iiLocalDiffusion/reference/convert.py"}:
         return "runtime"

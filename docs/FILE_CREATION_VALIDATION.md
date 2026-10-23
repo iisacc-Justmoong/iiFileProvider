@@ -29,7 +29,7 @@ Focused corrections were rerun after fixing the relevant boundary. A row with a 
 | iiPhotoLibrary | 8/8 | full source suite |
 | iiSDKBuilder | 12/12 | full source suite |
 | iiSDKCore | 34/34 | full source suite |
-| iiServerHost | 10/10 | full source suite |
+| iiWebServer | 10/10 | full source suite |
 | iiSharedCanvas | 63/63 | full source suite |
 | iiSocietyContainer | 31/31 | full source suite; corrected iOS package rerun |
 | iiSocietyGeneration | 1/1 | full source suite |

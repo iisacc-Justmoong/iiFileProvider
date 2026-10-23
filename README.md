@@ -1,5 +1,10 @@
 # iiFileProvider
 
+`ObjectStore::importDocument()` atomically connects an immutable RAW original to
+a mutable working object while sharing stored chunks. `original(workingKey)`
+retains original recovery after edits, moves and deletion. See
+[object storage](docs/OBJECT_STORE.md) for the native C++23 integration contract.
+
 [Windows 빌드 및 실행](docs/WindowsBuildAndRun.md)
 
 Android, iOS and WebAssembly builds compile pinned public-domain SQLite 3.49.1
@@ -70,6 +75,29 @@ stable object/index keys, directory-path projections, SHA-256, attribution,
 versioned binary diffs, mutation journals and work sessions. See
 [the object-store contract and integration boundaries](docs/OBJECT_STORE.md).
 The existing Qt APIs below are preserved; this new target does not depend on them.
+
+RAW envelopes now retain exact original bytes alongside versioned `FileMetadata`
+annotations. `wrapRaw()` captures a stable source snapshot; `reviseMetadata()`
+changes annotations without reading or copying the original payload, and
+`metadataDiff()` exposes JSON Pointer changes. `journal()` provides persistent
+keyset pagination across imports, edits, moves and tombstones, with object/session
+filters. Work sessions additionally record application/version, project, document
+and caller-defined context through `ObjectSessionContext` and `workSession()`.
+These APIs require database schema 4 or later; writer migration preserves existing payloads
+and revision hashes. Camera RAW decoding remains a separate concern. See
+[RAW envelopes, file journals and work sessions](docs/FILE_JOURNAL.md) for the
+API example, migration rules and verification procedure.
+
+`OntologyFileSystem` adds a native semantic filesystem to the same package:
+editable class hierarchies, file and domain entities, typed properties, directed
+relations, persistent query directories and bounded forward/reverse traversal.
+Files keep their existing object keys and payloads when moved or classified.
+Atomic ontology batches use revision checks and work-session journals. Queries
+use indexed candidates and reject stale cursors after file or graph changes.
+The current database schema is 5; writers migrate schemas 1–4 without rewriting
+file revisions. Read-only file access still supports schemas 3–5, while ontology
+access requires schema 5. Link the existing `iiFileProvider::Objects` target and
+include `<OntologyFileSystem.h>`. See [the ontology filesystem contract](docs/ONTOLOGY_FILESYSTEM.md).
 
 `iiFileProvider::Temporary` is a separate Qt-independent C++23 target, available
 through `find_package(iiFileProviderTemporary CONFIG REQUIRED)`. Its move-only

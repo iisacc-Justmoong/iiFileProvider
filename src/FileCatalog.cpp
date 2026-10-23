@@ -426,6 +426,16 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
         }
         return at;
     }
+    bool present(const std::string &relative) const {
+        intact(); const auto rel = nativePath(relativePath(relative)); auto at = root;
+        for (auto it = rel.begin(); it != rel.end(); ++it) {
+            at /= *it; std::error_code error; const auto status = fs::symlink_status(at, error);
+            if (error && error != std::errc::no_such_file_or_directory) fail(error.message());
+            if (!fs::exists(status)) return false;
+            auto next = it; ++next; (void)inspect(at, next != rel.end());
+        }
+        return true;
+    }
     void bump() { exec(db, "UPDATE catalog SET revision=revision+1"); }
     CatalogFile entry(Statement &q) const {
         CatalogFile f; f.index = q.number(0); f.key = q.text(1); f.path = q.text(2); f.size = std::uint64_t(q.number(3));
@@ -466,7 +476,17 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
         const auto target = nativePath(pathText(file) + companionSuffix); const auto status = fs::symlink_status(target);
         if (fs::exists(status)) {
             const auto previous = companion(target);
-            if (previous.at("fileKey").get<std::string>() != key || previous.at("revision").get<std::uint64_t>() > f.revision) fail("metadata companion belongs to a different or newer file revision");
+            const auto previousKey = previous.at("fileKey").get<std::string>();
+            if (previousKey != key) {
+                // A copied portable companion can refer to another resident
+                // catalog entry. Fork only that known annotation; unrelated
+                // or newer documents remain protected against replacement.
+                Statement source(db, "SELECT path,metadata,revision FROM files WHERE key=?"); source.bind(1, previousKey);
+                if (!source.row() || source.text(0) == f.path || parseMetadata(previous.at("metadata")) != f.metadata
+                    || previous.at("revision").get<std::uint64_t>() > std::uint64_t(source.number(2)))
+                    fail("metadata companion belongs to a different or newer file revision");
+            } else if (previous.at("revision").get<std::uint64_t>() > f.revision)
+                fail("metadata companion belongs to a newer file revision");
         }
         const auto json = document(f); if (json.size() > FileCatalog::maximumMetadataBytes) fail("companion exceeds byte limit");
         Stage staged(file.parent_path(), newKey(db, "")); writeBytes(staged.path, asBytes(json)); staged.publish(target, fs::exists(status));
@@ -492,26 +512,47 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
         for (auto &c : metadata.collections) { if (!remap.contains(c)) fail("companion has unknown collection membership"); c = remap.at(c); }
         metadata = normalizeMetadata(std::move(metadata));
     }
-    CatalogFile registration(const FileRegistration &registration) {
+    CatalogFile registration(const FileRegistration &registration, bool *mutated = nullptr) {
         const auto relative = relativePath(registration.path); const auto physical = inspect(path(relative));
-        const auto existing = find(relative, true); FileMetadata metadata;
+        auto existing = find(relative, true); FileMetadata metadata;
+        if (!existing) {
+            Statement same(db, "SELECT key,path FROM files WHERE identity=?"); same.bind(1, physical.identity);
+            if (same.row()) {
+                const auto previous = same.text(1);
+                if (present(previous)) fail("managed hard-link aliases require separate files");
+                existing = require(same.text(0));
+            }
+        }
         std::string key = existing ? existing->key : newKey(db, "file-"); std::uint64_t revision = existing ? existing->revision + 1 : 1;
         if (registration.metadata) metadata = normalizeMetadata(*registration.metadata);
-        else if (existing) metadata = existing->metadata;
+        else if (existing) {
+            metadata = existing->metadata;
+            const auto sidecar = nativePath(pathText(path(relative)) + companionSuffix);
+            if (fs::exists(fs::symlink_status(sidecar))) {
+                const auto j = companion(sidecar);
+                if (j.at("fileKey").get<std::string>() == key && j.at("revision").get<std::uint64_t>() >= existing->revision) {
+                    metadata = parseMetadata(j.at("metadata")); restoreCollections(j, metadata);
+                }
+            }
+        }
         else {
             const auto sidecar = nativePath(pathText(path(relative)) + companionSuffix);
             if (fs::exists(fs::symlink_status(sidecar))) {
                 const auto j = companion(sidecar); key = j.at("fileKey").get<std::string>(); metadata = parseMetadata(j.at("metadata"));
                 revision = std::max(std::uint64_t(1), j.at("revision").get<std::uint64_t>());
                 restoreCollections(j, metadata);
+                Statement owner(db, "SELECT path FROM files WHERE key=?"); owner.bind(1, key);
+                if (owner.row() && owner.text(0) != relative) { key = newKey(db, "file-"); revision = 1; }
             }
         }
-        Statement write(db, existing ? "UPDATE files SET identity=?,size=?,modified=?,stamp=?,revision=? WHERE id=?"
+        if (existing && existing->path == relative && existing->contentVersion == physical.version && existing->metadata == metadata) return *existing;
+        Statement write(db, existing ? "UPDATE files SET identity=?,size=?,modified=?,stamp=?,revision=?,path=? WHERE id=?"
             : "INSERT INTO files(identity,size,modified,stamp,revision,key,path,rating,color,title,metadata) VALUES(?,?,?,?,?,?,?,0,0,'','{}')");
         write.bind(1, physical.identity); write.bind(2, integer(physical.size)); write.bind(3, physical.modified); write.bind(4, physical.version); write.bind(5, integer(revision));
-        if (existing) write.bind(6, existing->index); else { write.bind(6, key); write.bind(7, relative); } write.done();
+        if (existing) { write.bind(6, relative); write.bind(7, existing->index); } else { write.bind(6, key); write.bind(7, relative); } write.done();
         const auto id = existing ? existing->index : sqlite3_last_insert_rowid(db); annotations(id, relative, metadata);
-        const auto result = require(key); if (document(result).size() > FileCatalog::maximumMetadataBytes) fail("encoded companion exceeds byte limit"); return result;
+        const auto result = require(key); if (document(result).size() > FileCatalog::maximumMetadataBytes) fail("encoded companion exceeds byte limit");
+        if (mutated) *mutated = true; return result;
     }
 };
 
@@ -524,8 +565,9 @@ std::vector<CatalogFile> FileCatalog::registerFiles(const std::vector<FileRegist
     for (const auto &f : input) { (void)relativePath(f.path); if (!paths.insert(f.path).second) fail("duplicate path in registration batch"); if (f.metadata) bytes += metadataJson(normalizeMetadata(*f.metadata)).dump().size(); if (bytes > maximumBatchMetadata) fail("registration metadata exceeds batch limit"); }
     bytes = 0;
     std::lock_guard lock(d->mutex); d->writable(); Transaction transaction(d->db); std::vector<CatalogFile> result;
-    for (const auto &f : input) { result.push_back(d->registration(f)); bytes += metadataJson(result.back().metadata).dump().size(); if (bytes > maximumBatchMetadata) fail("registration metadata exceeds batch limit"); }
-    d->bump(); transaction.commit(); return result;
+    bool mutated = false;
+    for (const auto &f : input) { result.push_back(d->registration(f, &mutated)); bytes += metadataJson(result.back().metadata).dump().size(); if (bytes > maximumBatchMetadata) fail("registration metadata exceeds batch limit"); }
+    if (mutated) d->bump(); transaction.commit(); return result;
 }
 MetadataWrite FileCatalog::registerFile(const std::string &path, const std::optional<FileMetadata> &metadata) {
     if (metadata) (void)normalizeMetadata(*metadata);

@@ -1,0 +1,5 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(iiFileProviderNative 0.9 CONFIG)
+include("${CMAKE_CURRENT_LIST_DIR}/iiFileProviderCompatibilityTargets.cmake")
+check_required_components(iiFileProviderCompatibility)

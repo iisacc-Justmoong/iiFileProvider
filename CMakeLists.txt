@@ -138,7 +138,7 @@ endif()
 install(TARGETS iiFileProviderCli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-add_library(iiFileProviderObjects STATIC src/ObjectStore.cpp src/ObjectHash.cpp src/ObjectSource.cpp src/ObjectBatchRead.cpp src/ObjectSnapshotBatch.cpp src/ObjectPackager.cpp src/ObjectAudit.cpp)
+add_library(iiFileProviderObjects STATIC src/ObjectStore.cpp src/OntologyFileSystem.cpp src/ObjectMetadataCodec.cpp src/ObjectHash.cpp src/ObjectSource.cpp src/ObjectBatchRead.cpp src/ObjectSnapshotBatch.cpp src/ObjectPackager.cpp src/ObjectAudit.cpp)
 add_library(iiFileProvider::Objects ALIAS iiFileProviderObjects)
 if(EMSCRIPTEN)
     target_compile_options(iiFileProviderObjects PUBLIC -pthread)
@@ -149,7 +149,8 @@ set_target_properties(iiFileProviderObjects PROPERTIES EXPORT_NAME Objects POSIT
 target_compile_features(iiFileProviderObjects PUBLIC cxx_std_23)
 target_include_directories(iiFileProviderObjects PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE Native/third_party)
 target_link_libraries(iiFileProviderObjects PRIVATE SQLite3::SQLite3 Threads::Threads iiFileProvider::Temporary)
 if(IIFILEPROVIDER_BUILD_TOOLS)
 add_executable(iiFileProviderObjectPackage tools/ObjectPackage.cpp tools/ObjectPackageOptions.cpp)
@@ -157,6 +158,13 @@ target_link_libraries(iiFileProviderObjectPackage PRIVATE iiFileProvider::Object
 install(TARGETS iiFileProviderObjectPackage RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 if(BUILD_TESTING)
+    foreach(_test IN ITEMS object_document object_journal object_journal_storage object_metadata_limits ontology_filesystem ontology_storage ontology_boundaries)
+        add_executable(iiFileProvider_${_test} tests/${_test}.cpp)
+        target_compile_definitions(iiFileProvider_${_test} PRIVATE OBJECT_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
+        target_link_libraries(iiFileProvider_${_test} PRIVATE iiFileProvider::Objects SQLite3::SQLite3 Threads::Threads)
+        add_test(NAME iiFileProvider.${_test} COMMAND iiFileProvider_${_test})
+        set_tests_properties(iiFileProvider.${_test} PROPERTIES TIMEOUT 120)
+    endforeach()
     if(TARGET iiFileProviderNative)
         add_executable(iiFileProvider_presentation_catalog tests/presentation_catalog.cpp)
         target_include_directories(iiFileProvider_presentation_catalog PRIVATE Native/third_party)
@@ -168,7 +176,7 @@ if(BUILD_TESTING)
     target_link_libraries(iiFileProvider_file_catalog PRIVATE iiFileProvider::Catalog SQLite3::SQLite3)
     add_test(NAME iiFileProvider.file_catalog COMMAND iiFileProvider_file_catalog)
     set_tests_properties(iiFileProvider.file_catalog PROPERTIES TIMEOUT 120)
-    foreach(_test IN ITEMS file_catalog_index file_catalog_safety)
+    foreach(_test IN ITEMS catalog_reconciliation file_catalog_index file_catalog_safety)
         add_executable(iiFileProvider_${_test} tests/${_test}.cpp)
         target_compile_definitions(iiFileProvider_${_test} PRIVATE CATALOG_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
         target_link_libraries(iiFileProvider_${_test} PRIVATE iiFileProvider::Catalog SQLite3::SQLite3 Threads::Threads)
@@ -254,14 +262,14 @@ if(BUILD_TESTING)
     set_tests_properties(iiFileProvider.object_store PROPERTIES TIMEOUT 60)
 endif()
 install(TARGETS iiFileProviderObjects EXPORT iiFileProviderObjectsTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES src/ObjectStore.h src/ObjectSource.h src/ObjectPackager.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES src/ObjectStore.h src/ObjectSource.h src/ObjectPackager.h src/OntologyFileSystem.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT iiFileProviderObjectsTargets NAMESPACE iiFileProvider:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderObjects)
 configure_package_config_file(cmake/iiFileProviderObjectsConfig.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderObjectsConfig.cmake"
     INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderObjects)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderObjectsConfig.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderObjects)
-install(FILES docs/OBJECT_STORE.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs)
+install(FILES docs/OBJECT_STORE.md docs/FILE_JOURNAL.md docs/FILE_JOURNAL_VALIDATION.md docs/ONTOLOGY_FILESYSTEM.md docs/ONTOLOGY_VALIDATION.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs)
 
 if(BUILD_TESTING AND IIFILEPROVIDER_BUILD_NATIVE_API AND NOT CMAKE_CROSSCOMPILING)
     add_test(NAME iiFileProvider.python_adapter COMMAND ${Python3_EXECUTABLE}
