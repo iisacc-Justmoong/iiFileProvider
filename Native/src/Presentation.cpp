@@ -15,6 +15,7 @@
 #include <fstream>
 #include <limits>
 #include <mutex>
+#include <optional>
 #include <set>
 #include <thread>
 #ifdef _WIN32
@@ -22,6 +23,7 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
+#include <winioctl.h>
 #else
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -50,7 +52,11 @@ std::map<std::string, Presentation::Renderer> renderers;
 std::atomic_uint64_t rendererRevision{};
 std::atomic_bool presentationStopped = false;
 std::mutex cacheTokenMutex;
-std::map<std::string, std::pair<std::string, std::string>> cacheTokens;
+struct CacheToken final {
+    std::string observed, normalized;
+    std::optional<std::int64_t> observedSequence, normalizedSequence;
+};
+std::map<std::string, CacheToken> cacheTokens;
 std::string text(const fs::path &p) { const auto u = p.u8string(); return {u.begin(), u.end()}; }
 std::string lower(std::string s) { for (auto &c : s) if (c >= 'A' && c <= 'Z') c += 'a' - 'A'; return s; }
 bool sameName(const std::string &left, const std::string &right) {
@@ -116,6 +122,7 @@ struct Source {
     std::uint64_t size{};
     std::int64_t modified{};
     std::string changed;
+    std::optional<std::int64_t> sequence;
 };
 Source inspect(const fs::path &path, bool directory = false) {
     const auto s = fs::symlink_status(path);
@@ -127,12 +134,32 @@ Source inspect(const fs::path &path, bool directory = false) {
     BY_HANDLE_FILE_INFORMATION info{};
     const bool valid = GetFileInformationByHandle(h, &info) && !(info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT);
     FILE_BASIC_INFO basic{}; const bool basicValid = GetFileInformationByHandleEx(h, FileBasicInfo, &basic, sizeof(basic));
+    // Closing successive writes can leave equal timestamps. A journal sequence
+    // distinguishes those edits without rereading model/tensor contents.
+    std::optional<std::int64_t> sequence;
+    READ_FILE_USN_DATA request{2, 3};
+    std::array<unsigned char, 1024> journal{}; DWORD returned = 0;
+    if (DeviceIoControl(h, FSCTL_READ_FILE_USN_DATA, &request, sizeof(request),
+                        journal.data(), DWORD(journal.size()), &returned, nullptr)
+        && returned >= sizeof(USN_RECORD_COMMON_HEADER)) {
+        USN_RECORD_COMMON_HEADER header{};
+        std::memcpy(&header, journal.data(), sizeof(header));
+        if (header.MajorVersion == 2 && returned >= offsetof(USN_RECORD_V2, FileName)) {
+            USN_RECORD_V2 record{};
+            std::memcpy(&record, journal.data(), std::min<std::size_t>(sizeof(record), returned));
+            if (record.Usn > 0) sequence = record.Usn;
+        } else if (header.MajorVersion == 3 && returned >= offsetof(USN_RECORD_V3, FileName)) {
+            USN_RECORD_V3 record{};
+            std::memcpy(&record, journal.data(), std::min<std::size_t>(sizeof(record), returned));
+            if (record.Usn > 0) sequence = record.Usn;
+        }
+    }
     CloseHandle(h); if (!valid) fail("Cannot identify presentation source");
     const auto size = (std::uint64_t(info.nFileSizeHigh) << 32) | info.nFileSizeLow;
     const auto time = (std::uint64_t(info.ftLastWriteTime.dwHighDateTime) << 32) | info.ftLastWriteTime.dwLowDateTime;
     const auto id = std::to_string(info.dwVolumeSerialNumber) + ":" + std::to_string(info.nFileIndexHigh) + ":" + std::to_string(info.nFileIndexLow);
     return {id, id + ":" + std::to_string(size) + ":" + std::to_string(time), size,
-        static_cast<std::int64_t>((time - 116444736000000000ull) * 100), id + ":" + std::to_string(basicValid ? basic.ChangeTime.QuadPart : static_cast<LONGLONG>(time))};
+        static_cast<std::int64_t>((time - 116444736000000000ull) * 100), id + ":" + std::to_string(basicValid ? basic.ChangeTime.QuadPart : static_cast<LONGLONG>(time)), sequence};
 #else
     struct stat info{};
     if (::lstat(path.c_str(), &info) || (directory ? !S_ISDIR(info.st_mode) : !S_ISREG(info.st_mode)) || info.st_size < 0) fail("Cannot inspect presentation source");
@@ -448,7 +475,9 @@ PresentationRecord persist(const fs::path &path, const Source &before, const std
             fail("Cannot replace an unrelated presentation companion");
         fs::permissions(companion, fs::perms::owner_read | fs::perms::owner_write);
     }
-    if (inspect(path).changed != before.changed) fail("Native source changed during preview rendering");
+    const auto renderedSource = inspect(path);
+    if (renderedSource.changed != before.changed || renderedSource.sequence != before.sequence)
+        fail("Native source changed during preview rendering");
     // Attribute publication changes ctime. Journal that resulting token in the
     // portable document, outside the source, without a self-invalidating loop.
     // A missing companion or any later native change requires regeneration.
@@ -458,12 +487,17 @@ PresentationRecord persist(const fs::path &path, const Source &before, const std
         std::lock_guard lock(cacheTokenMutex);
         const auto previous = cacheTokens.find(before.identity);
         auto originalToken = before.changed;
-        if (previous != cacheTokens.end() && previous->second.first == originalToken) originalToken = previous->second.second;
+        auto originalSequence = before.sequence;
+        if (previous != cacheTokens.end() && previous->second.observed == originalToken
+            && previous->second.observedSequence == before.sequence) {
+            originalToken = previous->second.normalized;
+            originalSequence = previous->second.normalizedSequence;
+        }
         r.embedded = embed(path, r.document);
         const auto after = inspect(path);
         resultingToken = changeToken(path, after);
         if (cacheTokens.size() >= 65536 && !cacheTokens.contains(before.identity)) cacheTokens.erase(cacheTokens.begin());
-        cacheTokens[before.identity] = {after.changed, std::move(originalToken)};
+        cacheTokens[before.identity] = {after.changed, std::move(originalToken), after.sequence, originalSequence};
     }
     portable["sourceChangeToken"] = resultingToken; r.document = portable.dump();
     if (r.document.size() > Presentation::maximumDocumentBytes) fail("Portable presentation exceeds byte limit");
@@ -652,10 +686,18 @@ std::string Presentation::cacheChangeToken(const fs::path &input) {
     const auto path = fs::absolute(input).lexically_normal();
     std::lock_guard lock(cacheTokenMutex); const auto state = inspect(path);
     const auto found = cacheTokens.find(state.identity);
-    auto result = found != cacheTokens.end() && found->second.first == state.changed ? found->second.second : state.changed;
+    const auto normalized = found != cacheTokens.end() && found->second.observed == state.changed
+        && found->second.observedSequence == state.sequence;
+    auto result = normalized ? found->second.normalized : state.changed;
+    const auto sequence = normalized ? found->second.normalizedSequence : state.sequence;
+    if (sequence) result += ":usn:" + std::to_string(*sequence);
     if (lower(text(path.extension())) == ".iisc") {
         auto wal = path; wal += "-wal";
-        if (fs::exists(fs::symlink_status(wal))) result += ":wal:" + inspect(wal).changed;
+        if (fs::exists(fs::symlink_status(wal))) {
+            const auto current = inspect(wal);
+            result += ":wal:" + current.changed;
+            if (current.sequence) result += ":usn:" + std::to_string(*current.sequence);
+        }
     }
     return result;
 }
@@ -672,7 +714,7 @@ std::string Presentation::normalizeChangeTime(std::uint64_t device, std::uint64_
 #endif
     std::lock_guard lock(cacheTokenMutex);
     const auto found = cacheTokens.find(identity);
-    return found != cacheTokens.end() && found->second.first == token ? found->second.second : token;
+    return found != cacheTokens.end() && found->second.observed == token ? found->second.normalized : token;
 }
 std::optional<PresentationRecord> Presentation::load(const fs::path &input) {
     try { const auto p = sourcePath(input); return loadAt(p, inspect(p)); } catch (...) { return {}; }

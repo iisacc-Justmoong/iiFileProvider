@@ -24,6 +24,21 @@ class ProviderTest(unittest.TestCase):
             os.utime(path, ns=(state.st_atime_ns, state.st_mtime_ns))
             self.assertNotEqual(provider.cache_change_token(path), before)
 
+    def test_rapid_same_size_edits_with_restored_mtime_change_tokens(self):
+        with provider.TemporaryDirectory(dir=TEST_ROOT) as root:
+            path = Path(root) / "rapid-token.txt"
+            path.write_bytes(b"original")
+            before = provider.cache_change_token(path)
+            provider.presentation(path, prepare=True)
+            self.assertEqual(provider.cache_change_token(path), before)
+            state = path.stat()
+            for index in range(64):
+                path.write_bytes(f"{index:08d}".encode("ascii"))
+                os.utime(path, ns=(state.st_atime_ns, state.st_mtime_ns))
+                after = provider.cache_change_token(path)
+                self.assertNotEqual(after, before, f"Lost rapid source edit {index}")
+                before = after
+
     @unittest.skipIf(os.name == "nt", "POSIX pinned-stat identity")
     def test_preview_publication_does_not_invalidate_but_external_edits_do(self):
         with provider.TemporaryDirectory(dir=TEST_ROOT) as root:

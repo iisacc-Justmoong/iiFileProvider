@@ -14,5 +14,7 @@ add a Qt library or header dependency and does not alter the installed provider.
 
 Congregation composes this target from source, exercises native exclusion and
 dead-owner recovery without Qt, and uses QLockFile only as an independent test
-oracle for compatibility in both directions. Windows code is provided; current
-execution evidence is from macOS.
+oracle for compatibility in both directions. Windows MSVC x64 also builds and
+runs `iiFileProvider.Compatibility.Contracts`, including repeated atomic
+replacement and lock cleanup. This Windows check is distinct from Congregation's
+macOS bidirectional Qt oracle. See [Windows verification](../docs/WindowsCompatibility.md).
