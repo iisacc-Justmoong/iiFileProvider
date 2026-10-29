@@ -21,7 +21,7 @@
       "document_id": "urn:iisacc:document:5797ead501c746517216ed8d6d5630cfdbb91260e8c50f5e0d6c85a3fba0d996",
       "source": "README.md",
       "agent_json": "docs/entrypoints/README.agent.json",
-      "source_sha256": "2f2ab9867300bc3fc9d55f838a5310e56c336fe6716ce3bd8a5340ca09294e41",
+      "source_sha256": "108c6b3db29e9b009e1563524c7fa7498277264532f6fef44f0db0bc04601c11",
       "role": "overview"
     },
     {
@@ -63,7 +63,7 @@
       "document_id": "urn:iisacc:document:a385ed591114cc4e5d5ba920bcecb5853ac40c101654bd4830c8f48c69dc2098",
       "source": "docs/FILE_JOURNAL.md",
       "agent_json": "docs/FILE_JOURNAL.agent.json",
-      "source_sha256": "7c5bb9c50d398f2bbd2c06cfce3b5e08abd32ff05e13ddbf4b01e8ecdd22d46b",
+      "source_sha256": "3d645a9be3468251b79731a01ab82db1f5b82ea7d17ecee9f65a5fb6b1335eb5",
       "role": "guide"
     },
     {
@@ -154,7 +154,7 @@
       "document_id": "urn:iisacc:document:4426116061d7c2cd6ef074175d7a9459cacde6c65e1427a85bf70d2c8100b276",
       "source": "docs/ONTOLOGY_FILESYSTEM.md",
       "agent_json": "docs/ONTOLOGY_FILESYSTEM.agent.json",
-      "source_sha256": "00195e49bf1d0fac87b179c1c881c27c785f3e5607a5da77d7311482456d6797",
+      "source_sha256": "2243560efb18c4f9b133dcd0f65d5237299036f1eb066d542f40d3a3c0fb7190",
       "role": "guide"
     },
     {
@@ -182,8 +182,15 @@
       "document_id": "urn:iisacc:document:c0e65809de0516f804d0676b41f27be6b1b92e29197bf5811dccdf108b32d4bf",
       "source": "docs/README.md",
       "agent_json": "docs/README.agent.json",
-      "source_sha256": "019bb01969bd0b10d3f0d174a4831881d24f198f4efc4a8dbd3c0460272951bd",
+      "source_sha256": "5ecb4df22a2da196b51475697fe870c049cd4b5d4cfd14bac7d1a148ffb857ab",
       "role": "overview"
+    },
+    {
+      "document_id": "urn:iisacc:document:3247e98e83b2c608cc12848cc70aa7441034e54ea72c5167a0803fab1602cee0",
+      "source": "docs/SourceLayout.md",
+      "agent_json": "docs/SourceLayout.agent.json",
+      "source_sha256": "e951781589ad390176b24aae988ae42fd1ed54f2c6fc8cedcce2a3540e58a1e3",
+      "role": "guide"
     },
     {
       "document_id": "urn:iisacc:document:4d47f2b5ba165c01d201856fa10b1718f06fbdfdcda1c5585e2690cf2ce2c3f5",

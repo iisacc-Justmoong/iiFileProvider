@@ -1,6 +1,6 @@
 # 온톨로지 파일 시스템
 
-`OntologyFileSystem`은 ObjectStore 패키지의 파일을 업무 개념과 관계로 구성하는 C++23 의미 기반 파일 시스템이다. 파일 내용은 기존 ObjectStore가 소유하고 클래스·개체·속성·관계·가상 디렉터리는 같은 SQLite 데이터베이스에 저장한다. Qt 및 상향 SDK 의존성은 없다. 헤더와 구현은 `src/OntologyFileSystem.h`와 `.cpp`에 함께 둔다. 설치 소비자는 기존 `iiFileProvider::Objects` 타겟을 사용한다.
+`OntologyFileSystem`은 ObjectStore 패키지의 파일을 업무 개념과 관계로 구성하는 C++23 의미 기반 파일 시스템이다. 파일 내용은 기존 ObjectStore가 소유하고 클래스·개체·속성·관계·가상 디렉터리는 같은 SQLite 데이터베이스에 저장한다. Qt 및 상향 SDK 의존성은 없다. 헤더와 구현은 `src/Objects/OntologyFileSystem.h`와 `.cpp`에 함께 둔다. 설치 소비자는 기존 `iiFileProvider::Objects` 타겟을 사용한다.
 
 ## 파일과 의미 구조
 

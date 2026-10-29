@@ -134,7 +134,7 @@ The public repository is [iisacc-Justmoong/iiFileProvider](https://github.com/ii
 
 ## Public API
 
-Using `<src/iiFileProvider.h>`, the author model, file links, and authentication tokens can be used. The public headers are `src/FileAuthor.h`, `src/AuthenticationToken.h`, `src/Authorship.h`, and `src/FileLink.h`. `Authorship` stores the distinction between the first editor and participants, the first and recent contribution times per author, file links, and change numbers, and updates the JSON dump immediately after changes. Classes are C++ value objects, not QObject, and do not depend on the lifespan of Qt Network or account managers.
+Using `<iiFileProvider.h>`, the author model, file links, and authentication tokens can be used. The public headers are `src/Identity/FileAuthor.h`, `src/Identity/AuthenticationToken.h`, `src/Identity/Authorship.h`, and `src/Identity/FileLink.h`. `Authorship` stores the distinction between the first editor and participants, the first and recent contribution times per author, file links, and change numbers, and updates the JSON dump immediately after changes. Classes are C++ value objects, not QObject, and do not depend on the lifespan of Qt Network or account managers.
 
 ```cpp
 #include <iiFileProvider.h>
@@ -254,7 +254,7 @@ ctest --test-dir build/consumer/build -C Release --output-on-failure
 
 ## Installation results and consumption
 
-The default installation path generates `include/` umbrella, author, file link, authentication token, and export header, `lib/` shared libraries, `lib/cmake/iiFileProvider/` CMake package, and `share/iiFileProvider/` README and contract documents. Private `src/JsonContract.h` is not installed. The Windows shared library executable is installed to `bin/`. Consumers are informed of C++20 and `Qt6::Core` link requirements. Qt is not bundled and copied, and the installed Qt runtime is required. The shared library installation RPATH includes the external library paths used in the link.
+The default installation path generates `include/` umbrella, author, file link, authentication token, and export header, `lib/` shared libraries, `lib/cmake/iiFileProvider/` CMake package, and `share/iiFileProvider/` README and contract documents. Private `src/API/JsonContract.h` is not installed. The Windows shared library executable is installed to `bin/`. Consumers are informed of C++20 and `Qt6::Core` link requirements. Qt is not bundled and copied, and the installed Qt runtime is required. The shared library installation RPATH includes the external library paths used in the link.
 
 ```cmake
 find_package(iiFileProvider 0.5.0 CONFIG REQUIRED)
@@ -339,6 +339,8 @@ headers in the package include directory. Generated export headers belong to
 Validate this layout from the SDK workspace with
 `python3 -B tests/test_source_header_layout.py`. Reconfigure, build, run CTest,
 and verify a staged installed consumer after changing source/header paths.
+
+Source and adjacent headers are grouped by responsibility under `src/` and `Native/src/`; installed header names and targets remain stable. See [source layout](docs/SourceLayout.md).
 
 <!-- workspace-docs:readme:start -->
 ## Documentation entry points

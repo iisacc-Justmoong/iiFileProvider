@@ -10,8 +10,8 @@
   },
   "source": {
     "path": "docs/FILE_JOURNAL.md",
-    "sha256": "7c5bb9c50d398f2bbd2c06cfce3b5e08abd32ff05e13ddbf4b01e8ecdd22d46b",
-    "bytes": 14683,
+    "sha256": "3d645a9be3468251b79731a01ab82db1f5b82ea7d17ecee9f65a5fb6b1335eb5",
+    "bytes": 14691,
     "line_count": 125,
     "encoding": "utf-8",
     "language": "ko"
@@ -43,7 +43,7 @@
       "kind": "paragraph",
       "start_line": 3,
       "end_line": 3,
-      "raw": "`iiFileProvider::Objects`의 C++23 공개 API에 파일 수정 이력, 작업 세션 문맥, 원본 바이트를 보존하는 메타데이터 래핑을 제공한다. Qt나 다른 SDK 모듈에 의존하지 않는다. 공개 헤더는 구현 옆의 `src/ObjectStore.h`이며 설치 소비자는 `<ObjectStore.h>`와 `iiFileProvider::Objects`를 사용한다. `FileMetadata` 값 타입을 재사용하지만 Catalog 라이브러리에 링크하지 않는다.\n"
+      "raw": "`iiFileProvider::Objects`의 C++23 공개 API에 파일 수정 이력, 작업 세션 문맥, 원본 바이트를 보존하는 메타데이터 래핑을 제공한다. Qt나 다른 SDK 모듈에 의존하지 않는다. 공개 헤더는 구현 옆의 `src/Objects/ObjectStore.h`이며 설치 소비자는 `<ObjectStore.h>`와 `iiFileProvider::Objects`를 사용한다. `FileMetadata` 값 타입을 재사용하지만 Catalog 라이브러리에 링크하지 않는다.\n"
     },
     {
       "id": "b000004",
@@ -598,7 +598,7 @@
       {
         "block_id": "b000003",
         "line": 3,
-        "text": "`iiFileProvider::Objects`의 C++23 공개 API에 파일 수정 이력, 작업 세션 문맥, 원본 바이트를 보존하는 메타데이터 래핑을 제공한다. Qt나 다른 SDK 모듈에 의존하지 않는다. 공개 헤더는 구현 옆의 `src/ObjectStore.h`이며 설치 소비자는 `<ObjectStore.h>`와 `iiFileProvider::Objects`를 사용한다. `FileMetadata` 값 타입을 재사용하지만 Catalog 라이브러리에 링크하지 않는다.",
+        "text": "`iiFileProvider::Objects`의 C++23 공개 API에 파일 수정 이력, 작업 세션 문맥, 원본 바이트를 보존하는 메타데이터 래핑을 제공한다. Qt나 다른 SDK 모듈에 의존하지 않는다. 공개 헤더는 구현 옆의 `src/Objects/ObjectStore.h`이며 설치 소비자는 `<ObjectStore.h>`와 `iiFileProvider::Objects`를 사용한다. `FileMetadata` 값 타입을 재사용하지만 Catalog 라이브러리에 링크하지 않는다.",
         "basis": "lexical_match",
         "context": "paragraph"
       },

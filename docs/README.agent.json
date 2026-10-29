@@ -10,9 +10,9 @@
   },
   "source": {
     "path": "docs/README.md",
-    "sha256": "019bb01969bd0b10d3f0d174a4831881d24f198f4efc4a8dbd3c0460272951bd",
-    "bytes": 3083,
-    "line_count": 40,
+    "sha256": "5ecb4df22a2da196b51475697fe870c049cd4b5d4cfd14bac7d1a148ffb857ab",
+    "bytes": 3163,
+    "line_count": 41,
     "encoding": "utf-8",
     "language": "en"
   },
@@ -79,8 +79,8 @@
       "id": "b000008",
       "kind": "table",
       "start_line": 8,
-      "end_line": 39,
-      "raw": "| Document | Agent JSON |\n| --- | --- |\n| [`AGENT.md`](../AGENT.md) | [JSON](entrypoints/AGENT.agent.json) |\n| [`README.md`](../README.md) | [JSON](entrypoints/README.agent.json) |\n| [`docs/FILE_AUTHOR_CONTRACT.md`](FILE_AUTHOR_CONTRACT.md) | [JSON](FILE_AUTHOR_CONTRACT.agent.json) |\n| [`docs/FILE_CATALOG.md`](FILE_CATALOG.md) | [JSON](FILE_CATALOG.agent.json) |\n| [`docs/FILE_CATALOG_VALIDATION.md`](FILE_CATALOG_VALIDATION.md) | [JSON](FILE_CATALOG_VALIDATION.agent.json) |\n| [`docs/FILE_CREATION_VALIDATION.md`](FILE_CREATION_VALIDATION.md) | [JSON](FILE_CREATION_VALIDATION.agent.json) |\n| [`docs/FILE_CRUD.md`](FILE_CRUD.md) | [JSON](FILE_CRUD.agent.json) |\n| [`docs/FILE_JOURNAL.md`](FILE_JOURNAL.md) | [JSON](FILE_JOURNAL.agent.json) |\n| [`docs/FILE_JOURNAL_VALIDATION.md`](FILE_JOURNAL_VALIDATION.md) | [JSON](FILE_JOURNAL_VALIDATION.agent.json) |\n| [`docs/FILE_LINKS.md`](FILE_LINKS.md) | [JSON](FILE_LINKS.agent.json) |\n| [`docs/FILE_OWNERSHIP.md`](FILE_OWNERSHIP.md) | [JSON](FILE_OWNERSHIP.agent.json) |\n| [`docs/FILE_PRESENTATION.md`](FILE_PRESENTATION.md) | [JSON](FILE_PRESENTATION.agent.json) |\n| [`docs/FILE_PRESENTATION_VALIDATION.md`](FILE_PRESENTATION_VALIDATION.md) | [JSON](FILE_PRESENTATION_VALIDATION.agent.json) |\n| [`docs/FILE_SEARCH_INDEX.md`](FILE_SEARCH_INDEX.md) | [JSON](FILE_SEARCH_INDEX.agent.json) |\n| [`docs/IPADOS_TEMPORARY.md`](IPADOS_TEMPORARY.md) | [JSON](IPADOS_TEMPORARY.agent.json) |\n| [`docs/NATIVE_DATABASE.md`](NATIVE_DATABASE.md) | [JSON](NATIVE_DATABASE.agent.json) |\n| [`docs/NATIVE_STATIC.md`](NATIVE_STATIC.md) | [JSON](NATIVE_STATIC.agent.json) |\n| [`docs/NATIVE_TIMESTAMP_SAFETY.md`](NATIVE_TIMESTAMP_SAFETY.md) | [JSON](NATIVE_TIMESTAMP_SAFETY.agent.json) |\n| [`docs/OBJECT_STORE.md`](OBJECT_STORE.md) | [JSON](OBJECT_STORE.agent.json) |\n| [`docs/OBJECT_STORE_PROGRESS.md`](OBJECT_STORE_PROGRESS.md) | [JSON](OBJECT_STORE_PROGRESS.agent.json) |\n| [`docs/ONTOLOGY_FILESYSTEM.md`](ONTOLOGY_FILESYSTEM.md) | [JSON](ONTOLOGY_FILESYSTEM.agent.json) |\n| [`docs/ONTOLOGY_VALIDATION.md`](ONTOLOGY_VALIDATION.md) | [JSON](ONTOLOGY_VALIDATION.agent.json) |\n| [`docs/OWNED_FILE_IO.md`](OWNED_FILE_IO.md) | [JSON](OWNED_FILE_IO.agent.json) |\n| [`docs/PERFORMANCE.md`](PERFORMANCE.md) | [JSON](PERFORMANCE.agent.json) |\n| [`docs/Windows.md`](Windows.md) | [JSON](Windows.agent.json) |\n| [`docs/WindowsBuildAndRun.md`](WindowsBuildAndRun.md) | [JSON](WindowsBuildAndRun.agent.json) |\n| [`docs/WindowsChangeTokens.md`](WindowsChangeTokens.md) | [JSON](WindowsChangeTokens.agent.json) |\n| [`docs/WindowsCompatibility.md`](WindowsCompatibility.md) | [JSON](WindowsCompatibility.agent.json) |\n| [`docs/documentation-structure.md`](documentation-structure.md) | [JSON](documentation-structure.agent.json) |\n| [`example/README.md`](../example/README.md) | [JSON](mirrors/example/README.agent.json) |\n",
+      "end_line": 40,
+      "raw": "| Document | Agent JSON |\n| --- | --- |\n| [`AGENT.md`](../AGENT.md) | [JSON](entrypoints/AGENT.agent.json) |\n| [`README.md`](../README.md) | [JSON](entrypoints/README.agent.json) |\n| [`docs/FILE_AUTHOR_CONTRACT.md`](FILE_AUTHOR_CONTRACT.md) | [JSON](FILE_AUTHOR_CONTRACT.agent.json) |\n| [`docs/FILE_CATALOG.md`](FILE_CATALOG.md) | [JSON](FILE_CATALOG.agent.json) |\n| [`docs/FILE_CATALOG_VALIDATION.md`](FILE_CATALOG_VALIDATION.md) | [JSON](FILE_CATALOG_VALIDATION.agent.json) |\n| [`docs/FILE_CREATION_VALIDATION.md`](FILE_CREATION_VALIDATION.md) | [JSON](FILE_CREATION_VALIDATION.agent.json) |\n| [`docs/FILE_CRUD.md`](FILE_CRUD.md) | [JSON](FILE_CRUD.agent.json) |\n| [`docs/FILE_JOURNAL.md`](FILE_JOURNAL.md) | [JSON](FILE_JOURNAL.agent.json) |\n| [`docs/FILE_JOURNAL_VALIDATION.md`](FILE_JOURNAL_VALIDATION.md) | [JSON](FILE_JOURNAL_VALIDATION.agent.json) |\n| [`docs/FILE_LINKS.md`](FILE_LINKS.md) | [JSON](FILE_LINKS.agent.json) |\n| [`docs/FILE_OWNERSHIP.md`](FILE_OWNERSHIP.md) | [JSON](FILE_OWNERSHIP.agent.json) |\n| [`docs/FILE_PRESENTATION.md`](FILE_PRESENTATION.md) | [JSON](FILE_PRESENTATION.agent.json) |\n| [`docs/FILE_PRESENTATION_VALIDATION.md`](FILE_PRESENTATION_VALIDATION.md) | [JSON](FILE_PRESENTATION_VALIDATION.agent.json) |\n| [`docs/FILE_SEARCH_INDEX.md`](FILE_SEARCH_INDEX.md) | [JSON](FILE_SEARCH_INDEX.agent.json) |\n| [`docs/IPADOS_TEMPORARY.md`](IPADOS_TEMPORARY.md) | [JSON](IPADOS_TEMPORARY.agent.json) |\n| [`docs/NATIVE_DATABASE.md`](NATIVE_DATABASE.md) | [JSON](NATIVE_DATABASE.agent.json) |\n| [`docs/NATIVE_STATIC.md`](NATIVE_STATIC.md) | [JSON](NATIVE_STATIC.agent.json) |\n| [`docs/NATIVE_TIMESTAMP_SAFETY.md`](NATIVE_TIMESTAMP_SAFETY.md) | [JSON](NATIVE_TIMESTAMP_SAFETY.agent.json) |\n| [`docs/OBJECT_STORE.md`](OBJECT_STORE.md) | [JSON](OBJECT_STORE.agent.json) |\n| [`docs/OBJECT_STORE_PROGRESS.md`](OBJECT_STORE_PROGRESS.md) | [JSON](OBJECT_STORE_PROGRESS.agent.json) |\n| [`docs/ONTOLOGY_FILESYSTEM.md`](ONTOLOGY_FILESYSTEM.md) | [JSON](ONTOLOGY_FILESYSTEM.agent.json) |\n| [`docs/ONTOLOGY_VALIDATION.md`](ONTOLOGY_VALIDATION.md) | [JSON](ONTOLOGY_VALIDATION.agent.json) |\n| [`docs/OWNED_FILE_IO.md`](OWNED_FILE_IO.md) | [JSON](OWNED_FILE_IO.agent.json) |\n| [`docs/PERFORMANCE.md`](PERFORMANCE.md) | [JSON](PERFORMANCE.agent.json) |\n| [`docs/SourceLayout.md`](SourceLayout.md) | [JSON](SourceLayout.agent.json) |\n| [`docs/Windows.md`](Windows.md) | [JSON](Windows.agent.json) |\n| [`docs/WindowsBuildAndRun.md`](WindowsBuildAndRun.md) | [JSON](WindowsBuildAndRun.agent.json) |\n| [`docs/WindowsChangeTokens.md`](WindowsChangeTokens.md) | [JSON](WindowsChangeTokens.agent.json) |\n| [`docs/WindowsCompatibility.md`](WindowsCompatibility.md) | [JSON](WindowsCompatibility.agent.json) |\n| [`docs/documentation-structure.md`](documentation-structure.md) | [JSON](documentation-structure.agent.json) |\n| [`example/README.md`](../example/README.md) | [JSON](mirrors/example/README.agent.json) |\n",
       "columns": [
         "Document",
         "Agent JSON"
@@ -183,6 +183,10 @@
           "[JSON](PERFORMANCE.agent.json)"
         ],
         [
+          "[`docs/SourceLayout.md`](SourceLayout.md)",
+          "[JSON](SourceLayout.agent.json)"
+        ],
+        [
           "[`docs/Windows.md`](Windows.md)",
           "[JSON](Windows.agent.json)"
         ],
@@ -211,8 +215,8 @@
     {
       "id": "b000009",
       "kind": "html",
-      "start_line": 40,
-      "end_line": 40,
+      "start_line": 41,
+      "end_line": 41,
       "raw": "<!-- workspace-docs:document-map:end -->\n"
     }
   ],
@@ -576,87 +580,101 @@
       },
       {
         "block_id": "b000008",
+        "label": "`docs/SourceLayout.md`",
+        "target": "SourceLayout.md",
+        "kind": "relative",
+        "line": 34
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "SourceLayout.agent.json",
+        "kind": "relative",
+        "line": 34
+      },
+      {
+        "block_id": "b000008",
         "label": "`docs/Windows.md`",
         "target": "Windows.md",
         "kind": "relative",
-        "line": 34
+        "line": 35
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "Windows.agent.json",
         "kind": "relative",
-        "line": 34
+        "line": 35
       },
       {
         "block_id": "b000008",
         "label": "`docs/WindowsBuildAndRun.md`",
         "target": "WindowsBuildAndRun.md",
         "kind": "relative",
-        "line": 35
+        "line": 36
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "WindowsBuildAndRun.agent.json",
         "kind": "relative",
-        "line": 35
+        "line": 36
       },
       {
         "block_id": "b000008",
         "label": "`docs/WindowsChangeTokens.md`",
         "target": "WindowsChangeTokens.md",
         "kind": "relative",
-        "line": 36
+        "line": 37
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "WindowsChangeTokens.agent.json",
         "kind": "relative",
-        "line": 36
+        "line": 37
       },
       {
         "block_id": "b000008",
         "label": "`docs/WindowsCompatibility.md`",
         "target": "WindowsCompatibility.md",
         "kind": "relative",
-        "line": 37
+        "line": 38
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "WindowsCompatibility.agent.json",
         "kind": "relative",
-        "line": 37
+        "line": 38
       },
       {
         "block_id": "b000008",
         "label": "`docs/documentation-structure.md`",
         "target": "documentation-structure.md",
         "kind": "relative",
-        "line": 38
+        "line": 39
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "documentation-structure.agent.json",
         "kind": "relative",
-        "line": 38
+        "line": 39
       },
       {
         "block_id": "b000008",
         "label": "`example/README.md`",
         "target": "../example/README.md",
         "kind": "relative",
-        "line": 39
+        "line": 40
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "mirrors/example/README.agent.json",
         "kind": "relative",
-        "line": 39
+        "line": 40
       }
     ],
     "tables": [
@@ -762,6 +780,10 @@
           [
             "[`docs/PERFORMANCE.md`](PERFORMANCE.md)",
             "[JSON](PERFORMANCE.agent.json)"
+          ],
+          [
+            "[`docs/SourceLayout.md`](SourceLayout.md)",
+            "[JSON](SourceLayout.agent.json)"
           ],
           [
             "[`docs/Windows.md`](Windows.md)",

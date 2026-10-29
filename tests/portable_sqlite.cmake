@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.31)
-set(_root "${BINARY_ROOT}/portable-sqlite")
-file(LOCK "${_root}.lock" GUARD PROCESS TIMEOUT 300)
+# A test run must never replace another build's relocation or fixture data.
+string(RANDOM LENGTH 16 ALPHABET 0123456789abcdef _run_id)
+set(_root "${BINARY_ROOT}/portable-sqlite-${_run_id}")
+if(EXISTS "${_root}")
+    message(FATAL_ERROR "Refusing to reuse an existing portable SQLite test directory")
+endif()
+file(MAKE_DIRECTORY "${_root}")
 set(_stage "${_root}/installed")
 function(run_checked)
     execute_process(COMMAND ${ARGV} RESULT_VARIABLE result
@@ -62,3 +67,6 @@ if(WIN32)
     set(ENV{PATH} "${_root}/relocated/bin;$ENV{PATH}")
 endif()
 run_checked("${CTEST_COMMAND}" --test-dir "${_root}/consumer/build" --output-on-failure)
+
+# This directory belongs exclusively to the successful test run.
+file(REMOVE_RECURSE "${_root}")

@@ -10,9 +10,9 @@
   },
   "source": {
     "path": "README.md",
-    "sha256": "2f2ab9867300bc3fc9d55f838a5310e56c336fe6716ce3bd8a5340ca09294e41",
-    "bytes": 24690,
-    "line_count": 356,
+    "sha256": "108c6b3db29e9b009e1563524c7fa7498277264532f6fef44f0db0bc04601c11",
+    "bytes": 24910,
+    "line_count": 358,
     "encoding": "utf-8",
     "language": "ko"
   },
@@ -313,7 +313,7 @@
       "kind": "paragraph",
       "start_line": 137,
       "end_line": 137,
-      "raw": "Using `<src/iiFileProvider.h>`, the author model, file links, and authentication tokens can be used. The public headers are `src/FileAuthor.h`, `src/AuthenticationToken.h`, `src/Authorship.h`, and `src/FileLink.h`. `Authorship` stores the distinction between the first editor and participants, the first and recent contribution times per author, file links, and change numbers, and updates the JSON dump immediately after changes. Classes are C++ value objects, not QObject, and do not depend on the lifespan of Qt Network or account managers.\n"
+      "raw": "Using `<iiFileProvider.h>`, the author model, file links, and authentication tokens can be used. The public headers are `src/Identity/FileAuthor.h`, `src/Identity/AuthenticationToken.h`, `src/Identity/Authorship.h`, and `src/Identity/FileLink.h`. `Authorship` stores the distinction between the first editor and participants, the first and recent contribution times per author, file links, and change numbers, and updates the JSON dump immediately after changes. Classes are C++ value objects, not QObject, and do not depend on the lifespan of Qt Network or account managers.\n"
     },
     {
       "id": "b000042",
@@ -790,7 +790,7 @@
       "kind": "paragraph",
       "start_line": 257,
       "end_line": 257,
-      "raw": "The default installation path generates `include/` umbrella, author, file link, authentication token, and export header, `lib/` shared libraries, `lib/cmake/iiFileProvider/` CMake package, and `share/iiFileProvider/` README and contract documents. Private `src/JsonContract.h` is not installed. The Windows shared library executable is installed to `bin/`. Consumers are informed of C++20 and `Qt6::Core` link requirements. Qt is not bundled and copied, and the installed Qt runtime is required. The shared library installation RPATH includes the external library paths used in the link.\n"
+      "raw": "The default installation path generates `include/` umbrella, author, file link, authentication token, and export header, `lib/` shared libraries, `lib/cmake/iiFileProvider/` CMake package, and `share/iiFileProvider/` README and contract documents. Private `src/API/JsonContract.h` is not installed. The Windows shared library executable is installed to `bin/`. Consumers are informed of C++20 and `Qt6::Core` link requirements. Qt is not bundled and copied, and the installed Qt runtime is required. The shared library installation RPATH includes the external library paths used in the link.\n"
     },
     {
       "id": "b000106",
@@ -1180,32 +1180,46 @@
     },
     {
       "id": "b000158",
-      "kind": "html",
+      "kind": "paragraph",
       "start_line": 343,
       "end_line": 343,
-      "raw": "<!-- workspace-docs:readme:start -->\n"
+      "raw": "Source and adjacent headers are grouped by responsibility under `src/` and `Native/src/`; installed header names and targets remain stable. See [source layout](docs/SourceLayout.md).\n"
     },
     {
       "id": "b000159",
-      "kind": "heading",
+      "kind": "blank",
       "start_line": 344,
       "end_line": 344,
+      "raw": "\n"
+    },
+    {
+      "id": "b000160",
+      "kind": "html",
+      "start_line": 345,
+      "end_line": 345,
+      "raw": "<!-- workspace-docs:readme:start -->\n"
+    },
+    {
+      "id": "b000161",
+      "kind": "heading",
+      "start_line": 346,
+      "end_line": 346,
       "raw": "## Documentation entry points\n",
       "level": 2,
       "title": "Documentation entry points"
     },
     {
-      "id": "b000160",
+      "id": "b000162",
       "kind": "blank",
-      "start_line": 345,
-      "end_line": 345,
+      "start_line": 347,
+      "end_line": 347,
       "raw": "\n"
     },
     {
-      "id": "b000161",
+      "id": "b000163",
       "kind": "list",
-      "start_line": 346,
-      "end_line": 349,
+      "start_line": 348,
+      "end_line": 351,
       "raw": "- Human overview: this English `README.md`.\n- Agent instructions: [AGENT.md](AGENT.md).\n- Human documentation: [documentation index](docs/README.md).\n- Structured agent documentation: [agent index](docs/agent-index.json).\n",
       "items": [
         {
@@ -1231,22 +1245,6 @@
       ]
     },
     {
-      "id": "b000162",
-      "kind": "blank",
-      "start_line": 350,
-      "end_line": 350,
-      "raw": "\n"
-    },
-    {
-      "id": "b000163",
-      "kind": "heading",
-      "start_line": 351,
-      "end_line": 351,
-      "raw": "### Child projects\n",
-      "level": 3,
-      "title": "Child projects"
-    },
-    {
       "id": "b000164",
       "kind": "blank",
       "start_line": 352,
@@ -1255,9 +1253,25 @@
     },
     {
       "id": "b000165",
-      "kind": "list",
+      "kind": "heading",
       "start_line": 353,
-      "end_line": 355,
+      "end_line": 353,
+      "raw": "### Child projects\n",
+      "level": 3,
+      "title": "Child projects"
+    },
+    {
+      "id": "b000166",
+      "kind": "blank",
+      "start_line": 354,
+      "end_line": 354,
+      "raw": "\n"
+    },
+    {
+      "id": "b000167",
+      "kind": "list",
+      "start_line": 355,
+      "end_line": 357,
       "raw": "- [`SDK/iiFileProvider/Compatibility`](Compatibility/README.md)\n- [`SDK/iiFileProvider/example/CoreIO`](example/CoreIO/README.md)\n- [`SDK/iiFileProvider/Native`](Native/README.md)\n",
       "items": [
         {
@@ -1278,10 +1292,10 @@
       ]
     },
     {
-      "id": "b000166",
+      "id": "b000168",
       "kind": "html",
-      "start_line": 356,
-      "end_line": 356,
+      "start_line": 358,
+      "end_line": 358,
       "raw": "<!-- workspace-docs:readme:end -->\n"
     }
   ],
@@ -1407,20 +1421,20 @@
       "start_line": 331
     },
     {
-      "block_id": "b000159",
+      "block_id": "b000161",
       "parent_id": "b000001",
       "level": 2,
       "title": "Documentation entry points",
       "anchor": "documentation-entry-points",
-      "start_line": 344
+      "start_line": 346
     },
     {
-      "block_id": "b000163",
-      "parent_id": "b000159",
+      "block_id": "b000165",
+      "parent_id": "b000161",
       "level": 3,
       "title": "Child projects",
       "anchor": "child-projects",
-      "start_line": 351
+      "start_line": 353
     }
   ],
   "indexes": {
@@ -1484,7 +1498,7 @@
       {
         "block_id": "b000041",
         "line": 137,
-        "text": "Using `<src/iiFileProvider.h>`, the author model, file links, and authentication tokens can be used. The public headers are `src/FileAuthor.h`, `src/AuthenticationToken.h`, `src/Authorship.h`, and `src/FileLink.h`. `Authorship` stores the distinction between the first editor and participants, the first and recent contribution times per author, file links, and change numbers, and updates the JSON dump immediately after changes. Classes are C++ value objects, not QObject, and do not depend on the lifespan of Qt Network or account managers.",
+        "text": "Using `<iiFileProvider.h>`, the author model, file links, and authentication tokens can be used. The public headers are `src/Identity/FileAuthor.h`, `src/Identity/AuthenticationToken.h`, `src/Identity/Authorship.h`, and `src/Identity/FileLink.h`. `Authorship` stores the distinction between the first editor and participants, the first and recent contribution times per author, file links, and change numbers, and updates the JSON dump immediately after changes. Classes are C++ value objects, not QObject, and do not depend on the lifespan of Qt Network or account managers.",
         "basis": "lexical_match",
         "context": "paragraph"
       },
@@ -1540,7 +1554,7 @@
       {
         "block_id": "b000105",
         "line": 257,
-        "text": "The default installation path generates `include/` umbrella, author, file link, authentication token, and export header, `lib/` shared libraries, `lib/cmake/iiFileProvider/` CMake package, and `share/iiFileProvider/` README and contract documents. Private `src/JsonContract.h` is not installed. The Windows shared library executable is installed to `bin/`. Consumers are informed of C++20 and `Qt6::Core` link requirements. Qt is not bundled and copied, and the installed Qt runtime is required. The shared library installation RPATH includes the external library paths used in the link.",
+        "text": "The default installation path generates `include/` umbrella, author, file link, authentication token, and export header, `lib/` shared libraries, `lib/cmake/iiFileProvider/` CMake package, and `share/iiFileProvider/` README and contract documents. Private `src/API/JsonContract.h` is not installed. The Windows shared library executable is installed to `bin/`. Consumers are informed of C++20 and `Qt6::Core` link requirements. Qt is not bundled and copied, and the installed Qt runtime is required. The shared library installation RPATH includes the external library paths used in the link.",
         "basis": "lexical_match",
         "context": "paragraph"
       },
@@ -1711,46 +1725,53 @@
         "line": 315
       },
       {
-        "block_id": "b000161",
+        "block_id": "b000158",
+        "label": "source layout",
+        "target": "docs/SourceLayout.md",
+        "kind": "relative",
+        "line": 343
+      },
+      {
+        "block_id": "b000163",
         "label": "AGENT.md",
         "target": "AGENT.md",
-        "kind": "relative",
-        "line": 347
-      },
-      {
-        "block_id": "b000161",
-        "label": "documentation index",
-        "target": "docs/README.md",
-        "kind": "relative",
-        "line": 348
-      },
-      {
-        "block_id": "b000161",
-        "label": "agent index",
-        "target": "docs/agent-index.json",
         "kind": "relative",
         "line": 349
       },
       {
-        "block_id": "b000165",
+        "block_id": "b000163",
+        "label": "documentation index",
+        "target": "docs/README.md",
+        "kind": "relative",
+        "line": 350
+      },
+      {
+        "block_id": "b000163",
+        "label": "agent index",
+        "target": "docs/agent-index.json",
+        "kind": "relative",
+        "line": 351
+      },
+      {
+        "block_id": "b000167",
         "label": "`SDK/iiFileProvider/Compatibility`",
         "target": "Compatibility/README.md",
         "kind": "relative",
-        "line": 353
+        "line": 355
       },
       {
-        "block_id": "b000165",
+        "block_id": "b000167",
         "label": "`SDK/iiFileProvider/example/CoreIO`",
         "target": "example/CoreIO/README.md",
         "kind": "relative",
-        "line": 354
+        "line": 356
       },
       {
-        "block_id": "b000165",
+        "block_id": "b000167",
         "label": "`SDK/iiFileProvider/Native`",
         "target": "Native/README.md",
         "kind": "relative",
-        "line": 355
+        "line": 357
       }
     ],
     "tables": []

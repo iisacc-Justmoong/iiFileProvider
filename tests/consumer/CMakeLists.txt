@@ -57,3 +57,14 @@ add_executable(installed_file_devices ../file_devices.cpp ../device_resource.qrc
 set_target_properties(installed_file_devices PROPERTIES AUTORCC ON)
 target_link_libraries(installed_file_devices PRIVATE iiFileProvider::iiFileProvider Qt6::Gui)
 add_test(NAME installed.file_devices COMMAND installed_file_devices "${CMAKE_CURRENT_BINARY_DIR}")
+
+if(APPLE)
+    # Exercise the selected installed package, even when the shell exports an
+    # older SDK library with the same install name.
+    set_tests_properties(iiFileProvider.installed_consumer
+        iiFileProvider.installed_author_contract iiFileProvider.installed_authorship
+        iiFileProvider.installed_file_links installed.file_crud installed.database
+        installed.catalog installed.file_devices
+        PROPERTIES ENVIRONMENT_MODIFICATION
+        "DYLD_LIBRARY_PATH=unset:;DYLD_FRAMEWORK_PATH=unset:;DYLD_FALLBACK_LIBRARY_PATH=unset:;DYLD_VERSIONED_LIBRARY_PATH=unset:")
+endif()

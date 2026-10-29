@@ -1,6 +1,6 @@
 # 파일 journal, 작업 세션, 원본 RAW 래핑
 
-`iiFileProvider::Objects`의 C++23 공개 API에 파일 수정 이력, 작업 세션 문맥, 원본 바이트를 보존하는 메타데이터 래핑을 제공한다. Qt나 다른 SDK 모듈에 의존하지 않는다. 공개 헤더는 구현 옆의 `src/ObjectStore.h`이며 설치 소비자는 `<ObjectStore.h>`와 `iiFileProvider::Objects`를 사용한다. `FileMetadata` 값 타입을 재사용하지만 Catalog 라이브러리에 링크하지 않는다.
+`iiFileProvider::Objects`의 C++23 공개 API에 파일 수정 이력, 작업 세션 문맥, 원본 바이트를 보존하는 메타데이터 래핑을 제공한다. Qt나 다른 SDK 모듈에 의존하지 않는다. 공개 헤더는 구현 옆의 `src/Objects/ObjectStore.h`이며 설치 소비자는 `<ObjectStore.h>`와 `iiFileProvider::Objects`를 사용한다. `FileMetadata` 값 타입을 재사용하지만 Catalog 라이브러리에 링크하지 않는다.
 
 ## 저장 모델과 원본 보존
 

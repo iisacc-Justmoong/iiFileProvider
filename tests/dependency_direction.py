@@ -59,9 +59,9 @@ for relative in [
     if file.exists():
         source = file.read_text()
         assert not re.search(r'#include\s*[<"](?:QFile|QSaveFile|fstream|sqlite3.h)[>"]', source), f"storage bypass: {file}"
-for relative in ("src/FileCatalog.h", "src/FileCatalog.cpp", "tools/FileProvider.cpp",
-                 "src/ObjectStore.h", "src/ObjectStore.cpp", "src/ObjectMetadataCodec_p.h", "src/ObjectMetadataCodec.cpp",
-                 "src/OntologyFileSystem.h", "src/OntologyFileSystem.cpp", "src/OntologySchema_p.h", "src/ObjectSqlite_p.h"):
+for relative in ("src/Catalog/FileCatalog.h", "src/Catalog/FileCatalog.cpp", "tools/FileProvider.cpp",
+                 "src/Objects/ObjectStore.h", "src/Objects/ObjectStore.cpp", "src/Objects/ObjectMetadataCodec_p.h", "src/Objects/ObjectMetadataCodec.cpp",
+                 "src/Objects/OntologyFileSystem.h", "src/Objects/OntologyFileSystem.cpp", "src/Objects/OntologySchema_p.h", "src/Objects/ObjectSqlite_p.h"):
     source = (provider / relative).read_text()
     assert not re.search(r'#include\s*[<"](?:Qt\w*|Q[A-Z]\w*)', source), f"native catalog imports Qt: {relative}"
 print(f"{len(graph)} SDK dependency declarations form a DAG; iiFileProvider has no upward SDK edges.")
