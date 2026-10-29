@@ -1,7 +1,7 @@
 #include <iiFileProvider.h>
 
 #include <QtCore/QDebug>
-#include <QtCore/QFile>
+#include "iiFileProviderDevice.h"
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
@@ -52,7 +52,7 @@ class AuthorContractTest final : public QObject
 private slots:
     void pairedAccountDetails()
     {
-        QFile fixture(QFINDTESTDATA("fixtures/iisacc-account.json"));
+        iiFileProvider::FileDevice fixture(QFINDTESTDATA("fixtures/iisacc-account.json"));
         QVERIFY(fixture.open(QIODevice::ReadOnly));
         const auto snapshot = QJsonDocument::fromJson(fixture.readAll()).object();
         QString error;

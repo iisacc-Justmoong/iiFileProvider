@@ -1,0 +1,322 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:cbe96c07852717754e6007518da4f8bf53dab60195d436e5d88b05f63272595f",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider%2FNative",
+    "name": "Native",
+    "root": "SDK/iiFileProvider/Native",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/BLOB_RANGES.md",
+    "sha256": "b14c9f2629f8d26e36b6cb46b765faad31cadde095c54e05ca7a4141d25400d1",
+    "bytes": 4744,
+    "line_count": 64,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "BLOB 범위 입출력과 배치 비교·교체",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# BLOB 범위 입출력과 배치 비교·교체\n",
+      "level": 1,
+      "title": "BLOB 범위 입출력과 배치 비교·교체"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 7,
+      "raw": "Native 0.11.0은 SQLite 실행·핸들을 공개하지 않고 큰 값의 일부를 읽고 쓰는\n동기 C++23 경계를 제공한다. 연결·문장 작업은 기존과 같이 한 실행 영역에서\n직렬화하며, 호출 동안 빌린 입력 바이트는 안정적으로 유지한다. 새 API는 문서·\n픽셀·타일·상위 SDK를 알지 않는다. 공개 Database/Statement/Transaction 배치와\n기존 Code 값, dylib ABI 0.5를 유지한다. 충돌 Code는 열거 끝에 추가한다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 8,
+      "end_line": 8,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "heading",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "## 범위 읽기\n",
+      "level": 2,
+      "title": "범위 읽기"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 10,
+      "end_line": 10,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 11,
+      "end_line": 16,
+      "raw": "`read_blob_range(table, column, rowId, offset, count)`는 main 데이터베이스의\n해당 값에서 요청한 바이트만 반환한다. 명시적 트랜잭션 밖에서도 읽을 수 있다.\n끝 위치의 빈 범위는 유효하며, 범위를 넘는 offset/count와 정수 오버플로는 거부한다.\n요청 크기는 연결의 값 크기 한도를 넘을 수 없다. SQLite가 incremental BLOB으로\n열 수 있는 BLOB/TEXT 값에 적용하며 수치·NULL·누락된 행은 거부한다.\n식별자는 SQL 문장에 삽입하지 않고 SQLite의 식별자 인자로 전달한다.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 17,
+      "end_line": 17,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "heading",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "## 배치 비교·교체\n",
+      "level": 2,
+      "title": "배치 비교·교체"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 20,
+      "end_line": 23,
+      "raw": "`BlobRangePatch`는 바이트 offset과 같은 길이의 before/after span이다.\n`compare_exchange_blob_ranges`는 명시적 SQL 트랜잭션 안에서만 호출한다.\n쓰기 가능한 연결과 `Transaction::begin(database, true)`를 권장한다. 이 함수가\n바깥 트랜잭션을 커밋하지 않는다. 읽기 전용 연결에서는 쓰기를 거부한다.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 24,
+      "end_line": 24,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 25,
+      "end_line": 29,
+      "raw": "범위 순서는 자유롭고 비어 있지 않은 범위끼리 중첩할 수 없다. 모든 범위와 before를\n검사한 뒤에만 쓰기를 시작한다. 잘못된 두 번째 범위나 이전 바이트 불일치는 앞의\n범위도 쓰지 않는다. 불일치는 `Code::conflict`이다. 같은 길이를 유지하며 실제로 다른\n연속 바이트만 기록한다. `BlobPatchStatistics`는 비교한 바이트와 기록한 바이트 수를\n반환하며 페이지·저널·인덱스 비용을 나타내지 않는다. 무변경은 기록 바이트가 0이다.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 30,
+      "end_line": 30,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 31,
+      "end_line": 33,
+      "raw": "배치 메타데이터와 비교 바이트의 합계는 각각 연결의 값 크기 한도 안에 있어야 하며,\n범위 수는 65,536개 이하이다. 빈 범위는 바이트를 차지하지 않는다. 빈 배치도 연결·\n식별자·행·명시적 트랜잭션을 검증한다. 입력 span이나 쓰기 명령을 보관하지 않는다.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 34,
+      "end_line": 34,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 35,
+      "end_line": 38,
+      "raw": "실제 쓰기는 내부 savepoint로 묶는다. 늦은 I/O 오류 등에서 savepoint를 되돌리고,\n이를 복원할 수 없으면 바깥 트랜잭션을 롤백한다. 복원 결과도 확정할 수 없는 연결은\n폐기하여 뒤의 Native 호출에서 부분 변경을 커밋할 수 없게 한다. SQLite 자체의\n전원 차단·장치 내구성은 기존 트랜잭션 계약에 속한다. 오류를 성공으로 바꾸지 않는다.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 39,
+      "end_line": 39,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "heading",
+      "start_line": 40,
+      "end_line": 40,
+      "raw": "## 스트리밍 체크섬\n",
+      "level": 2,
+      "title": "스트리밍 체크섬"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 41,
+      "end_line": 41,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 42,
+      "end_line": 47,
+      "raw": "`blob_sha256(table, column, rowId, maximumBytes)`는 전체 값의 SHA-256을\n32바이트 배열로 반환한다. 전체 BLOB을 C++ 값에 복사하지 않고 고정 크기 버퍼와\n기존 SHA-256 구현을 사용한다. maximumBytes는 호출자가 반드시 지정한다.\n값이 이를 넘으면 읽기 전에 거부한다. 열려 있는 BLOB 읽기 수명 동안 같은 SQLite\n읽기 시점을 유지하며, 기존 트랜잭션 안에서는 자신의 아직 커밋하지 않은 값도 읽는다.\n이는 전체 바이트를 해시하는 CPU·I/O 비용을 없애는 기능이 아니다.\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 48,
+      "end_line": 48,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "heading",
+      "start_line": 49,
+      "end_line": 49,
+      "raw": "## 검증과 채택 경계\n",
+      "level": 2,
+      "title": "검증과 채택 경계"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 50,
+      "end_line": 50,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "paragraph",
+      "start_line": 51,
+      "end_line": 56,
+      "raw": "계약 검사는 경계·빈 값·NUL·정렬되지 않은 구간·중첩·잘못된 두 번째 구간·충돌,\n바깥 롤백·커밋·재열기·같은 이름의 중첩 savepoint·쓰기 제한 열의 늦은 오류,\nTEXT·읽기 전용·한도·체크섬을 검사한다. 일반 빌드의 C++ 할당\n실패 주입과 별도 ASan/UBSan 검사를 구분한다. 큰 BLOB 검사는 8K ARGB32 자산과\n같은 256 MiB 값을 사용하고 SDK C++ 할당 규모를 기록한다. 이 계측은 SQLite C\n할당자나 프로세스 RSS를 측정한 것이 아니다.\n"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 57,
+      "end_line": 57,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "paragraph",
+      "start_line": 58,
+      "end_line": 60,
+      "raw": "이 단계는 DocumentFile을 새 경계에 연결하거나 작업 파일을 타일별 체크섬 형식으로\n전환한 것이 아니다. 전체 문서 임시 사본·자산 인코딩·전체 자산 해시 비용을 제거하는\n후속 캔버스 트랜잭션에서 이 경계를 채택한다. 앱·기기 검증과도 구분한다.\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 61,
+      "end_line": 61,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 62,
+      "end_line": 64,
+      "raw": "설치본은 Native README의 `docs/` 링크와 기존 데이터베이스 안내의\n`../Native/docs/` 링크도 해석되도록 같은 원본 문서 집합을 각 진입점의 상대 경로에\n공급한다. 검증 시 원문/JSON 동일성과 새 계약 링크의 실제 파일 존재를 함께 확인한다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "BLOB 범위 입출력과 배치 비교·교체",
+      "anchor": "blob-범위-입출력과-배치-비교교체",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000005",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "범위 읽기",
+      "anchor": "범위-읽기",
+      "start_line": 9
+    },
+    {
+      "block_id": "b000009",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "배치 비교·교체",
+      "anchor": "배치-비교교체",
+      "start_line": 18
+    },
+    {
+      "block_id": "b000019",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "스트리밍 체크섬",
+      "anchor": "스트리밍-체크섬",
+      "start_line": 40
+    },
+    {
+      "block_id": "b000023",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "검증과 채택 경계",
+      "anchor": "검증과-채택-경계",
+      "start_line": 49
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000011",
+        "line": 23,
+        "text": "바깥 트랜잭션을 커밋하지 않는다. 읽기 전용 연결에서는 쓰기를 거부한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000015",
+        "line": 32,
+        "text": "범위 수는 65,536개 이하이다. 빈 범위는 바이트를 차지하지 않는다. 빈 배치도 연결·",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000015",
+        "line": 33,
+        "text": "식별자·행·명시적 트랜잭션을 검증한다. 입력 span이나 쓰기 명령을 보관하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000021",
+        "line": 44,
+        "text": "기존 SHA-256 구현을 사용한다. maximumBytes는 호출자가 반드시 지정한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

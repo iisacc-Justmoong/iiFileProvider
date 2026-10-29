@@ -1,0 +1,771 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:a35b0a9ddf67ee6f094cb6329e20f6ebdeca82c401926dd007bf9aae78cad6b1",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/FILE_CATALOG.md",
+    "sha256": "9b418d34286643604d312f7abd1849795ff2a5eb23763bfff96446048695c034",
+    "bytes": 14213,
+    "line_count": 261,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "Native file catalog and classification",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Native file catalog and classification\n",
+      "level": 1,
+      "title": "Native file catalog and classification"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 10,
+      "raw": "Repeated registration of an unchanged file and annotation preserves its revision\nand search cursor. Registration can reconnect a native file identity after its\nold path disappears, preserving the catalog key and rebuilding its search path.\nA copied portable companion forks its key when the source key is already known\nto this catalog; metadata stays intact. Unknown or newer companion ownership\ncontinues to reject publication. Existing matching companions with a current or\nnewer revision can refresh external annotations. `catalog_reconciliation` covers\nno-op registration, native rename and a copied companion.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 11,
+      "end_line": 11,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 12,
+      "end_line": 17,
+      "raw": "Version 0.6.0 adds `iiFileProvider::Catalog`: native C++23 file creation, streaming\nimport, bounded provision, editable metadata, collections and persistent search.\nIt depends on SQLite 3.27+ with FTS5, the standard library, provider TemporaryLease,\nand the JSON/utf8proc sources already vendored under `Native/third_party`. Their\npinned hashes and licenses are verified during configuration. No Qt, upper iisacc\nSDK, renderer, account, network service or interpreter runtime is required.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "heading",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "## Storage contract\n",
+      "level": 2,
+      "title": "Storage contract"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 20,
+      "end_line": 20,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 21,
+      "end_line": 24,
+      "raw": "Open an absolute local directory with `FileCatalog(root)`. `Access::Create`\ncreates missing storage, `ReadWrite` requires an existing catalog, and `ReadOnly`\nrejects provider mutations and never creates a missing root. SQLite may use its\nordinary WAL/shared-memory coordination files for an existing read-only connection.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 25,
+      "end_line": 25,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "list",
+      "start_line": 26,
+      "end_line": 32,
+      "raw": "- Original payload bytes remain unchanged by annotation.\n- `<filename>.iisacc.json` holds UTF-8 portable metadata: stable file key, revision,\n  title, description, keywords, rating, color, custom fields, collection keys/names.\n- `.iisacc-file-provider/catalog.sqlite3` holds the transactional index, saved\n  filters, collections, filesystem versions and pending-publication journal.\n  Its schema is independent of Society object packages.\n- `.iisacc-temporary.lock` coordinates provider-owned staging and cleanup.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Original payload bytes remain unchanged by annotation.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`<filename>.iisacc.json` holds UTF-8 portable metadata: stable file key, revision,",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`.iisacc-file-provider/catalog.sqlite3` holds the transactional index, saved",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`.iisacc-temporary.lock` coordinates provider-owned staging and cleanup.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 33,
+      "end_line": 33,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 34,
+      "end_line": 38,
+      "raw": "ObjectPackager excludes the reserved `.iisacc-file-provider` directory,\n`.iisacc-temporary.lock`, `.iifile-stage-*` and `.society-extract-*` control names\nat every tree depth. Public payloads and `.iisacc.json` companions are packaged\ntogether. Reserved controls and companion suffixes are compared without ASCII\ncase sensitivity. Other hidden files retain the ordinary inventory policy.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 39,
+      "end_line": 39,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 40,
+      "end_line": 45,
+      "raw": "Keep companions with originals when transporting files. An arbitrary image,\nvideo, archive or model cannot safely accept generic metadata inserted into its\npayload. This schema is not automatically recognized as EXIF, IPTC, XMP, ID3 or\nan OS filesystem tag. Format-specific embedding stays in a codec supplied with\na provider-owned stream or staging path. Classification does not authenticate\nauthors; existing `Authorship`, `FileAuthor` and `FileLink` contracts are preserved.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 46,
+      "end_line": 46,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "heading",
+      "start_line": 47,
+      "end_line": 47,
+      "raw": "## Build and consume\n",
+      "level": 2,
+      "title": "Build and consume"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 48,
+      "end_line": 48,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "fenced_code",
+      "start_line": 49,
+      "end_line": 55,
+      "raw": "```sh\ncmake -S . -B build -DIIFILEPROVIDER_BUILD_QT_API=OFF \\\n  -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=\"$PWD/build/install\"\ncmake --build build --parallel 2\nctest --test-dir build --output-on-failure\ncmake --install build\n```\n",
+      "language": "sh",
+      "code": "cmake -S . -B build -DIIFILEPROVIDER_BUILD_QT_API=OFF \\\n  -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=\"$PWD/build/install\"\ncmake --build build --parallel 2\nctest --test-dir build --output-on-failure\ncmake --install build\n",
+      "closed": true
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 56,
+      "end_line": 56,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "fenced_code",
+      "start_line": 57,
+      "end_line": 60,
+      "raw": "```cmake\nfind_package(iiFileProviderCatalog 0.6.0 CONFIG REQUIRED)\ntarget_link_libraries(application PRIVATE iiFileProvider::Catalog)\n```\n",
+      "language": "cmake",
+      "code": "find_package(iiFileProviderCatalog 0.6.0 CONFIG REQUIRED)\ntarget_link_libraries(application PRIVATE iiFileProvider::Catalog)\n",
+      "closed": true
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 61,
+      "end_line": 61,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "paragraph",
+      "start_line": 62,
+      "end_line": 64,
+      "raw": "The public header is `<FileCatalog.h>`. No vendored dependency type appears in\nits interface. The existing Qt package re-exports the Catalog target. The native\nCLI installs as `bin/ii-file-provider`.\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 65,
+      "end_line": 65,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "heading",
+      "start_line": 66,
+      "end_line": 66,
+      "raw": "## Creation and editing\n",
+      "level": 2,
+      "title": "Creation and editing"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 67,
+      "end_line": 67,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "fenced_code",
+      "start_line": 68,
+      "end_line": 92,
+      "raw": "```cpp\n#include <FileCatalog.h>\n#include <ostream>\n\niiFileProvider::FileCatalog files(absoluteLibraryDirectory);\nauto campaign = files.createCollection(\"Autumn campaign\");\niiFileProvider::FileMetadata metadata;\nmetadata.title = \"Seoul portrait\";\nmetadata.description = \"Approved original\";\nmetadata.keywords = {\"Portrait\", \"Seoul\"};\nmetadata.rating = 5;\nmetadata.color = iiFileProvider::ColorLabel::Purple;\nmetadata.fields = {{\"project\", \"Campaign 2026\"}};\nmetadata.collections = {campaign.key};\n\nauto created = files.createFileWith(\"originals/portrait.bin\",\n    [&](std::ostream &output) { encodeOriginal(output); }, metadata);\n// Inspect created.metadataWritten and metadataError before reporting export complete.\nauto edit = created.file.metadata;\nedit.rating = 4;\nauto updated = files.updateMetadata(created.file.key, created.file.revision, edit);\nauto chunk = files.read(updated.file.key, 0, 256 * 1024);\nauto next = files.read(updated.file.key, chunk.bytes.size(), 256 * 1024,\n                       chunk.contentVersion);\n```\n",
+      "language": "cpp",
+      "code": "#include <FileCatalog.h>\n#include <ostream>\n\niiFileProvider::FileCatalog files(absoluteLibraryDirectory);\nauto campaign = files.createCollection(\"Autumn campaign\");\niiFileProvider::FileMetadata metadata;\nmetadata.title = \"Seoul portrait\";\nmetadata.description = \"Approved original\";\nmetadata.keywords = {\"Portrait\", \"Seoul\"};\nmetadata.rating = 5;\nmetadata.color = iiFileProvider::ColorLabel::Purple;\nmetadata.fields = {{\"project\", \"Campaign 2026\"}};\nmetadata.collections = {campaign.key};\n\nauto created = files.createFileWith(\"originals/portrait.bin\",\n    [&](std::ostream &output) { encodeOriginal(output); }, metadata);\n// Inspect created.metadataWritten and metadataError before reporting export complete.\nauto edit = created.file.metadata;\nedit.rating = 4;\nauto updated = files.updateMetadata(created.file.key, created.file.revision, edit);\nauto chunk = files.read(updated.file.key, 0, 256 * 1024);\nauto next = files.read(updated.file.key, chunk.bytes.size(), 256 * 1024,\n                       chunk.contentVersion);\n",
+      "closed": true
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 93,
+      "end_line": 93,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 94,
+      "end_line": 98,
+      "raw": "`createFile` accepts a byte span. `createFileWith` streams an encoder into staging\nand publishes after successful completion/flush. An encoder exception publishes\nnothing. Creation/import reject an existing payload or companion without replacing\nit, before running an expensive encoder/copy, then recheck before publication.\nMetadata updates replace classification, never payload content.\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 99,
+      "end_line": 99,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 100,
+      "end_line": 104,
+      "raw": "`importFile(source, relativeDestination)` copies with a 1 MiB maximum buffer and\nchecks the source version before/after copying. A recognized source companion\nsupplies metadata and collections, while the copy receives a new file key.\nExplicit metadata replaces inherited classification. An unknown companion is an\nerror, never permission to overwrite it.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 105,
+      "end_line": 105,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 106,
+      "end_line": 112,
+      "raw": "`registerFile(relativePath)` reads filesystem metadata, not payload content.\nExisting indexed paths retain classification; new paths import a recognized\ncompanion and stable key. Index rebuilding can therefore recover file-owned\nmetadata/memberships. Saved filters and empty collections remain catalog-owned\nand require an index backup. `registerFiles` commits up to 1,024 entries and\n16 MiB of annotations atomically; a failure rolls back the complete batch.\nBatch registration defers companion writes to `publishMetadata(limit)`.\n"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 113,
+      "end_line": 113,
+      "raw": "\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "paragraph",
+      "start_line": 114,
+      "end_line": 117,
+      "raw": "Do not copy only the SQLite main file while WAL writers are active. Back up a\nconsistent SQLite snapshot, or close all catalog connections before copying the\nindex and before any explicit rebuild. Do not discard a pending journal before\nits companions have been published.\n"
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 118,
+      "end_line": 118,
+      "raw": "\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "paragraph",
+      "start_line": 119,
+      "end_line": 125,
+      "raw": "Each instance serializes calls. Independent instances/processes use SQLite WAL\nand writer transactions, with up to 30 seconds of writer contention waiting for\ndurable external-storage flushes. Encoders run inside their instance's operation;\nuse a separate catalog connection for reads made by an encoder callback.\n`updateMetadata` requires the caller's last-read revision;\nstale edits fail without replacing the current data. Metadata arguments are complete\nreplacements: load the current record, edit desired fields, submit its revision.\n"
+    },
+    {
+      "id": "b000038",
+      "kind": "blank",
+      "start_line": 126,
+      "end_line": 126,
+      "raw": "\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "paragraph",
+      "start_line": 127,
+      "end_line": 131,
+      "raw": "Ratings range from 0 (unrated) to 5. Colors are None, Red, Orange, Yellow, Green,\nBlue, Purple and Gray. Keywords use NFC normalization and Unicode case folding\nfor duplicate detection/exact filtering, preserving the first display spelling.\nCustom fields use NFC and exact matching. Collections are virtual memberships;\nthey never move or duplicate a payload.\n"
+    },
+    {
+      "id": "b000040",
+      "kind": "blank",
+      "start_line": 132,
+      "end_line": 132,
+      "raw": "\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "heading",
+      "start_line": 133,
+      "end_line": 133,
+      "raw": "## Search and saved filters\n",
+      "level": 2,
+      "title": "Search and saved filters"
+    },
+    {
+      "id": "b000042",
+      "kind": "blank",
+      "start_line": 134,
+      "end_line": 134,
+      "raw": "\n"
+    },
+    {
+      "id": "b000043",
+      "kind": "fenced_code",
+      "start_line": 135,
+      "end_line": 147,
+      "raw": "```cpp\niiFileProvider::FileFilter filter;\nfilter.text = \"서울 por\";\nfilter.pathPrefix = \"originals\";\nfilter.allKeywords = {\"Portrait\"};\nfilter.minimumRating = 4;\nfilter.colors = {iiFileProvider::ColorLabel::Purple};\nfilter.collections = {campaign.key};\nfilter.fields = {{\"project\", \"Campaign 2026\"}};\nauto saved = files.saveFilter(\"Approved portraits\", filter);\nauto page = files.searchSaved(saved.key, {}, 128);\nif (page.next) page = files.searchSaved(saved.key, page.next, 128);\n```\n",
+      "language": "cpp",
+      "code": "iiFileProvider::FileFilter filter;\nfilter.text = \"서울 por\";\nfilter.pathPrefix = \"originals\";\nfilter.allKeywords = {\"Portrait\"};\nfilter.minimumRating = 4;\nfilter.colors = {iiFileProvider::ColorLabel::Purple};\nfilter.collections = {campaign.key};\nfilter.fields = {{\"project\", \"Campaign 2026\"}};\nauto saved = files.saveFilter(\"Approved portraits\", filter);\nauto page = files.searchSaved(saved.key, {}, 128);\nif (page.next) page = files.searchSaved(saved.key, page.next, 128);\n",
+      "closed": true
+    },
+    {
+      "id": "b000044",
+      "kind": "blank",
+      "start_line": 148,
+      "end_line": 148,
+      "raw": "\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "paragraph",
+      "start_line": 149,
+      "end_line": 155,
+      "raw": "Text consists of Unicode word prefixes with AND semantics across path, title,\ndescription, keywords and custom fields. It is never raw SQL/FTS syntax. FTS5\nuses `unicode61` and 2/3/4-character prefix indexes. This is token-prefix search,\nnot arbitrary substring matching or morphological analysis. See\n[SQLite FTS5](https://www.sqlite.org/fts5.html).\nThe minimum SQLite version follows the `remove_diacritics=2` option added in\n[SQLite 3.27.0](https://www.sqlite.org/releaselog/3_27_0.html).\n"
+    },
+    {
+      "id": "b000046",
+      "kind": "blank",
+      "start_line": 156,
+      "end_line": 156,
+      "raw": "\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "paragraph",
+      "start_line": 157,
+      "end_line": 161,
+      "raw": "Filter groups combine with AND. `allKeywords` requires every keyword;\n`anyKeywords`, `colors` and `collections` use OR within their own group.\nRating/size ranges are inclusive. Path prefixes match the path and descendants,\nnot unrelated names sharing initial letters. A deleted collection is an empty\nmatch in saved filters; removing it never broadens a filter to all files.\n"
+    },
+    {
+      "id": "b000048",
+      "kind": "blank",
+      "start_line": 162,
+      "end_line": 162,
+      "raw": "\n"
+    },
+    {
+      "id": "b000049",
+      "kind": "paragraph",
+      "start_line": 163,
+      "end_line": 168,
+      "raw": "Pages contain up to 1,024 `CatalogFileSummary` values: key, index, revision, path,\n64-bit size, modification time, content version, title, rating, color and pending\nstatus. Search does not load full descriptions, fields, memberships or original\ncontents. `lookup(key)` retrieves full metadata. Keyset cursors bind catalog ID,\nindex revision and normalized filter. Classification/index mutations expire earlier cursors;\nrestart search instead of silently skipping/duplicating results.\n"
+    },
+    {
+      "id": "b000050",
+      "kind": "blank",
+      "start_line": 169,
+      "end_line": 169,
+      "raw": "\n"
+    },
+    {
+      "id": "b000051",
+      "kind": "paragraph",
+      "start_line": 170,
+      "end_line": 172,
+      "raw": "Saved filters upsert by normalized name and keep stable keys. Collection names\nare unique after normalization/case folding. Renaming a collection queues member\ncompanions; publish the updates in bounded batches.\n"
+    },
+    {
+      "id": "b000052",
+      "kind": "blank",
+      "start_line": 173,
+      "end_line": 173,
+      "raw": "\n"
+    },
+    {
+      "id": "b000053",
+      "kind": "heading",
+      "start_line": 174,
+      "end_line": 174,
+      "raw": "## Recovery and boundaries\n",
+      "level": 2,
+      "title": "Recovery and boundaries"
+    },
+    {
+      "id": "b000054",
+      "kind": "blank",
+      "start_line": 175,
+      "end_line": 175,
+      "raw": "\n"
+    },
+    {
+      "id": "b000055",
+      "kind": "paragraph",
+      "start_line": 176,
+      "end_line": 182,
+      "raw": "The index and pending journal commit together before companion publication.\nSingle-file methods return `MetadataWrite` with the committed file,\n`metadataWritten` and `metadataError`. A blocked companion leaves durable metadata\nand a retry entry. Correct the blockage, then call `publishMetadata`; it throws\non the first failure and leaves unprocessed entries pending. Check\n`pendingMetadata()` for remaining work. Repeating a publication after a crash\nbetween atomic replacement and journal acknowledgement is safe at the same revision.\n"
+    },
+    {
+      "id": "b000056",
+      "kind": "blank",
+      "start_line": 183,
+      "end_line": 183,
+      "raw": "\n"
+    },
+    {
+      "id": "b000057",
+      "kind": "paragraph",
+      "start_line": 184,
+      "end_line": 188,
+      "raw": "Staging resides on the destination filesystem. Native exclusive publication\npreserves existing payloads. Companion replacements use atomic native rename,\nfile flush and directory flush where supported. SQLite uses `synchronous=FULL`.\nPayload publication and SQLite are separate commits; a power failure between them\ncan leave an unindexed original. Register that original to recover it.\n"
+    },
+    {
+      "id": "b000058",
+      "kind": "blank",
+      "start_line": 189,
+      "end_line": 189,
+      "raw": "\n"
+    },
+    {
+      "id": "b000059",
+      "kind": "paragraph",
+      "start_line": 190,
+      "end_line": 201,
+      "raw": "Managed paths are canonical root-relative UTF-8. Absolute/parent paths,\nbackslashes, colons, reserved provider control names, companion names, Windows-reserved\ncharacters/device names, control characters and trailing spaces/dots are rejected.\nThe device/character rules follow [Microsoft's filename conventions](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).\nOrdinary hidden files such as `.config/app.json` are supported; hidden names are\nnot excluded as a category.\nComponents have a 220-byte limit to reserve suffix\nspace. Existing symbolic links/reparse points and replaced root/state/database\nidentities are rejected. The same hard-linked file cannot be registered twice.\nThis is coordination for cooperating local applications, not authorization\nagainst a hostile process racing path replacement. Remote access must retain its\ntransport's confinement and authority checks.\n"
+    },
+    {
+      "id": "b000060",
+      "kind": "blank",
+      "start_line": 202,
+      "end_line": 202,
+      "raw": "\n"
+    },
+    {
+      "id": "b000061",
+      "kind": "paragraph",
+      "start_line": 203,
+      "end_line": 206,
+      "raw": "There is no recursive disk scan, background watcher, network server or automatic\nmount. The owner decides which files to register. Externally changed files require\nexplicit registration refresh. External file relocation requires owner-managed\nindex maintenance; this release adds no catalog move/delete operation.\n"
+    },
+    {
+      "id": "b000062",
+      "kind": "blank",
+      "start_line": 207,
+      "end_line": 207,
+      "raw": "\n"
+    },
+    {
+      "id": "b000063",
+      "kind": "paragraph",
+      "start_line": 208,
+      "end_line": 210,
+      "raw": "Limits: 256 KiB encoded companion, 4 KiB title, 64 KiB description, 128 keywords,\n128 memberships, 64 custom fields, 4,096 collections/saved filters per catalog,\n1 MiB provision chunks, 32 text-search prefixes.\n"
+    },
+    {
+      "id": "b000064",
+      "kind": "blank",
+      "start_line": 211,
+      "end_line": 211,
+      "raw": "\n"
+    },
+    {
+      "id": "b000065",
+      "kind": "heading",
+      "start_line": 212,
+      "end_line": 212,
+      "raw": "## Native CLI\n",
+      "level": 2,
+      "title": "Native CLI"
+    },
+    {
+      "id": "b000066",
+      "kind": "blank",
+      "start_line": 213,
+      "end_line": 213,
+      "raw": "\n"
+    },
+    {
+      "id": "b000067",
+      "kind": "paragraph",
+      "start_line": 214,
+      "end_line": 217,
+      "raw": "Use an absolute `ROOT`. Metadata requests/results use UTF-8 JSON stdin/stdout.\nFailures return JSON stderr and a nonzero exit code. `create` consumes binary\nstdin; `read` emits binary stdout. Commands:\nJSON requests are bounded to 1 MiB, including serialized continuation cursors.\n"
+    },
+    {
+      "id": "b000068",
+      "kind": "blank",
+      "start_line": 218,
+      "end_line": 218,
+      "raw": "\n"
+    },
+    {
+      "id": "b000069",
+      "kind": "fenced_code",
+      "start_line": 219,
+      "end_line": 232,
+      "raw": "```text\nii-file-provider ROOT init\nii-file-provider ROOT create RELATIVE\nii-file-provider ROOT import SOURCE RELATIVE\nii-file-provider ROOT annotate KEY EXPECTED_REVISION\nii-file-provider ROOT metadata KEY\nii-file-provider ROOT query\nii-file-provider ROOT collection NAME\nii-file-provider ROOT collections\nii-file-provider ROOT save-filter NAME\nii-file-provider ROOT search-filter KEY\nii-file-provider ROOT recover\nii-file-provider ROOT read KEY OFFSET LENGTH\n```\n",
+      "language": "text",
+      "code": "ii-file-provider ROOT init\nii-file-provider ROOT create RELATIVE\nii-file-provider ROOT import SOURCE RELATIVE\nii-file-provider ROOT annotate KEY EXPECTED_REVISION\nii-file-provider ROOT metadata KEY\nii-file-provider ROOT query\nii-file-provider ROOT collection NAME\nii-file-provider ROOT collections\nii-file-provider ROOT save-filter NAME\nii-file-provider ROOT search-filter KEY\nii-file-provider ROOT recover\nii-file-provider ROOT read KEY OFFSET LENGTH\n",
+      "closed": true
+    },
+    {
+      "id": "b000070",
+      "kind": "blank",
+      "start_line": 233,
+      "end_line": 233,
+      "raw": "\n"
+    },
+    {
+      "id": "b000071",
+      "kind": "paragraph",
+      "start_line": 234,
+      "end_line": 238,
+      "raw": "`annotate` consumes a full metadata object. `save-filter` consumes a filter.\n`query` consumes `{filter, limit, cursor}`; pass its returned `next` object as the\nnext cursor. `search-filter` currently exposes the first page; use the C++ API\nor `query` with the same conditions for subsequent pages. Unknown request fields\nand fractional/negative/overflowing integer values are rejected.\n"
+    },
+    {
+      "id": "b000072",
+      "kind": "blank",
+      "start_line": 239,
+      "end_line": 239,
+      "raw": "\n"
+    },
+    {
+      "id": "b000073",
+      "kind": "paragraph",
+      "start_line": 240,
+      "end_line": 246,
+      "raw": "Native tests cover payload preservation, Unicode, conflicts, restart, filters,\npagination, 513-file batches, rollback, sparse multi-gigabyte provision, portable\nimport, independent concurrent connections, encoder failure, foreign state,\nredirected roots, recovery, CLI and installed consumers. Qt adapters and Society\nexport have separate tests. Host execution evidence is macOS; other targets\nrequire native toolchains and target execution. Browser storage requires an\nexplicit filesystem/SQLite adapter; this release does not provide it.\n"
+    },
+    {
+      "id": "b000074",
+      "kind": "blank",
+      "start_line": 247,
+      "end_line": 247,
+      "raw": "\n"
+    },
+    {
+      "id": "b000075",
+      "kind": "paragraph",
+      "start_line": 248,
+      "end_line": 261,
+      "raw": "On macOS, packaging fixtures prime their first native snapshot, then establish\none second of stable native metadata before capturing their asserted inventory.\nNew-file provenance attributes can\notherwise arrive asynchronously and change ctime during an unrelated test phase.\nProduction source identity/conflict checks remain unchanged and include ctime.\nThe quiet-fixture helper is confined to the new catalog/object integration test;\nexisting packaging regression fixtures retain their original behavior. Their\nmetadata-change failures are recorded separately from classification validation.\nPackaging and audit hold a shared staging lease across the complete operation,\nincluding intervals between individual snapshots, so cleanup cannot enter a gap.\nNative temporary admission retries a transient concurrent-first-create ENOENT\nat most eight times, only while the pinned parent still matches the live path.\nInvalid, redirected, replaced or removed parents retain their failure behavior.\nThe regression exercises eight simultaneous writers in 32 fresh directories.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Native file catalog and classification",
+      "anchor": "native-file-catalog-and-classification",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000007",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Storage contract",
+      "anchor": "storage-contract",
+      "start_line": 19
+    },
+    {
+      "block_id": "b000017",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Build and consume",
+      "anchor": "build-and-consume",
+      "start_line": 47
+    },
+    {
+      "block_id": "b000025",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Creation and editing",
+      "anchor": "creation-and-editing",
+      "start_line": 66
+    },
+    {
+      "block_id": "b000041",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Search and saved filters",
+      "anchor": "search-and-saved-filters",
+      "start_line": 133
+    },
+    {
+      "block_id": "b000053",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Recovery and boundaries",
+      "anchor": "recovery-and-boundaries",
+      "start_line": 174
+    },
+    {
+      "block_id": "b000065",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Native CLI",
+      "anchor": "native-cli",
+      "start_line": 212
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000005",
+        "line": 17,
+        "text": "SDK, renderer, account, network service or interpreter runtime is required.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000009",
+        "line": 23,
+        "text": "rejects provider mutations and never creates a missing root. SQLite may use its",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000029",
+        "line": 98,
+        "text": "Metadata updates replace classification, never payload content.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000031",
+        "line": 104,
+        "text": "error, never permission to overwrite it.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000035",
+        "line": 114,
+        "text": "Do not copy only the SQLite main file while WAL writers are active. Back up a",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000035",
+        "line": 116,
+        "text": "index and before any explicit rebuild. Do not discard a pending journal before",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000039",
+        "line": 131,
+        "text": "they never move or duplicate a payload.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000045",
+        "line": 150,
+        "text": "description, keywords and custom fields. It is never raw SQL/FTS syntax. FTS5",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000047",
+        "line": 161,
+        "text": "match in saved filters; removing it never broadens a filter to all files.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000059",
+        "line": 200,
+        "text": "against a hostile process racing path replacement. Remote access must retain its",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [
+      {
+        "block_id": "b000019",
+        "language": "sh",
+        "code": "cmake -S . -B build -DIIFILEPROVIDER_BUILD_QT_API=OFF \\\n  -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=\"$PWD/build/install\"\ncmake --build build --parallel 2\nctest --test-dir build --output-on-failure\ncmake --install build\n"
+      }
+    ],
+    "links": [
+      {
+        "block_id": "b000045",
+        "label": "SQLite FTS5",
+        "target": "https://www.sqlite.org/fts5.html",
+        "kind": "external",
+        "line": 153
+      },
+      {
+        "block_id": "b000045",
+        "label": "SQLite 3.27.0",
+        "target": "https://www.sqlite.org/releaselog/3_27_0.html",
+        "kind": "external",
+        "line": 155
+      },
+      {
+        "block_id": "b000059",
+        "label": "Microsoft's filename conventions",
+        "target": "https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file",
+        "kind": "external",
+        "line": 193
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

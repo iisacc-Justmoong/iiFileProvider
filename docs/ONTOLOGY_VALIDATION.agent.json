@@ -1,0 +1,437 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:ab9c308d89f025a9bf245d28a95c0bb0cd618b76c7e2176995ca454585b6f7fa",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/ONTOLOGY_VALIDATION.md",
+    "sha256": "e5cb7ffbd50d5a84dbe8a3f26f04f30caf9665577e7630f94e8111bd36c3f53f",
+    "bytes": 7065,
+    "line_count": 66,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "온톨로지 파일 시스템 검증 기록",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 온톨로지 파일 시스템 검증 기록\n",
+      "level": 1,
+      "title": "온톨로지 파일 시스템 검증 기록"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "검증일은 2026-10-22이다. 대상은 `SDK/iiFileProvider`이며 실행 환경은 macOS 27.0.1 arm64, Apple Clang 21.0.0, CMake 4.4.4이다. Objects 타겟과 독립 소비자의 C++23 컴파일을 확인했다. 실제 사용자 패키지·활성 staging·설치 앱을 대상으로 형식 이전이나 교체를 수행하지 않고 `build/` 아래 소유한 fixture만 사용했다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "heading",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "## 실행 결과\n",
+      "level": 2,
+      "title": "실행 결과"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "table",
+      "start_line": 7,
+      "end_line": 17,
+      "raw": "| 검증 | 결과 | 로그 |\n| --- | --- | --- |\n| API 미구현 상태 확인 | 테스트의 헤더 탐색 실패를 먼저 기록 | `build/ontology-red-contract.log` |\n| 전체 Release 빌드 | 성공 | `build/ontology-configure.log`, `build/ontology-build.log` |\n| 전체 모듈 회귀 | 45/45 통과, 240.82초 | `build/ontology-full-ctest.log` |\n| 최종 보강 후 온톨로지 회귀 | 3/3 통과, 21.51초 | `build/ontology-final-contract-ctest.log` |\n| Qt·Native·CoreIO 없는 독립 빌드 | 성공, 관련 회귀 9/9 통과 | `build/ontology-qt-free-*.log` |\n| 설치된 헤더·라이브러리만 사용하는 별도 소비자 | 7/7 통과, 90.25초 | `build/ontology-consumer-*.log` |\n| 최종 소스의 번들 SQLite 빌드·설치·재배치 | 소비자 5/5 통과, 외부 검증 71.33초 | `build/ontology-portable-final-ctest.log` |\n| Qt 없는 실행 파일의 동적 의존성 | 시스템 SQLite·libc++·libSystem만 확인 | `otool -L`로 독립 테스트와 설치 소비자 확인 |\n| SDK 의존성 방향·SDK/Product 파일 생성 경계 | 통과 | 전체 회귀의 `dependency_direction`, `workspace_creation` |\n",
+      "columns": [
+        "검증",
+        "결과",
+        "로그"
+      ],
+      "rows": [
+        [
+          "API 미구현 상태 확인",
+          "테스트의 헤더 탐색 실패를 먼저 기록",
+          "`build/ontology-red-contract.log`"
+        ],
+        [
+          "전체 Release 빌드",
+          "성공",
+          "`build/ontology-configure.log`, `build/ontology-build.log`"
+        ],
+        [
+          "전체 모듈 회귀",
+          "45/45 통과, 240.82초",
+          "`build/ontology-full-ctest.log`"
+        ],
+        [
+          "최종 보강 후 온톨로지 회귀",
+          "3/3 통과, 21.51초",
+          "`build/ontology-final-contract-ctest.log`"
+        ],
+        [
+          "Qt·Native·CoreIO 없는 독립 빌드",
+          "성공, 관련 회귀 9/9 통과",
+          "`build/ontology-qt-free-*.log`"
+        ],
+        [
+          "설치된 헤더·라이브러리만 사용하는 별도 소비자",
+          "7/7 통과, 90.25초",
+          "`build/ontology-consumer-*.log`"
+        ],
+        [
+          "최종 소스의 번들 SQLite 빌드·설치·재배치",
+          "소비자 5/5 통과, 외부 검증 71.33초",
+          "`build/ontology-portable-final-ctest.log`"
+        ],
+        [
+          "Qt 없는 실행 파일의 동적 의존성",
+          "시스템 SQLite·libc++·libSystem만 확인",
+          "`otool -L`로 독립 테스트와 설치 소비자 확인"
+        ],
+        [
+          "SDK 의존성 방향·SDK/Product 파일 생성 경계",
+          "통과",
+          "전체 회귀의 `dependency_direction`, `workspace_creation`"
+        ]
+      ]
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "전체 회귀 후 실수 ±0의 동일 값 처리, 검증 중 동일 속성·타입 판정 재사용, SQL 조회 계획 확인을 보강했다. 해당 최종 소스는 온톨로지 3개 회귀, 독립 빌드 9개, 설치 소비자 7개, 번들 SQLite 소비자 5개로 다시 검증했다. 이미 통과한 다른 기능의 회귀는 불필요하게 반복하지 않았다. 전체 Qt 어댑터 회귀는 현재 빌드 라이브러리를 우선하는 `DYLD_LIBRARY_PATH=\"$PWD/build/Native:$PWD/build\"`에서 수행했다.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 20,
+      "end_line": 20,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 21,
+      "end_line": 21,
+      "raw": "마지막으로 두 부모와 다이아몬드 상속 경로에서 파일 결과가 중복되지 않는 양성 사례를 추가했다. 이 테스트는 독립 빌드·설치 소비자·번들 SQLite에서 각각 1/1로 통과했으며 `build/ontology-diamond-ctest.log`, `build/ontology-installed-diamond-ctest.log`, `build/ontology-bundled-diamond-ctest.log`에 결과를 보존했다.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 22,
+      "end_line": 22,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 23,
+      "end_line": 23,
+      "raw": "독립 빌드의 9개 항목은 신규 `ontology_filesystem`, `ontology_storage`, `ontology_boundaries`와 기존 `object_journal`, `object_journal_storage`, `object_metadata_limits`, `object_read_only`, `object_index`, `object_store`이다. 설치 소비자는 통합 `objects.installed` 및 신규·기존 journal 회귀 6개를 실행한다. 번들 SQLite 검증은 Catalog, 설치 API 통합 소비자, 파일 journal 이전, 온톨로지 동작, 온톨로지 이전을 각각 실행한다.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 24,
+      "end_line": 24,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "heading",
+      "start_line": 25,
+      "end_line": 25,
+      "raw": "## 검증한 계약\n",
+      "level": 2,
+      "title": "검증한 계약"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 26,
+      "end_line": 26,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "list",
+      "start_line": 27,
+      "end_line": 34,
+      "raw": "- 상위 Asset·하위 Photo 분류, 다중 부모 모델의 탐색 구조, 명시적 타입과 domain/range 검증을 확인했다. 클래스·속성 정의를 갱신할 때 기존 사실이나 저장된 폴더를 무효화하면 전체 변경을 거부한다.\n- 업무 개체와 파일 개체, 관계·정수·실수·불리언·문자열 값의 구분을 확인했다. 비유한 실수·잘못된 UTF-8·NUL·없는 참조·잘못된 타입·단일 값 위반을 거부한다. +0.0과 -0.0은 중복 사실을 만들지 않는다.\n- 클래스·관계·타입·가상 폴더 변경의 원자성, 정확한 revision 비교, 두 연결의 동시 CAS 경쟁, 지연된 제약 오류의 완전 롤백, 세션 종료 후 수정 거부를 확인했다.\n- 클래스·관계 조건의 가상 디렉터리, 정방향·역방향 탐색, 허용된 순환 관계의 종료, 결과 상한과 취소를 확인했다. 금지한 비순환 속성에 순환을 넣는 작업은 거부한다.\n- 파일 이동 후 동일한 키와 최신 경로 유지, 파일 삭제 후 기본 폴더에서 제외, 삭제된 파일의 남은 분류·관계 조회, 이전 파일 버전의 원본 제공을 확인했다. 의미 구조 변경으로 RAW 청크·파일 버전·파일 검증 키가 바뀌지 않는다.\n- 파일이나 그래프 변경 시 오래된 파일 페이지 커서와 다른 질의의 커서를 거부한다. 조회 계획에 분류 후보 인덱스와 파일 키 인덱스를 사용하며 RAW 문서·청크를 스캔하지 않는지 확인했다.\n- 스키마 4의 파일·RAW·journal 읽기 전용 호환과 온톨로지의 이전 요구, 스키마 5 쓰기 이전, DDL 중간 실패 시 완전 롤백, 기존 RAW 검증 키 보존을 확인했다. 기존 스키마 1·2·3 이전 회귀도 전체 실행에 포함된다.\n- WAL 읽기 동시성, 원래 ObjectStore 소멸 이후 facade 사용, 읽기 전용 능력 유지, VACUUM·재개방 후 journal 커서 유지, 변경 개수·journal 바이트 제한의 원자적 거부를 확인했다.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "상위 Asset·하위 Photo 분류, 다중 부모 모델의 탐색 구조, 명시적 타입과 domain/range 검증을 확인했다. 클래스·속성 정의를 갱신할 때 기존 사실이나 저장된 폴더를 무효화하면 전체 변경을 거부한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "업무 개체와 파일 개체, 관계·정수·실수·불리언·문자열 값의 구분을 확인했다. 비유한 실수·잘못된 UTF-8·NUL·없는 참조·잘못된 타입·단일 값 위반을 거부한다. +0.0과 -0.0은 중복 사실을 만들지 않는다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "클래스·관계·타입·가상 폴더 변경의 원자성, 정확한 revision 비교, 두 연결의 동시 CAS 경쟁, 지연된 제약 오류의 완전 롤백, 세션 종료 후 수정 거부를 확인했다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "클래스·관계 조건의 가상 디렉터리, 정방향·역방향 탐색, 허용된 순환 관계의 종료, 결과 상한과 취소를 확인했다. 금지한 비순환 속성에 순환을 넣는 작업은 거부한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "파일 이동 후 동일한 키와 최신 경로 유지, 파일 삭제 후 기본 폴더에서 제외, 삭제된 파일의 남은 분류·관계 조회, 이전 파일 버전의 원본 제공을 확인했다. 의미 구조 변경으로 RAW 청크·파일 버전·파일 검증 키가 바뀌지 않는다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "파일이나 그래프 변경 시 오래된 파일 페이지 커서와 다른 질의의 커서를 거부한다. 조회 계획에 분류 후보 인덱스와 파일 키 인덱스를 사용하며 RAW 문서·청크를 스캔하지 않는지 확인했다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "스키마 4의 파일·RAW·journal 읽기 전용 호환과 온톨로지의 이전 요구, 스키마 5 쓰기 이전, DDL 중간 실패 시 완전 롤백, 기존 RAW 검증 키 보존을 확인했다. 기존 스키마 1·2·3 이전 회귀도 전체 실행에 포함된다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "WAL 읽기 동시성, 원래 ObjectStore 소멸 이후 facade 사용, 읽기 전용 능력 유지, VACUUM·재개방 후 journal 커서 유지, 변경 개수·journal 바이트 제한의 원자적 거부를 확인했다.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 35,
+      "end_line": 35,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "heading",
+      "start_line": 36,
+      "end_line": 36,
+      "raw": "## 빌드·설치 소비자 재현\n",
+      "level": 2,
+      "title": "빌드·설치 소비자 재현"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 37,
+      "end_line": 37,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "fenced_code",
+      "start_line": 38,
+      "end_line": 62,
+      "raw": "```sh\ncmake -S . -B build\ncmake --build build --parallel 5\nDYLD_LIBRARY_PATH=\"$PWD/build/Native:$PWD/build\" \\\n  ctest --test-dir build --output-on-failure --parallel 2\n\ncmake -S . -B build/ontology-qt-free/build \\\n  -DIIFILEPROVIDER_BUILD_QT_API=OFF -DIIFILEPROVIDER_BUILD_NATIVE_API=OFF \\\n  -DIIFILEPROVIDER_BUILD_CORE_IO=OFF -DIIFILEPROVIDER_BUILD_TOOLS=OFF \\\n  -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=TRUE -DCMAKE_BUILD_TYPE=Release\ncmake --build build/ontology-qt-free/build --parallel 5\nctest --test-dir build/ontology-qt-free/build \\\n  -R '^iiFileProvider\\.(ontology_.*|object_journal.*|object_metadata_limits|object_store|object_index|object_read_only)$' \\\n  --output-on-failure --parallel 1\n\ncmake --install build/ontology-qt-free/build --prefix \"$PWD/build/ontology-stage\"\ncmake -S tests/objects_consumer -B build/ontology-consumer/build \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/ontology-stage\" \\\n  -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=TRUE \\\n  -DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF -DCMAKE_BUILD_TYPE=Release\ncmake --build build/ontology-consumer/build --parallel 5\nctest --test-dir build/ontology-consumer/build --output-on-failure --parallel 1\n\nctest --test-dir build -R '^iiFileProvider.portable_sqlite$' --output-on-failure\n```\n",
+      "language": "sh",
+      "code": "cmake -S . -B build\ncmake --build build --parallel 5\nDYLD_LIBRARY_PATH=\"$PWD/build/Native:$PWD/build\" \\\n  ctest --test-dir build --output-on-failure --parallel 2\n\ncmake -S . -B build/ontology-qt-free/build \\\n  -DIIFILEPROVIDER_BUILD_QT_API=OFF -DIIFILEPROVIDER_BUILD_NATIVE_API=OFF \\\n  -DIIFILEPROVIDER_BUILD_CORE_IO=OFF -DIIFILEPROVIDER_BUILD_TOOLS=OFF \\\n  -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=TRUE -DCMAKE_BUILD_TYPE=Release\ncmake --build build/ontology-qt-free/build --parallel 5\nctest --test-dir build/ontology-qt-free/build \\\n  -R '^iiFileProvider\\.(ontology_.*|object_journal.*|object_metadata_limits|object_store|object_index|object_read_only)$' \\\n  --output-on-failure --parallel 1\n\ncmake --install build/ontology-qt-free/build --prefix \"$PWD/build/ontology-stage\"\ncmake -S tests/objects_consumer -B build/ontology-consumer/build \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/ontology-stage\" \\\n  -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=TRUE \\\n  -DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF -DCMAKE_BUILD_TYPE=Release\ncmake --build build/ontology-consumer/build --parallel 5\nctest --test-dir build/ontology-consumer/build --output-on-failure --parallel 1\n\nctest --test-dir build -R '^iiFileProvider.portable_sqlite$' --output-on-failure\n",
+      "closed": true
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 63,
+      "end_line": 63,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "paragraph",
+      "start_line": 64,
+      "end_line": 64,
+      "raw": "독립 소비자는 SDK 소스의 include 경로나 빌드 정적 라이브러리를 직접 지정하지 않고 설치된 CMake 타겟만 링크한다. 번들 SQLite 검증은 설치 경로를 `build/portable-sqlite/relocated`로 옮긴 뒤 소비한다. 검증용 설치 위치는 `build/ontology-stage`이다. 파일 시스템 계약과 예시는 [ONTOLOGY_FILESYSTEM.md](ONTOLOGY_FILESYSTEM.md)에 명시한다.\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 65,
+      "end_line": 65,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "paragraph",
+      "start_line": 66,
+      "end_line": 66,
+      "raw": "이번 실제 실행 증거는 macOS arm64이다. Windows·Linux·Android·iOS·WASM에서 이번 변경분을 실행했다는 증거는 포함하지 않는다. OS 커널 마운트, RDF/OWL 전체 처리, 자연어 온톨로지 생성, 특정 과거 그래프 revision 전체의 재현은 제공 범위에 포함되지 않는다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "온톨로지 파일 시스템 검증 기록",
+      "anchor": "온톨로지-파일-시스템-검증-기록",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000005",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "실행 결과",
+      "anchor": "실행-결과",
+      "start_line": 5
+    },
+    {
+      "block_id": "b000015",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "검증한 계약",
+      "anchor": "검증한-계약",
+      "start_line": 25
+    },
+    {
+      "block_id": "b000019",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "빌드·설치 소비자 재현",
+      "anchor": "빌드설치-소비자-재현",
+      "start_line": 36
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000017",
+        "line": 30,
+        "text": "- 클래스·관계 조건의 가상 디렉터리, 정방향·역방향 탐색, 허용된 순환 관계의 종료, 결과 상한과 취소를 확인했다. 금지한 비순환 속성에 순환을 넣는 작업은 거부한다.",
+        "basis": "lexical_match",
+        "context": "list"
+      },
+      {
+        "block_id": "b000025",
+        "line": 66,
+        "text": "이번 실제 실행 증거는 macOS arm64이다. Windows·Linux·Android·iOS·WASM에서 이번 변경분을 실행했다는 증거는 포함하지 않는다. OS 커널 마운트, RDF/OWL 전체 처리, 자연어 온톨로지 생성, 특정 과거 그래프 revision 전체의 재현은 제공 범위에 포함되지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [
+      {
+        "block_id": "b000021",
+        "language": "sh",
+        "code": "cmake -S . -B build\ncmake --build build --parallel 5\nDYLD_LIBRARY_PATH=\"$PWD/build/Native:$PWD/build\" \\\n  ctest --test-dir build --output-on-failure --parallel 2\n\ncmake -S . -B build/ontology-qt-free/build \\\n  -DIIFILEPROVIDER_BUILD_QT_API=OFF -DIIFILEPROVIDER_BUILD_NATIVE_API=OFF \\\n  -DIIFILEPROVIDER_BUILD_CORE_IO=OFF -DIIFILEPROVIDER_BUILD_TOOLS=OFF \\\n  -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=TRUE -DCMAKE_BUILD_TYPE=Release\ncmake --build build/ontology-qt-free/build --parallel 5\nctest --test-dir build/ontology-qt-free/build \\\n  -R '^iiFileProvider\\.(ontology_.*|object_journal.*|object_metadata_limits|object_store|object_index|object_read_only)$' \\\n  --output-on-failure --parallel 1\n\ncmake --install build/ontology-qt-free/build --prefix \"$PWD/build/ontology-stage\"\ncmake -S tests/objects_consumer -B build/ontology-consumer/build \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/ontology-stage\" \\\n  -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=TRUE \\\n  -DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF -DCMAKE_BUILD_TYPE=Release\ncmake --build build/ontology-consumer/build --parallel 5\nctest --test-dir build/ontology-consumer/build --output-on-failure --parallel 1\n\nctest --test-dir build -R '^iiFileProvider.portable_sqlite$' --output-on-failure\n"
+      }
+    ],
+    "links": [
+      {
+        "block_id": "b000023",
+        "label": "ONTOLOGY_FILESYSTEM.md",
+        "target": "ONTOLOGY_FILESYSTEM.md",
+        "kind": "relative",
+        "line": 64
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000007",
+        "columns": [
+          "검증",
+          "결과",
+          "로그"
+        ],
+        "rows": [
+          [
+            "API 미구현 상태 확인",
+            "테스트의 헤더 탐색 실패를 먼저 기록",
+            "`build/ontology-red-contract.log`"
+          ],
+          [
+            "전체 Release 빌드",
+            "성공",
+            "`build/ontology-configure.log`, `build/ontology-build.log`"
+          ],
+          [
+            "전체 모듈 회귀",
+            "45/45 통과, 240.82초",
+            "`build/ontology-full-ctest.log`"
+          ],
+          [
+            "최종 보강 후 온톨로지 회귀",
+            "3/3 통과, 21.51초",
+            "`build/ontology-final-contract-ctest.log`"
+          ],
+          [
+            "Qt·Native·CoreIO 없는 독립 빌드",
+            "성공, 관련 회귀 9/9 통과",
+            "`build/ontology-qt-free-*.log`"
+          ],
+          [
+            "설치된 헤더·라이브러리만 사용하는 별도 소비자",
+            "7/7 통과, 90.25초",
+            "`build/ontology-consumer-*.log`"
+          ],
+          [
+            "최종 소스의 번들 SQLite 빌드·설치·재배치",
+            "소비자 5/5 통과, 외부 검증 71.33초",
+            "`build/ontology-portable-final-ctest.log`"
+          ],
+          [
+            "Qt 없는 실행 파일의 동적 의존성",
+            "시스템 SQLite·libc++·libSystem만 확인",
+            "`otool -L`로 독립 테스트와 설치 소비자 확인"
+          ],
+          [
+            "SDK 의존성 방향·SDK/Product 파일 생성 경계",
+            "통과",
+            "전체 회귀의 `dependency_direction`, `workspace_creation`"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

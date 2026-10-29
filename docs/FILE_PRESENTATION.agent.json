@@ -1,0 +1,664 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:0a94fb336fb20197cdb71ead05408810ad26627b866f70e39a32d3ed0f83b00a",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/FILE_PRESENTATION.md",
+    "sha256": "6da5fd15f104c093dfc457b665bc0042d804d5c236dd227dbe892559cb224753",
+    "bytes": 13373,
+    "line_count": 211,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "File details and embedded previews",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# File details and embedded previews\n",
+      "level": 1,
+      "title": "File details and embedded previews"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 7,
+      "raw": "iiFileProvider 0.7 owns the persistent presentation of an iisacc file asset as\nwell as its filesystem creation and delivery. An asset retains its original\ndata fork and filename extension. The provider never converts an imported file\nto another document format merely to attach a preview. Generated images remain\nPNG; a separately saved editor canvas remains IISC.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 8,
+      "end_line": 8,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "heading",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "## Representation\n",
+      "level": 2,
+      "title": "Representation"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 10,
+      "end_line": 10,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 11,
+      "end_line": 11,
+      "raw": "`iiFileProvider.Presentation`, schema 1, embeds the following in one JSON document:\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 12,
+      "end_line": 12,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "list",
+      "start_line": 13,
+      "end_line": 17,
+      "raw": "- Source identity/version and a native change token.\n- Filename, extension, detected MIME type, byte size, nanosecond modification time\n  and format-specific properties. Apple images also expose available camera,\n  capture-time, exposure, ISO, orientation and color-model properties.\n- Preview kind, MIME type, dimensions, base64 bytes and SHA-256 of those bytes.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Source identity/version and a native change token.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Filename, extension, detected MIME type, byte size, nanosecond modification time",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Preview kind, MIME type, dimensions, base64 bytes and SHA-256 of those bytes.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 19,
+      "end_line": 23,
+      "raw": "The native file additionally carries the document in\n`com.iisacc.file.presentation` on Apple, `user.iisacc.file.presentation` on Linux /\nAndroid, or the `iisacc.presentation` NTFS stream on Windows where supported.\n`PresentationRecord::embedded` reports the actual result rather than assuming\nthat every filesystem supports attributes or a document of that size.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 24,
+      "end_line": 24,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 25,
+      "end_line": 30,
+      "raw": "The hidden sibling `.<filename>.iisacc-preview` is the portable asset companion.\nIt contains the preview bytes themselves, not a machine-local cache pathname.\nRetain it when transporting an asset through a service that drops file attributes.\nThe object packager includes it and its existing classification companion in the\nordinary source inventory. User-facing Society trees and native Files projections\nhide provider control documents even when public hidden files are requested.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 31,
+      "end_line": 31,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 32,
+      "end_line": 47,
+      "raw": "The portable document journals the **resulting** native change token after an\nattribute write. This avoids an attribute/ctime invalidation loop and detects\nsame-size edits that restore mtime, including changes outside the bounded head /\ntail fingerprint samples. Missing/corrupt/stale companions are refused as cache\nhits and regenerated. Preview checksums detect damaged derived bytes; they are\nnot signatures or authorization credentials. IISC source versions also account\nfor the committed WAL when present.\nOn Apple filesystems, canonically equivalent composed/decomposed Unicode names\nshare the same verified presentation; the native identity still pins the file.\nPer-file publication locks and thumbnail token bookkeeping also use native file\nidentity, so these alternate path spellings cannot split an enrichment request.\nPinned native readers use `normalizeChangeTime` with their own stat/handle\nidentity and timestamps. It performs no path lookup, preserves external ctime\nchanges and normalizes only the provider's recorded attribute publication.\nReplication hashing and chunk reads therefore retain content-version checks\nwithout restarting when this process merely embeds a preview.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 48,
+      "end_line": 48,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 49,
+      "end_line": 56,
+      "raw": "Derived companions are published with owner-only read/write permission so their\nembedded content does not broaden filesystem access. The original source bytes\nand permission bits are retained. Native metadata\npublication can change ctime/change-time. Single-file Catalog creation/import/\nregistration therefore enriches **before** recording the physical catalog\nversion. Annotation edits keep the existing strict revision/content checks.\nEditable keywords, ratings, labels, collections and custom annotations remain in\nthe independent `.iisacc.json` classification document and its catalog journal.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 57,
+      "end_line": 57,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "heading",
+      "start_line": 58,
+      "end_line": 58,
+      "raw": "## Content support and limits\n",
+      "level": 2,
+      "title": "Content support and limits"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 59,
+      "end_line": 59,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "table",
+      "start_line": 60,
+      "end_line": 66,
+      "raw": "| Backend | Content preview |\n| --- | --- |\n| Portable C++23 | PNG/JPEG/BMP/GIF and supported stb raster inputs, with 16-Mpixel allocation admission; UTF-8 text/JSON; PCM16 and float32 WAVE waveforms |\n| Apple native | Image I/O aspect-fit thumbnails with orientation; other available system PDF/movie/office thumbnail providers through Quick Look Thumbnailing |\n| Swift source-only bridge | Native Image I/O thumbnails and UTF-8 text/information cards using the same portable schema |\n| iiSocietyHelper domain adapter | Bounded, read-only IISC frame-0 composites through the existing iiSharedCanvas renderer and PNG encoder |\n| Unsupported, corrupt or over-budget content | Explicit `information` card; never labeled as a rendered image/document |\n",
+      "columns": [
+        "Backend",
+        "Content preview"
+      ],
+      "rows": [
+        [
+          "Portable C++23",
+          "PNG/JPEG/BMP/GIF and supported stb raster inputs, with 16-Mpixel allocation admission; UTF-8 text/JSON; PCM16 and float32 WAVE waveforms"
+        ],
+        [
+          "Apple native",
+          "Image I/O aspect-fit thumbnails with orientation; other available system PDF/movie/office thumbnail providers through Quick Look Thumbnailing"
+        ],
+        [
+          "Swift source-only bridge",
+          "Native Image I/O thumbnails and UTF-8 text/information cards using the same portable schema"
+        ],
+        [
+          "iiSocietyHelper domain adapter",
+          "Bounded, read-only IISC frame-0 composites through the existing iiSharedCanvas renderer and PNG encoder"
+        ],
+        [
+          "Unsupported, corrupt or over-budget content",
+          "Explicit `information` card; never labeled as a rendered image/document"
+        ]
+      ]
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 67,
+      "end_line": 67,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "paragraph",
+      "start_line": 68,
+      "end_line": 77,
+      "raw": "Previews fit within 512 × 512, the document is at most 2 MiB and encoded preview\nbytes at most 1 MiB. Image/document decoding is admitted only up to 32 MiB source\nsize; file details and information cards also work for larger ordinary files\nwithout reading the whole payload. Text cards use a bounded leading excerpt.\nWaveforms describe whether they cover all samples or only the leading sample\nwindow. Apple Quick Look requests are cancelled after a three-second wait.\nFormat availability depends on the actual platform codecs; unsupported formats\nkeep their real original bytes and truthful information-card state.\nAn information card written by the source-only Swift bridge receives one native\ndecoder attempt when opened by a C++ consumer; usable previews remain reusable.\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 78,
+      "end_line": 78,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "heading",
+      "start_line": 79,
+      "end_line": 79,
+      "raw": "## Native API and creation lifecycle\n",
+      "level": 2,
+      "title": "Native API and creation lifecycle"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 80,
+      "end_line": 80,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "fenced_code",
+      "start_line": 81,
+      "end_line": 90,
+      "raw": "```cpp\n#include <iiFileProviderNative.h>\n#include <iiFileProviderPresentation.h>\nusing iiFileProvider::native::File;\nusing iiFileProvider::native::Presentation;\n\nFile::write(destination, encodedBytes);       // atomic save, then automatic enqueue\nauto record = Presentation::prepare(destination); // explicit synchronous result\nauto cached = Presentation::load(destination);    // read-only, rejects stale data\n```\n",
+      "language": "cpp",
+      "code": "#include <iiFileProviderNative.h>\n#include <iiFileProviderPresentation.h>\nusing iiFileProvider::native::File;\nusing iiFileProvider::native::Presentation;\n\nFile::write(destination, encodedBytes);       // atomic save, then automatic enqueue\nauto record = Presentation::prepare(destination); // explicit synchronous result\nauto cached = Presentation::load(destination);    // read-only, rejects stale data\n",
+      "closed": true
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 91,
+      "end_line": 91,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 92,
+      "end_line": 96,
+      "raw": "Use `find_package(iiFileProviderNative 0.7 CONFIG REQUIRED)` and link\n`iiFileProvider::Native`. The component is compiled C++23, with native Apple/JNI\nadapters where applicable, and has no Qt or higher SDK dependency. Its existing\nPython worker bridge calls this compiled component; it is not a new application\nruntime or an interpreter implementation of presentation.\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 97,
+      "end_line": 97,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 98,
+      "end_line": 107,
+      "raw": "Completed `File::write`/publication, native output-stream close/destruction,\ncopy/rename, Qt `File`/`StagedFile`, `FileDevice::close`, `SaveFile::commit`, C\nstaging/copy/publication, and Python buffered-stream close notify the owner.\nSwift write/create/copy/exclusive-document creation and descriptor finalization\ndo the same through the compiled Swift source adapter. Android output stream,\nwritable ParcelFileDescriptor close and AtomicFile completion notify the native\nJNI component. The Android adapter exposes the same `isControlFile` rule without loading JNI for\nread-only name queries. The native library is loaded on the first completed write.\nGranted content URIs remain subject to their document provider; Society's local\nbacking-file close callback supplies the native source path.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 108,
+      "end_line": 108,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 109,
+      "end_line": 116,
+      "raw": "Low-level borrowed descriptors/`FILE*` cannot signal a caller's arbitrary later\nclose automatically. Their consumer calls `Presentation::enqueue` /\n`iifp_present_later` after finalization, or uses a monitored Society root.\nPrivate staging, provider control state, hidden internal trees, logs and database\nbookkeeping do not create recursive previews through generic stream hooks.\nExplicit prepare and managed Society intake can still describe user `.log` and\ndatabase files as assets. An encoder failure before publication queues no final\nasset and preserves an existing destination.\n"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 117,
+      "end_line": 117,
+      "raw": "\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "paragraph",
+      "start_line": 118,
+      "end_line": 126,
+      "raw": "The C++ worker coalesces pending paths, bounds its queue at 4096 with producer\nbackpressure, and drains accepted writes at normal shutdown. Use\n`waitForIdle(timeout)` / Python `wait_for_presentations()` for a deterministic\ncompletion boundary. `cancelPending(path)` is the lifecycle barrier before\ndeleting an owned temporary tree. Provider temporary directories and Python\ntemporary-directory cleanup use it. `File::remove` removes its owned preview\ncompanion after cancelling work. Unrelated companion files are never overwritten\nor removed. Swift callers have `waitForPresentations()` for an explicit completion\nboundary before disposing of externally managed fixture/output directories.\n"
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 127,
+      "end_line": 127,
+      "raw": "\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "paragraph",
+      "start_line": 128,
+      "end_line": 134,
+      "raw": "`FileCatalog::presentationDocument(key)` and the compiled CLI's\n`presentation KEY` command expose verified detail/preview JSON. The metadata-only\n`registerFiles()` batch retains its no-payload-read contract; use native intake or\nenqueue completed assets when combining batch indexing with presentation.\nCore writable file Channels notify on successful final close, and native\nServerHost uploads notify after publishing the complete destination. Atomic\nCore publication already uses the notifying provider rename operation.\n"
+    },
+    {
+      "id": "b000038",
+      "kind": "blank",
+      "start_line": 135,
+      "end_line": 135,
+      "raw": "\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "heading",
+      "start_line": 136,
+      "end_line": 136,
+      "raw": "## Society intake and consumers\n",
+      "level": 2,
+      "title": "Society intake and consumers"
+    },
+    {
+      "id": "b000040",
+      "kind": "blank",
+      "start_line": 137,
+      "end_line": 137,
+      "raw": "\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "paragraph",
+      "start_line": 138,
+      "end_line": 146,
+      "raw": "Opening a verified SocietyDrive registers the public sections, excluding Deleted,\nwith the native presentation monitor. It keeps the original native directory\nidentity and the expected manifest identity, rejects redirected roots and skips\nprivate/control subtrees. Two stable observations precede external enrichment.\nTraversal is sliced into 128-entry inspections with at most one decoder per slice;\nunfinished traversals continue promptly, and completed passes repeat at two-second\nintervals. The monitor uses one native worker, at most 128 roots and a bounded\nobservation table. It does not require an open Society window when a storage\nconsumer or daemon owns the selected drive.\n"
+    },
+    {
+      "id": "b000042",
+      "kind": "blank",
+      "start_line": 147,
+      "end_line": 147,
+      "raw": "\n"
+    },
+    {
+      "id": "b000043",
+      "kind": "paragraph",
+      "start_line": 148,
+      "end_line": 153,
+      "raw": "The native Apple Files and FSKit bridges also notify the Swift provider after\ncontent replacement and descriptor write/close, including publication by rename.\nThe Qt preview cache consumes provider-generated PNGs. Its thumbnail key uses a\nnative change token normalized across the same process's own attribute writes,\nso a newly embedded thumbnail does not invalidate the other queued requests for\nthe same file. A later external edit still changes the key.\n"
+    },
+    {
+      "id": "b000044",
+      "kind": "blank",
+      "start_line": 154,
+      "end_line": 154,
+      "raw": "\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "paragraph",
+      "start_line": 155,
+      "end_line": 160,
+      "raw": "iiSocietyHelper registers its actual IISC decoder through\n`Presentation::setRenderer(\".iisc\", renderer)`. The provider never imports or links\niiSharedCanvas upward. The callback reads a detached bounded preview and supplies\nPNG bytes. The existing Helper preview URL remains a private runtime cache URL,\nnow populated from the provider's embedded result. Canvas edits enqueue a fresh\nprojection after closing their working file.\n"
+    },
+    {
+      "id": "b000046",
+      "kind": "blank",
+      "start_line": 161,
+      "end_line": 161,
+      "raw": "\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "paragraph",
+      "start_line": 162,
+      "end_line": 174,
+      "raw": "Native 0.8.3 exposes `SourceAccess`, a standard-C++ token keyed by the existing\nfile's native identity. A scoped lock coordinates in-place transactions with\nactual native/GUI reads and descriptor closure; an idle stream holds no lock.\nPresentation intake releases this access across a domain renderer callback. The\ncallback acquires access for copying/reading its source, releases it before\nrendering detached data, and never writes the source. Presentation reacquires\naccess and validates the original source version before publishing. If editing\nchanged the source meanwhile, the obsolete result is rejected. Unrelated files\nand hard links are covered by the source-access regression; a paused renderer\nmust allow a scoped writer and must not publish its old snapshot.\nConcurrent renderers may reuse a current validated projection. Only this\nprovider's normalized attribute publications are accepted as unchanged source\nmetadata; external changes still invalidate the in-flight result.\n"
+    },
+    {
+      "id": "b000048",
+      "kind": "blank",
+      "start_line": 175,
+      "end_line": 175,
+      "raw": "\n"
+    },
+    {
+      "id": "b000049",
+      "kind": "paragraph",
+      "start_line": 176,
+      "end_line": 183,
+      "raw": "Society's file inspector reads these details asynchronously. In the file list or\ngrid, Space opens/closes the LVRS preview surface; Escape closes it and Open\nretains normal file activation. Only a validated selected local child is read;\ninspection does not download a remote original, and late results from an older\nselection cannot replace the current details. This keyboard interaction is in\nSociety. System Finder support for custom document types additionally requires a\nregistered Quick Look extension; the common presentation document alone does not\nregister one.\n"
+    },
+    {
+      "id": "b000050",
+      "kind": "blank",
+      "start_line": 184,
+      "end_line": 184,
+      "raw": "\n"
+    },
+    {
+      "id": "b000051",
+      "kind": "heading",
+      "start_line": 185,
+      "end_line": 185,
+      "raw": "## Read-only classification\n",
+      "level": 2,
+      "title": "Read-only classification"
+    },
+    {
+      "id": "b000052",
+      "kind": "blank",
+      "start_line": 186,
+      "end_line": 186,
+      "raw": "\n"
+    },
+    {
+      "id": "b000053",
+      "kind": "paragraph",
+      "start_line": 187,
+      "end_line": 195,
+      "raw": "`FileCatalog::classificationDocument(absoluteAssetPath)` exposes the published\nclassification without opening or creating a catalog database and without\nreading the original payload. The bounded companion is parsed and validated by\niiFileProvider itself. The result includes the persistent file key, annotation\nrevision, title, description, keywords, rating, color, custom fields and collection\nkeys/names. Catalog-local paths and unknown document fields are omitted. An empty\nstring means unclassified; malformed, oversized, redirected or concurrently\nchanged data throws. Pending annotation writes still belong to the author's\ncatalog journal; this read-only API reports the portable, published copy.\n"
+    },
+    {
+      "id": "b000054",
+      "kind": "blank",
+      "start_line": 196,
+      "end_line": 196,
+      "raw": "\n"
+    },
+    {
+      "id": "b000055",
+      "kind": "paragraph",
+      "start_line": 197,
+      "end_line": 201,
+      "raw": "Society's `SharedStorage::fileInformation` combines this projection with the\nverified presentation. Its explicit `ready` / `absent` / `invalid` classification\nstate prevents a damaged annotation from hiding an otherwise readable preview.\nDetails of the native, application and authenticated host interfaces are in\n[Society's file-information contract](../../iiSocietyContainer/docs/FilePresentation.md).\n"
+    },
+    {
+      "id": "b000056",
+      "kind": "blank",
+      "start_line": 202,
+      "end_line": 202,
+      "raw": "\n"
+    },
+    {
+      "id": "b000057",
+      "kind": "heading",
+      "start_line": 203,
+      "end_line": 203,
+      "raw": "## Verification\n",
+      "level": 2,
+      "title": "Verification"
+    },
+    {
+      "id": "b000058",
+      "kind": "blank",
+      "start_line": 204,
+      "end_line": 204,
+      "raw": "\n"
+    },
+    {
+      "id": "b000059",
+      "kind": "paragraph",
+      "start_line": 205,
+      "end_line": 211,
+      "raw": "Native tests cover actual raster-to-PNG conversion, float32 PCM details/waveform,\ndomain renderer registration, external recursive intake, XML escaping, Unicode,\nsame-size/restored-mtime edits, portable embedding, source-byte preservation and\ninvalid-preview rejection. Catalog integration tests cover annotation edits,\nstrict content versions and rollback of derived companions. Source ownership,\npackage consumers, Python, Swift, platform bridges, Society regressions and their\nexact evidence boundaries are recorded in `FILE_PRESENTATION_VALIDATION.md`.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "File details and embedded previews",
+      "anchor": "file-details-and-embedded-previews",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000005",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Representation",
+      "anchor": "representation",
+      "start_line": 9
+    },
+    {
+      "block_id": "b000019",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Content support and limits",
+      "anchor": "content-support-and-limits",
+      "start_line": 58
+    },
+    {
+      "block_id": "b000025",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Native API and creation lifecycle",
+      "anchor": "native-api-and-creation-lifecycle",
+      "start_line": 79
+    },
+    {
+      "block_id": "b000039",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Society intake and consumers",
+      "anchor": "society-intake-and-consumers",
+      "start_line": 136
+    },
+    {
+      "block_id": "b000051",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Read-only classification",
+      "anchor": "read-only-classification",
+      "start_line": 185
+    },
+    {
+      "block_id": "b000057",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Verification",
+      "anchor": "verification",
+      "start_line": 203
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000003",
+        "line": 5,
+        "text": "data fork and filename extension. The provider never converts an imported file",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000021",
+        "line": 66,
+        "text": "| Unsupported, corrupt or over-budget content | Explicit `information` card; never labeled as a rendered image/document |",
+        "basis": "lexical_match",
+        "context": "table"
+      },
+      {
+        "block_id": "b000029",
+        "line": 92,
+        "text": "Use `find_package(iiFileProviderNative 0.7 CONFIG REQUIRED)` and link",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000033",
+        "line": 113,
+        "text": "bookkeeping do not create recursive previews through generic stream hooks.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000035",
+        "line": 124,
+        "text": "companion after cancelling work. Unrelated companion files are never overwritten",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000045",
+        "line": 156,
+        "text": "`Presentation::setRenderer(\".iisc\", renderer)`. The provider never imports or links",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000047",
+        "line": 167,
+        "text": "rendering detached data, and never writes the source. Presentation reacquires",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000047",
+        "line": 171,
+        "text": "must allow a scoped writer and must not publish its old snapshot.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000055",
+        "label": "Society's file-information contract",
+        "target": "../../iiSocietyContainer/docs/FilePresentation.md",
+        "kind": "relative",
+        "line": 201
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000021",
+        "columns": [
+          "Backend",
+          "Content preview"
+        ],
+        "rows": [
+          [
+            "Portable C++23",
+            "PNG/JPEG/BMP/GIF and supported stb raster inputs, with 16-Mpixel allocation admission; UTF-8 text/JSON; PCM16 and float32 WAVE waveforms"
+          ],
+          [
+            "Apple native",
+            "Image I/O aspect-fit thumbnails with orientation; other available system PDF/movie/office thumbnail providers through Quick Look Thumbnailing"
+          ],
+          [
+            "Swift source-only bridge",
+            "Native Image I/O thumbnails and UTF-8 text/information cards using the same portable schema"
+          ],
+          [
+            "iiSocietyHelper domain adapter",
+            "Bounded, read-only IISC frame-0 composites through the existing iiSharedCanvas renderer and PNG encoder"
+          ],
+          [
+            "Unsupported, corrupt or over-budget content",
+            "Explicit `information` card; never labeled as a rendered image/document"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

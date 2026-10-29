@@ -1,0 +1,378 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:79537d387f05ab62ac57fd93ed54ef535704b8188dbbb323bdac701d76b47bfe",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/FILE_CATALOG_VALIDATION.md",
+    "sha256": "001c06243ba6b6d623400ef7a1fdbcede31dd2c0a534a8d253a7c140a7e3b74d",
+    "bytes": 4070,
+    "line_count": 71,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "iiFileProvider 0.6.0 validation",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiFileProvider 0.6.0 validation\n",
+      "level": 1,
+      "title": "iiFileProvider 0.6.0 validation"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 5,
+      "raw": "This is the earlier metadata catalog snapshot. The subsequent\n[workspace file-creation validation](FILE_CREATION_VALIDATION.md) records the\nlater source migration and updated full provider suite results.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 7,
+      "end_line": 11,
+      "raw": "The metadata/classification implementation and compiled CLI are validated on\nmacOS arm64 with AppleClang 21, C++23 and system SQLite 3.54.0. The catalog requires\nSQLite 3.27 or newer with FTS5. Qt-free Release and the existing Qt 6.8.3 adapter\nboth build. The CLI is a native Mach-O arm64 executable linked to SQLite, libc++\nand libSystem; Qt and an interpreter are absent from its runtime dependencies.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 12,
+      "end_line": 12,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "table",
+      "start_line": 13,
+      "end_line": 23,
+      "raw": "| Validation | Result |\n| --- | --- |\n| Native Release classification/provision/temporary admission | 6 / 6 passed |\n| Provider full source suite | 21 / 25 passed; four existing packaging/snapshot checks remain unresolved |\n| Installed Qt API and Catalog consumers | 7 / 7 passed |\n| Independent installed native Catalog consumer | 1 / 1 passed |\n| Independent installed native Objects consumer | 1 / 1 passed |\n| Society Helper source suite | 11 / 11 passed |\n| Society Helper installed consumers | 9 / 9 passed |\n| Final Helper filesystem/export checks against updated provider | source 1 / 1; installed 1 / 1 passed |\n| SDK dependency graph and protected storage boundaries | 32 SDK declarations form a DAG; no upward provider edges |\n",
+      "columns": [
+        "Validation",
+        "Result"
+      ],
+      "rows": [
+        [
+          "Native Release classification/provision/temporary admission",
+          "6 / 6 passed"
+        ],
+        [
+          "Provider full source suite",
+          "21 / 25 passed; four existing packaging/snapshot checks remain unresolved"
+        ],
+        [
+          "Installed Qt API and Catalog consumers",
+          "7 / 7 passed"
+        ],
+        [
+          "Independent installed native Catalog consumer",
+          "1 / 1 passed"
+        ],
+        [
+          "Independent installed native Objects consumer",
+          "1 / 1 passed"
+        ],
+        [
+          "Society Helper source suite",
+          "11 / 11 passed"
+        ],
+        [
+          "Society Helper installed consumers",
+          "9 / 9 passed"
+        ],
+        [
+          "Final Helper filesystem/export checks against updated provider",
+          "source 1 / 1; installed 1 / 1 passed"
+        ],
+        [
+          "SDK dependency graph and protected storage boundaries",
+          "32 SDK declarations form a DAG; no upward provider edges"
+        ]
+      ]
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 24,
+      "end_line": 24,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 25,
+      "end_line": 32,
+      "raw": "Functional evidence includes 513-file transactional registration, compound\nfilters and keyset pages, Unicode normalization, persistent collections/filters,\noriginal byte preservation, stale-writer rejection, a sparse 8,589,934,609-byte\nlogical file with bounded range reads, portable annotation import, pending\ncompanion recovery, foreign database/companion preservation, private path checks,\nordinary hidden configuration files, and native CLI operations. The sparse-file\nfixture verifies 64-bit indexing and bounded provision, not a physical 8 GiB\ncopy-throughput benchmark.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 33,
+      "end_line": 33,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 34,
+      "end_line": 39,
+      "raw": "Concurrent first temporary admission was reproduced as ENOENT while the pinned\nparent inode still matched the live directory. A bounded retry preserves the\nno-follow/identity checks. The regression now passes eight simultaneous shared\nwriters in each of 32 fresh directories. Catalog writers wait up to 30 seconds\nthrough durable external-storage flush contention, then retain error/revision\nchecks rather than silently overwriting another edit.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 40,
+      "end_line": 40,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "heading",
+      "start_line": 41,
+      "end_line": 41,
+      "raw": "## Remaining full-suite failures\n",
+      "level": 2,
+      "title": "Remaining full-suite failures"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 42,
+      "end_line": 42,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "list",
+      "start_line": 43,
+      "end_line": 46,
+      "raw": "- `iiFileProvider.object_audit`\n- `iiFileProvider.object_snapshot_batch`\n- `iiFileProvider.object_package_cli`\n- `iiFileProvider.object_packager`\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "`iiFileProvider.object_audit`",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`iiFileProvider.object_snapshot_batch`",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`iiFileProvider.object_package_cli`",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`iiFileProvider.object_packager`",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 47,
+      "end_line": 47,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 48,
+      "end_line": 55,
+      "raw": "The original ObjectSource implementation and all four regression sources match\nthe task-start backup. Failures include changed-source stamps during snapshot or\naudit and an extra same-content revision during resume. A separate synthetic\nprobe observed a delayed ctime change and a provenance attribute after an initial\nnative clone. This observation does not establish every failure's cause. The\nruntime stamp checks and existing test expectations were preserved. The full\nsuite is not green; this report does not claim packaging health or whole-SDK\nrelease readiness.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 56,
+      "end_line": 56,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "heading",
+      "start_line": 57,
+      "end_line": 57,
+      "raw": "## Installation and execution boundary\n",
+      "level": 2,
+      "title": "Installation and execution boundary"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 58,
+      "end_line": 58,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 59,
+      "end_line": 64,
+      "raw": "Verified prefixes are `build/metadata-catalog/install`,\n`build/metadata-catalog/native/install`, and the sibling Helper's\n`build/file-provider-metadata/install`. Global `~/.local` installations, installed\nproduct apps and live Society stores/processes were not replaced or restarted.\nWindows/Linux/Android/iOS/WASM execution and Android document-picker URI writing\nremain unverified. No all-platform runtime completion is claimed.\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 65,
+      "end_line": 65,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "paragraph",
+      "start_line": 66,
+      "end_line": 71,
+      "raw": "Machine-readable results, binary/source SHA-256 values and exact JUnit paths are\nin [the verification record](../build/metadata-catalog/verification.json).\nThe API/storage contract is [FILE_CATALOG.md](FILE_CATALOG.md); ongoing file I/O\nownership is [FILE_OWNERSHIP.md](FILE_OWNERSHIP.md). The ownership policy and guarded\nadapters do not constitute an exhaustive migration of every historical writer in\nevery Product/Service repository.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiFileProvider 0.6.0 validation",
+      "anchor": "iifileprovider-060-validation",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000013",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Remaining full-suite failures",
+      "anchor": "remaining-full-suite-failures",
+      "start_line": 41
+    },
+    {
+      "block_id": "b000019",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Installation and execution boundary",
+      "anchor": "installation-and-execution-boundary",
+      "start_line": 57
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000023",
+        "line": 70,
+        "text": "adapters do not constitute an exhaustive migration of every historical writer in",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000003",
+        "label": "workspace file-creation validation",
+        "target": "FILE_CREATION_VALIDATION.md",
+        "kind": "relative",
+        "line": 4
+      },
+      {
+        "block_id": "b000023",
+        "label": "the verification record",
+        "target": "../build/metadata-catalog/verification.json",
+        "kind": "relative",
+        "line": 67
+      },
+      {
+        "block_id": "b000023",
+        "label": "FILE_CATALOG.md",
+        "target": "FILE_CATALOG.md",
+        "kind": "relative",
+        "line": 68
+      },
+      {
+        "block_id": "b000023",
+        "label": "FILE_OWNERSHIP.md",
+        "target": "FILE_OWNERSHIP.md",
+        "kind": "relative",
+        "line": 69
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000007",
+        "columns": [
+          "Validation",
+          "Result"
+        ],
+        "rows": [
+          [
+            "Native Release classification/provision/temporary admission",
+            "6 / 6 passed"
+          ],
+          [
+            "Provider full source suite",
+            "21 / 25 passed; four existing packaging/snapshot checks remain unresolved"
+          ],
+          [
+            "Installed Qt API and Catalog consumers",
+            "7 / 7 passed"
+          ],
+          [
+            "Independent installed native Catalog consumer",
+            "1 / 1 passed"
+          ],
+          [
+            "Independent installed native Objects consumer",
+            "1 / 1 passed"
+          ],
+          [
+            "Society Helper source suite",
+            "11 / 11 passed"
+          ],
+          [
+            "Society Helper installed consumers",
+            "9 / 9 passed"
+          ],
+          [
+            "Final Helper filesystem/export checks against updated provider",
+            "source 1 / 1; installed 1 / 1 passed"
+          ],
+          [
+            "SDK dependency graph and protected storage boundaries",
+            "32 SDK declarations form a DAG; no upward provider edges"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

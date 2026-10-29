@@ -14,12 +14,11 @@ for name, project in projects.items():
     graph[name] = sorted((references & projects.keys()) - {name})
 assert graph["iiFileProvider"] == [], "iiFileProvider must not depend on another iisacc SDK"
 assert graph["iiSDKCore"] == [], "Core must not depend on a feature SDK"
-adapter = root / "iiFileProvider/CoreIO"
+adapter = root / "iiFileProvider/example/CoreIO"
 if adapter.exists():
     references = set(re.findall(r"find_(?:package|dependency)\(\s*(\w+)",
         (adapter / "iiFileProviderCoreIOConfig.cmake.in").read_text()))
     assert references == {"iiSDKCore", "iiFileProviderNative"}, "CoreIO must sit above both independent libraries"
-    graph["iiFileProviderCoreIO"] = ["iiSDKCore", "iiFileProvider"]
 active, complete, order = [], set(), []
 
 def visit(name):
@@ -36,10 +35,16 @@ def visit(name):
 for name in sorted(graph):
     visit(name)
 provider = projects["iiFileProvider"]
+for base in (provider / "src", provider / "Native/src"):
+    for file in [*base.rglob("*.h"), *base.rglob("*.cpp")]:
+        source=file.read_text()
+        assert not re.search(r'\b(?:QFile|QSaveFile|QTemporaryFile)\b', source), f"Qt file engine returned to its owner: {file}"
+for file in [*(provider / "Native/src").glob("*.h"), *(provider / "Native/src").glob("*.cpp")]:
+    assert not re.search(r'#include\s*[<"](?:Qt\w*|Q[A-Z]\w*)',file.read_text()), f"Native storage imports Qt: {file}"
 for file in [*provider.glob("src/**/*.h"), *provider.glob("src/**/*.cpp")]:
     includes = re.findall(r'#include\s*[<"](ii\w+)', file.read_text())
     assert all(name.startswith("iiFileProvider") for name in includes), f"upward include: {file}"
-for file in [*adapter.glob("src/**/*.h"), *adapter.glob("src/**/*.cpp")]:
+for file in [*adapter.glob("App/**/*.h"), *adapter.glob("App/**/*.cpp")]:
     includes = re.findall(r'#include\s*[<"](ii\w+)', file.read_text())
     assert all(name.startswith(("iiSDKCore", "iiFileProvider")) for name in includes), f"unexpected adapter dependency: {file}"
 for relative in [

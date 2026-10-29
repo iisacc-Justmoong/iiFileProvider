@@ -1,0 +1,831 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:9ecf111baa8f2bf7b626ced5e985e24f99b8ae7cdc0fcbf41bda5d08e992feab",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/FILE_PRESENTATION_VALIDATION.md",
+    "sha256": "d049b70a865603d069ee12166e501fbf05f00e863420872be2c11d96618f8b63",
+    "bytes": 13175,
+    "line_count": 172,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "File presentation validation — 2026-10-16",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# File presentation validation — 2026-10-16\n",
+      "level": 1,
+      "title": "File presentation validation — 2026-10-16"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 6,
+      "raw": "This record describes source and workspace-local package evidence. It does not\nassert that an installed production application, Finder extension, mobile device\nor another operating system has received these changes. Evidence is retained\nunder this SDK's `build/presentation/` and the matching sibling SDK directories.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "heading",
+      "start_line": 8,
+      "end_line": 8,
+      "raw": "## Rich Society container information follow-up\n",
+      "level": 2,
+      "title": "Rich Society container information follow-up"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 10,
+      "end_line": 15,
+      "raw": "The follow-up packages are iiFileProvider 0.7.1, iiSocietyContainer 0.16.1,\niiSocietySync 0.8.2 and iiSocietyHelper 0.9.2. They add on-demand native\npresentation, a common container file-information document, validated published\nclassification, authenticated chunked host inspection and the actual Society\ninspector fields. The original payload is retained, listing remains lightweight,\nand unavailable/invalid data is explicit.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "table",
+      "start_line": 17,
+      "end_line": 26,
+      "raw": "| Component | Current follow-up evidence |\n| --- | --- |\n| Provider classification/Catalog integration | 6/6 focused tests passed; database-free reads, invalid companion rejection and original preservation |\n| Container tree/storage/rows | 7/7 affected tests passed; final richer-row checks also passed 2/2 after the listing optimization |\n| Native installed Container consumer | 2/2 passed with Qt discovery disabled; public typed presentation and native maintenance link/run |\n| Sync | Complete 12/12 passed; a real multi-chunk PNG preview, changed-classification rejection and original read-version checks |\n| Helper | Complete 11/11 passed; final public-API/session checks 2/2 passed after the transport allocation bound was added |\n| Independent installed Helper consumer | 4/4 passed: filesystem information, merged API, authenticated remote host inspection and same-device native drive access |\n| Society GUI source | 21/21 Qt cases passed in the exact-source installed-SDK consumer; actual title/keywords/rating/color/custom-field rows and a decoded Provider text preview |\n| SDK/Product source ownership | 0 bypasses and 0 unreadable sources |\n",
+      "columns": [
+        "Component",
+        "Current follow-up evidence"
+      ],
+      "rows": [
+        [
+          "Provider classification/Catalog integration",
+          "6/6 focused tests passed; database-free reads, invalid companion rejection and original preservation"
+        ],
+        [
+          "Container tree/storage/rows",
+          "7/7 affected tests passed; final richer-row checks also passed 2/2 after the listing optimization"
+        ],
+        [
+          "Native installed Container consumer",
+          "2/2 passed with Qt discovery disabled; public typed presentation and native maintenance link/run"
+        ],
+        [
+          "Sync",
+          "Complete 12/12 passed; a real multi-chunk PNG preview, changed-classification rejection and original read-version checks"
+        ],
+        [
+          "Helper",
+          "Complete 11/11 passed; final public-API/session checks 2/2 passed after the transport allocation bound was added"
+        ],
+        [
+          "Independent installed Helper consumer",
+          "4/4 passed: filesystem information, merged API, authenticated remote host inspection and same-device native drive access"
+        ],
+        [
+          "Society GUI source",
+          "21/21 Qt cases passed in the exact-source installed-SDK consumer; actual title/keywords/rating/color/custom-field rows and a decoded Provider text preview"
+        ],
+        [
+          "SDK/Product source ownership",
+          "0 bypasses and 0 unreadable sources"
+        ]
+      ]
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 27,
+      "end_line": 27,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 28,
+      "end_line": 38,
+      "raw": "Primary reports are `build/presentation/tests-information-catalog.xml`,\n`gui-information-tests-final.xml` and `ownership-information.json` in this SDK;\n`iiSocietyContainer/build/presentation/tests-information.xml`,\n`tests-information-rows-final.xml` and `native-consumer-tests-information.xml`;\n`iiSocietySync/build/presentation/tests-information-all.xml`; and\n`iiSocietyHelper/build/presentation/tests-information-all.xml`,\n`tests-information-final.xml` and `consumer-information-tests.xml`.\nThe 7 affected Container checks and their final focused rechecks are not a new\ncomplete 32-test Container run. All follow-up execution was on macOS and all\npackage installation stayed in workspace-local `build/presentation/install`.\nNo running production app, real user container or global installation was changed.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 39,
+      "end_line": 39,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "heading",
+      "start_line": 40,
+      "end_line": 40,
+      "raw": "## Earlier creation/intake regression outcomes\n",
+      "level": 2,
+      "title": "Earlier creation/intake regression outcomes"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 41,
+      "end_line": 41,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "table",
+      "start_line": 42,
+      "end_line": 53,
+      "raw": "| Component | Confirmed outcome |\n| --- | --- |\n| iiFileProvider native/Catalog/stream/Python contracts | Final complete suite: 33/33 passed; final focused native/time contracts also passed 5/5 |\n| iiSDKCore | Complete native suite: 34/34 passed, including writable Channel enrichment, event-loop I/O and architecture boundaries |\n| iiSocietyContainer | Complete earlier suite: 29/31 passed; the corrected native history and preview cases plus related integration were rechecked in a 7/7 passing run; the added Android bridge/name contract passed 1/1 |\n| iiSocietySync | Complete final normalized-I/O suite: 12/12 passed; strict real TLS synchronization deadlines were preserved |\n| iiWebServer | Hosting, actual local TLS/LAN and transfer: 3/3 passed; includes private-document pagination and automatic upload enrichment |\n| iiSocietyHelper | Final full dependency integration: 11/11 passed, including actual IISC pixels and direct host file access |\n| iiSharedCanvas | Document preview regression: 1/1 passed, including exact native-size mask pixels |\n| Society product GUI source | 20 Qt test cases passed through the installed-SDK consumer, including actual image display and Space/Escape |\n| Independent C++23 consumer | Installed Native package passed 1/1 with Qt discovery and global dyld overrides disabled; actual native attribute embedding was observed |\n| Source ownership | Final SDK/Product audit: zero bypasses and zero unreadable source files |\n",
+      "columns": [
+        "Component",
+        "Confirmed outcome"
+      ],
+      "rows": [
+        [
+          "iiFileProvider native/Catalog/stream/Python contracts",
+          "Final complete suite: 33/33 passed; final focused native/time contracts also passed 5/5"
+        ],
+        [
+          "iiSDKCore",
+          "Complete native suite: 34/34 passed, including writable Channel enrichment, event-loop I/O and architecture boundaries"
+        ],
+        [
+          "iiSocietyContainer",
+          "Complete earlier suite: 29/31 passed; the corrected native history and preview cases plus related integration were rechecked in a 7/7 passing run; the added Android bridge/name contract passed 1/1"
+        ],
+        [
+          "iiSocietySync",
+          "Complete final normalized-I/O suite: 12/12 passed; strict real TLS synchronization deadlines were preserved"
+        ],
+        [
+          "iiWebServer",
+          "Hosting, actual local TLS/LAN and transfer: 3/3 passed; includes private-document pagination and automatic upload enrichment"
+        ],
+        [
+          "iiSocietyHelper",
+          "Final full dependency integration: 11/11 passed, including actual IISC pixels and direct host file access"
+        ],
+        [
+          "iiSharedCanvas",
+          "Document preview regression: 1/1 passed, including exact native-size mask pixels"
+        ],
+        [
+          "Society product GUI source",
+          "20 Qt test cases passed through the installed-SDK consumer, including actual image display and Space/Escape"
+        ],
+        [
+          "Independent C++23 consumer",
+          "Installed Native package passed 1/1 with Qt discovery and global dyld overrides disabled; actual native attribute embedding was observed"
+        ],
+        [
+          "Source ownership",
+          "Final SDK/Product audit: zero bypasses and zero unreadable source files"
+        ]
+      ]
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 54,
+      "end_line": 54,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 55,
+      "end_line": 62,
+      "raw": "The earlier full Provider run hit the existing 60-second object-store test limit\nduring concurrent external-storage I/O; its unchanged-limit isolated run passed\nin 14.50 seconds and the final complete suite passed all 33 tests. Earlier Container preview completion exceeded its five-second\ncheck, and the native snapshot test exposed a real derived-directory revision\nissue. The implementation correction, focused passing results and original full\nrun reports are all retained; focused results are not presented as one complete\nall-green run. The final native signal and synchronization checks likewise keep\ntheir original assertions and deadlines.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 63,
+      "end_line": 63,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "heading",
+      "start_line": 64,
+      "end_line": 64,
+      "raw": "## Runtime and source contracts\n",
+      "level": 2,
+      "title": "Runtime and source contracts"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 65,
+      "end_line": 65,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "list",
+      "start_line": 66,
+      "end_line": 113,
+      "raw": "- Native C++23 owns extraction, persistence, background intake and creation hooks.\n  The public header is `iiFileProviderPresentation.h`; no Qt or higher SDK is\n  linked into the native component. The installed C++ consumer disables Qt\n  package discovery and executes without global dyld overrides.\n- Writable Core Channels notify on final successful close; atomic publication\n  uses the notifying provider rename/move path. Core's native file test verifies\n  the resulting details/preview. Darwin FIFO channels use descriptor-scoped\n  SIGPIPE suppression so unrelated provider workers do not turn a broken pipe\n  into host termination; pending-signal checks target the writing thread.\n- Native tests exercise real bitmap-to-PNG conversion, float32 stereo PCM WAVE\n  details/waveforms, escaped Unicode text, actual extended-attribute embedding,\n  portable preview bytes/checksums, owner-only companions, original preservation,\n  failed attachment preservation, renderer upgrade, recursive external intake,\n  restored-mtime edits and Apple composed/decomposed filename lookup.\n- Catalog tests preserve strict revisions after annotation edits and reject or\n  roll back failed publications. Existing object packages retain portable\n  classification and preview documents without private provider state.\n- Swift uses the same source-bound presentation schema and native Image I/O.\n  Derived writes use reserved staging names plus the shared temporary-file lease.\n  Native Files enumeration skips control directories without skipping the\n  visible siblings of a control file.\n- Android shares the owner's reserved-name rule through DriveStore. Host Java\n  tests compile every Android bridge source and exercise public/control naming\n  without initializing JNI. Read-only name queries defer native library loading.\n- Society intake tests write through a deliberately foreign writer and verify\n  automatic details/preview creation and original bytes. Model package identity\n  excludes provider control state. A preview's own attribute write preserves\n  thumbnail request keys while a later external edit changes them.\n- Sync excludes derived presentation/control documents from live replication\n  and keeps user classification documents. Direct `drive.stat` finishes\n  enrichment before returning a file version for subsequent chunked reads.\n  Confined readers/hashes normalize provider-owned attribute ctime using their\n  pinned stat/handle fields, with no extra path lookup. A regression proves that\n  actual external changes still invalidate a restored-mtime pinned read.\n- Native ServerHost shares apply the provider's control rule before pagination,\n  including Windows entry validation. A directory containing 270 private preview\n  documents still lists its public assets on the first page. Society host\n  catalogs and direct reads use the same boundary while private replication\n  retains user annotation documents.\n- Helper supplies a bounded IISC domain renderer without a provider dependency\n  on iiSharedCanvas. The shared preview renderer preserves exact mask coverage\n  at native size; reduction remains smoothly sampled. Helper tests compare real\n  PNG pixels, regenerated previews and original strict save conflicts.\n- Society's GUI consumer compiles the actual product DirectoryLocation and GUI\n  regression sources, loads the actual QML through installed LVRS, displays the\n  actual preview data URL, and exercises Space/Escape and rapid selection changes.\n  It is an ordinary executable in the SDK build tree and creates no second\n  Product application bundle.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Native C++23 owns extraction, persistence, background intake and creation hooks.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Writable Core Channels notify on final successful close; atomic publication",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Native tests exercise real bitmap-to-PNG conversion, float32 stereo PCM WAVE",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Catalog tests preserve strict revisions after annotation edits and reject or",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Swift uses the same source-bound presentation schema and native Image I/O.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Android shares the owner's reserved-name rule through DriveStore. Host Java",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Society intake tests write through a deliberately foreign writer and verify",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Sync excludes derived presentation/control documents from live replication",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Native ServerHost shares apply the provider's control rule before pagination,",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Helper supplies a bounded IISC domain renderer without a provider dependency",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Society's GUI consumer compiles the actual product DirectoryLocation and GUI",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 114,
+      "end_line": 114,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "heading",
+      "start_line": 115,
+      "end_line": 115,
+      "raw": "## Evidence files\n",
+      "level": 2,
+      "title": "Evidence files"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 116,
+      "end_line": 116,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "table",
+      "start_line": 117,
+      "end_line": 140,
+      "raw": "| Evidence | Location relative to the relevant module |\n| --- | --- |\n| Provider final full CTest results | `build/presentation/tests-final-all.xml` |\n| Provider focused final regressions | `build/presentation/tests-complete.xml` |\n| Latest native time/creation regressions | `build/presentation/tests-last.xml` |\n| Qt-free installed C++ consumer | `build/presentation/native-consumer-tests-last.xml` |\n| Native Unicode/embedded-preview regression | `build/presentation/unicode-tests.xml` |\n| Swift source adapter compile/run | `build/presentation/swift-tests-final.log` |\n| Android SDK 35 Java compile | `build/presentation/android-javac-final.log` |\n| Android arm64 core/image/JNI object compile | `build/presentation/android-native-final.log` |\n| Latest Android core object compile | `build/presentation/android-core-last.log` |\n| iPhoneOS arm64 core/Image I/O/Quick Look object compile | `build/presentation/ios-native.log` |\n| Latest iPhoneOS core object compile | `build/presentation/ios-core-last.log` |\n| Society product GUI consumer | `build/presentation/gui-tests-last.xml` |\n| iiSocietyContainer full regressions | `build/presentation/tests-verified.xml` in iiSocietyContainer |\n| iiSocietyContainer final focused regressions | `build/presentation/tests-complete.xml` in iiSocietyContainer |\n| Android bridge compile and public-name contract | `build/presentation/android-names.xml` in iiSocietyContainer |\n| iiSocietyHelper full regressions | `build/presentation/tests-final.xml` in iiSocietyHelper |\n| iiSocietyHelper final dependency integration | `build/presentation/tests-last.xml` in iiSocietyHelper |\n| iiSocietySync final full regressions | `build/presentation/tests-normalized.xml` in iiSocietySync |\n| iiWebServer hosting/LAN/transfer regressions | `build/presentation/tests-current.xml` in iiWebServer |\n| iiSDKCore full regressions | `build/presentation/tests-final.xml` in iiSDKCore |\n| Final SDK/Product source-creation audit | `build/presentation/ownership-audit-last.json` |\n| iiSharedCanvas document preview regression | `build/presentation/tests.xml` in iiSharedCanvas |\n",
+      "columns": [
+        "Evidence",
+        "Location relative to the relevant module"
+      ],
+      "rows": [
+        [
+          "Provider final full CTest results",
+          "`build/presentation/tests-final-all.xml`"
+        ],
+        [
+          "Provider focused final regressions",
+          "`build/presentation/tests-complete.xml`"
+        ],
+        [
+          "Latest native time/creation regressions",
+          "`build/presentation/tests-last.xml`"
+        ],
+        [
+          "Qt-free installed C++ consumer",
+          "`build/presentation/native-consumer-tests-last.xml`"
+        ],
+        [
+          "Native Unicode/embedded-preview regression",
+          "`build/presentation/unicode-tests.xml`"
+        ],
+        [
+          "Swift source adapter compile/run",
+          "`build/presentation/swift-tests-final.log`"
+        ],
+        [
+          "Android SDK 35 Java compile",
+          "`build/presentation/android-javac-final.log`"
+        ],
+        [
+          "Android arm64 core/image/JNI object compile",
+          "`build/presentation/android-native-final.log`"
+        ],
+        [
+          "Latest Android core object compile",
+          "`build/presentation/android-core-last.log`"
+        ],
+        [
+          "iPhoneOS arm64 core/Image I/O/Quick Look object compile",
+          "`build/presentation/ios-native.log`"
+        ],
+        [
+          "Latest iPhoneOS core object compile",
+          "`build/presentation/ios-core-last.log`"
+        ],
+        [
+          "Society product GUI consumer",
+          "`build/presentation/gui-tests-last.xml`"
+        ],
+        [
+          "iiSocietyContainer full regressions",
+          "`build/presentation/tests-verified.xml` in iiSocietyContainer"
+        ],
+        [
+          "iiSocietyContainer final focused regressions",
+          "`build/presentation/tests-complete.xml` in iiSocietyContainer"
+        ],
+        [
+          "Android bridge compile and public-name contract",
+          "`build/presentation/android-names.xml` in iiSocietyContainer"
+        ],
+        [
+          "iiSocietyHelper full regressions",
+          "`build/presentation/tests-final.xml` in iiSocietyHelper"
+        ],
+        [
+          "iiSocietyHelper final dependency integration",
+          "`build/presentation/tests-last.xml` in iiSocietyHelper"
+        ],
+        [
+          "iiSocietySync final full regressions",
+          "`build/presentation/tests-normalized.xml` in iiSocietySync"
+        ],
+        [
+          "iiWebServer hosting/LAN/transfer regressions",
+          "`build/presentation/tests-current.xml` in iiWebServer"
+        ],
+        [
+          "iiSDKCore full regressions",
+          "`build/presentation/tests-final.xml` in iiSDKCore"
+        ],
+        [
+          "Final SDK/Product source-creation audit",
+          "`build/presentation/ownership-audit-last.json`"
+        ],
+        [
+          "iiSharedCanvas document preview regression",
+          "`build/presentation/tests.xml` in iiSharedCanvas"
+        ]
+      ]
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 141,
+      "end_line": 141,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "heading",
+      "start_line": 142,
+      "end_line": 142,
+      "raw": "## Evidence boundaries\n",
+      "level": 2,
+      "title": "Evidence boundaries"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 143,
+      "end_line": 143,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 144,
+      "end_line": 150,
+      "raw": "The macOS host executes native C++/Swift and the Qt GUI consumer. The Container\niOS package contract compiles/links the unsigned iPhoneOS native Files bridges\nand extensions. Android checks compile Java against SDK 35 and native arm64\nobjects against installed NDK 26.1 using its C++23 draft spelling (`c++2b`);\nthese are compile checks, not device execution. iOS C++ object checks likewise do\nnot constitute an iOS app or device run. Windows, Linux and WASM runtime execution\nwas not performed for this change.\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 151,
+      "end_line": 151,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 152,
+      "end_line": 156,
+      "raw": "Image/document decoding is admitted up to 32 MiB; unsupported, corrupt and\nover-budget assets retain file details and an honest information card. The\nsource-only Swift bridge has fewer decoders; a C++ consumer may upgrade its\ninformation card once. Native attribute availability is filesystem-dependent;\nthe portable companion is always the transportable representation.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 157,
+      "end_line": 157,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 158,
+      "end_line": 162,
+      "raw": "Space preview is implemented in Society. The provider uses Apple's native\nImage I/O and Quick Look Thumbnailing backend where available, but does not\nregister a new system Finder Quick Look extension for IISC. External intake\nrequires a live storage-owning process/daemon. No active installed app or real\nSociety drive was restarted, migrated or replaced to obtain these fixture results.\n"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 163,
+      "end_line": 163,
+      "raw": "\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "heading",
+      "start_line": 164,
+      "end_line": 164,
+      "raw": "## Alright App Store Swift 6 consumer — 2026-10-15 UTC\n",
+      "level": 2,
+      "title": "Alright App Store Swift 6 consumer — 2026-10-15 UTC"
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 165,
+      "end_line": 165,
+      "raw": "\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "paragraph",
+      "start_line": 166,
+      "end_line": 166,
+      "raw": "The Alright Release consumer compiles the installed Swift source with `-swift-version 6`. That consumer exposed a strict-concurrency error on the mutable `pendingPreviews` set. Every access already holds `previewLock`; the declaration now documents that external synchronization with `nonisolated(unsafe)` and retains the lock. The workspace-local presentation install contains the exact corrected source. The existing Swift adapter compiled in Swift 6 mode and passed its real file, collision, traversal, persistence and presentation checks; Alright passed all eight CTest suites. Evidence and the previous Swift source are retained in `Product/Utility/Alright/build/verification/icon-submission-20261015/`. This is source-consumer and test evidence, not App Store review approval.\n"
+    },
+    {
+      "id": "b000038",
+      "kind": "heading",
+      "start_line": 167,
+      "end_line": 167,
+      "raw": "# Deterministic bridge cache validation\n",
+      "level": 1,
+      "title": "Deterministic bridge cache validation"
+    },
+    {
+      "id": "b000039",
+      "kind": "blank",
+      "start_line": 168,
+      "end_line": 168,
+      "raw": "\n"
+    },
+    {
+      "id": "b000040",
+      "kind": "paragraph",
+      "start_line": 169,
+      "end_line": 172,
+      "raw": "The native presentation regression drains the automatic creation queue before\nreplacing an unsupported file's information card with a source-only bridge\nrecord. This isolates the subsequent synchronous upgrade/cache assertions from\nthe legitimate asynchronous intake of that same newly created file.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "File presentation validation — 2026-10-16",
+      "anchor": "file-presentation-validation--2026-10-16",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000005",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Rich Society container information follow-up",
+      "anchor": "rich-society-container-information-follow-up",
+      "start_line": 8
+    },
+    {
+      "block_id": "b000013",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Earlier creation/intake regression outcomes",
+      "anchor": "earlier-creationintake-regression-outcomes",
+      "start_line": 40
+    },
+    {
+      "block_id": "b000019",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Runtime and source contracts",
+      "anchor": "runtime-and-source-contracts",
+      "start_line": 64
+    },
+    {
+      "block_id": "b000023",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Evidence files",
+      "anchor": "evidence-files",
+      "start_line": 115
+    },
+    {
+      "block_id": "b000027",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Evidence boundaries",
+      "anchor": "evidence-boundaries",
+      "start_line": 142
+    },
+    {
+      "block_id": "b000035",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Alright App Store Swift 6 consumer — 2026-10-15 UTC",
+      "anchor": "alright-app-store-swift-6-consumer--2026-10-15-utc",
+      "start_line": 164
+    },
+    {
+      "block_id": "b000038",
+      "parent_id": null,
+      "level": 1,
+      "title": "Deterministic bridge cache validation",
+      "anchor": "deterministic-bridge-cache-validation",
+      "start_line": 167
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000021",
+        "line": 73,
+        "text": "SIGPIPE suppression so unrelated provider workers do not turn a broken pipe",
+        "basis": "lexical_match",
+        "context": "list"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": [
+      {
+        "block_id": "b000009",
+        "columns": [
+          "Component",
+          "Current follow-up evidence"
+        ],
+        "rows": [
+          [
+            "Provider classification/Catalog integration",
+            "6/6 focused tests passed; database-free reads, invalid companion rejection and original preservation"
+          ],
+          [
+            "Container tree/storage/rows",
+            "7/7 affected tests passed; final richer-row checks also passed 2/2 after the listing optimization"
+          ],
+          [
+            "Native installed Container consumer",
+            "2/2 passed with Qt discovery disabled; public typed presentation and native maintenance link/run"
+          ],
+          [
+            "Sync",
+            "Complete 12/12 passed; a real multi-chunk PNG preview, changed-classification rejection and original read-version checks"
+          ],
+          [
+            "Helper",
+            "Complete 11/11 passed; final public-API/session checks 2/2 passed after the transport allocation bound was added"
+          ],
+          [
+            "Independent installed Helper consumer",
+            "4/4 passed: filesystem information, merged API, authenticated remote host inspection and same-device native drive access"
+          ],
+          [
+            "Society GUI source",
+            "21/21 Qt cases passed in the exact-source installed-SDK consumer; actual title/keywords/rating/color/custom-field rows and a decoded Provider text preview"
+          ],
+          [
+            "SDK/Product source ownership",
+            "0 bypasses and 0 unreadable sources"
+          ]
+        ]
+      },
+      {
+        "block_id": "b000015",
+        "columns": [
+          "Component",
+          "Confirmed outcome"
+        ],
+        "rows": [
+          [
+            "iiFileProvider native/Catalog/stream/Python contracts",
+            "Final complete suite: 33/33 passed; final focused native/time contracts also passed 5/5"
+          ],
+          [
+            "iiSDKCore",
+            "Complete native suite: 34/34 passed, including writable Channel enrichment, event-loop I/O and architecture boundaries"
+          ],
+          [
+            "iiSocietyContainer",
+            "Complete earlier suite: 29/31 passed; the corrected native history and preview cases plus related integration were rechecked in a 7/7 passing run; the added Android bridge/name contract passed 1/1"
+          ],
+          [
+            "iiSocietySync",
+            "Complete final normalized-I/O suite: 12/12 passed; strict real TLS synchronization deadlines were preserved"
+          ],
+          [
+            "iiWebServer",
+            "Hosting, actual local TLS/LAN and transfer: 3/3 passed; includes private-document pagination and automatic upload enrichment"
+          ],
+          [
+            "iiSocietyHelper",
+            "Final full dependency integration: 11/11 passed, including actual IISC pixels and direct host file access"
+          ],
+          [
+            "iiSharedCanvas",
+            "Document preview regression: 1/1 passed, including exact native-size mask pixels"
+          ],
+          [
+            "Society product GUI source",
+            "20 Qt test cases passed through the installed-SDK consumer, including actual image display and Space/Escape"
+          ],
+          [
+            "Independent C++23 consumer",
+            "Installed Native package passed 1/1 with Qt discovery and global dyld overrides disabled; actual native attribute embedding was observed"
+          ],
+          [
+            "Source ownership",
+            "Final SDK/Product audit: zero bypasses and zero unreadable source files"
+          ]
+        ]
+      },
+      {
+        "block_id": "b000025",
+        "columns": [
+          "Evidence",
+          "Location relative to the relevant module"
+        ],
+        "rows": [
+          [
+            "Provider final full CTest results",
+            "`build/presentation/tests-final-all.xml`"
+          ],
+          [
+            "Provider focused final regressions",
+            "`build/presentation/tests-complete.xml`"
+          ],
+          [
+            "Latest native time/creation regressions",
+            "`build/presentation/tests-last.xml`"
+          ],
+          [
+            "Qt-free installed C++ consumer",
+            "`build/presentation/native-consumer-tests-last.xml`"
+          ],
+          [
+            "Native Unicode/embedded-preview regression",
+            "`build/presentation/unicode-tests.xml`"
+          ],
+          [
+            "Swift source adapter compile/run",
+            "`build/presentation/swift-tests-final.log`"
+          ],
+          [
+            "Android SDK 35 Java compile",
+            "`build/presentation/android-javac-final.log`"
+          ],
+          [
+            "Android arm64 core/image/JNI object compile",
+            "`build/presentation/android-native-final.log`"
+          ],
+          [
+            "Latest Android core object compile",
+            "`build/presentation/android-core-last.log`"
+          ],
+          [
+            "iPhoneOS arm64 core/Image I/O/Quick Look object compile",
+            "`build/presentation/ios-native.log`"
+          ],
+          [
+            "Latest iPhoneOS core object compile",
+            "`build/presentation/ios-core-last.log`"
+          ],
+          [
+            "Society product GUI consumer",
+            "`build/presentation/gui-tests-last.xml`"
+          ],
+          [
+            "iiSocietyContainer full regressions",
+            "`build/presentation/tests-verified.xml` in iiSocietyContainer"
+          ],
+          [
+            "iiSocietyContainer final focused regressions",
+            "`build/presentation/tests-complete.xml` in iiSocietyContainer"
+          ],
+          [
+            "Android bridge compile and public-name contract",
+            "`build/presentation/android-names.xml` in iiSocietyContainer"
+          ],
+          [
+            "iiSocietyHelper full regressions",
+            "`build/presentation/tests-final.xml` in iiSocietyHelper"
+          ],
+          [
+            "iiSocietyHelper final dependency integration",
+            "`build/presentation/tests-last.xml` in iiSocietyHelper"
+          ],
+          [
+            "iiSocietySync final full regressions",
+            "`build/presentation/tests-normalized.xml` in iiSocietySync"
+          ],
+          [
+            "iiWebServer hosting/LAN/transfer regressions",
+            "`build/presentation/tests-current.xml` in iiWebServer"
+          ],
+          [
+            "iiSDKCore full regressions",
+            "`build/presentation/tests-final.xml` in iiSDKCore"
+          ],
+          [
+            "Final SDK/Product source-creation audit",
+            "`build/presentation/ownership-audit-last.json`"
+          ],
+          [
+            "iiSharedCanvas document preview regression",
+            "`build/presentation/tests.xml` in iiSharedCanvas"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

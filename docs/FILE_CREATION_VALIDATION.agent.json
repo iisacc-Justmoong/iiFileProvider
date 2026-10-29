@@ -1,0 +1,602 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:10a186224d385c0b168deb6e4fb4afdc643fefa6ee23bdf9b40c4a77dda68e20",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/FILE_CREATION_VALIDATION.md",
+    "sha256": "a439b1eed7309936c839864f18d783f234d8e71501774cfa70aa0999a26b04f8",
+    "bytes": 6240,
+    "line_count": 59,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "Workspace file creation migration validation",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Workspace file creation migration validation\n",
+      "level": 1,
+      "title": "Workspace file creation migration validation"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "Validated on 2026-10-15 on macOS arm64 with AppleClang 21, C++23 and Qt 6.8.3 for existing compatibility adapters. Native storage introduces no Qt dependency or common interpreter/VM for application logic.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "heading",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "## Scope and ownership\n",
+      "level": 2,
+      "title": "Scope and ownership"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "The migration covers 20 consumer SDKs, iiFileProvider itself, and seven products: Dreamscapes, Society, Congregation, Alright, TimeScopes, and archived Vincent/WhatSon. Native streams/descriptors, Qt devices, Python AI workers, Swift storage and Android document bridges delegate creation/publication to iiFileProvider. Format codecs and transport authority stay in their existing owners.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 8,
+      "end_line": 8,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "The final source audit counts 2463 runtime files, 60 bootstrap/development files, 1079 fixture files and 91 provider-owned files. It reports 0 direct creation violations and 0 unreadable files. Deprecated product source and nested model source are included. Generated builds, fixtures, vendored implementations and bootstrap tools are distinct scopes. The gate checks known source factories and is not a syscall sandbox for arbitrary commands, third-party internals or OS-managed stores.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 10,
+      "end_line": 10,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 11,
+      "end_line": 11,
+      "raw": "`tests/dependency_direction.py` validates 32 SDK declarations as a DAG with no upward iiFileProvider dependency. Core Values and PhotoLibrary Albums retain their independent package boundaries. All 28 touched repositories passed `git diff --check`.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 12,
+      "end_line": 12,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "heading",
+      "start_line": 13,
+      "end_line": 13,
+      "raw": "## SDK results\n",
+      "level": 2,
+      "title": "SDK results"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 14,
+      "end_line": 14,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 15,
+      "end_line": 15,
+      "raw": "Focused corrections were rerun after fixing the relevant boundary. A row with a rerun means every listed case passed across the full run and its corrective rerun; it does not imply repeating unrelated hardware/GUI execution.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "table",
+      "start_line": 17,
+      "end_line": 39,
+      "raw": "| Module | Passed/tested | Evidence scope |\n| --- | --- | --- |\n| LVRS | 56/56 | full source suite |\n| iiAudioGen | 8/8 | full source suite |\n| iiCalendar | 13/13 | full source suite |\n| iiCameraIntegration | 21/21 | full source suite |\n| iiFileProvider | 31/31 | full source suite; relocated worker discovery rerun |\n| iiGraphicAdjust | 163/163 | full source suite |\n| iiLicenseManager | 3/3 | full source suite |\n| iiLocalDiffusion | 10/10 | focused output/video/checkpoint/archive/installer suite |\n| iiLocalLLM | 34/34 | focused file/agent suite; two strict wire tests rerun on shorter socket paths |\n| iiPaintEngine | 45/45 | full source suite |\n| iiPhotoLibrary | 8/8 | full source suite |\n| iiSDKBuilder | 12/12 | full source suite |\n| iiSDKCore | 34/34 | full source suite |\n| iiWebServer | 10/10 | full source suite |\n| iiSharedCanvas | 63/63 | full source suite |\n| iiSocietyContainer | 31/31 | full source suite; corrected iOS package rerun |\n| iiSocietyGeneration | 1/1 | full source suite |\n| iiSocietyHelper | 11/11 | full source suite |\n| iiSocietyMonitor | 2/2 | full source suite |\n| iiSocietySync | 12/12 | full source suite |\n| iiUpdateManager | 5/5 | full source suite |\n",
+      "columns": [
+        "Module",
+        "Passed/tested",
+        "Evidence scope"
+      ],
+      "rows": [
+        [
+          "LVRS",
+          "56/56",
+          "full source suite"
+        ],
+        [
+          "iiAudioGen",
+          "8/8",
+          "full source suite"
+        ],
+        [
+          "iiCalendar",
+          "13/13",
+          "full source suite"
+        ],
+        [
+          "iiCameraIntegration",
+          "21/21",
+          "full source suite"
+        ],
+        [
+          "iiFileProvider",
+          "31/31",
+          "full source suite; relocated worker discovery rerun"
+        ],
+        [
+          "iiGraphicAdjust",
+          "163/163",
+          "full source suite"
+        ],
+        [
+          "iiLicenseManager",
+          "3/3",
+          "full source suite"
+        ],
+        [
+          "iiLocalDiffusion",
+          "10/10",
+          "focused output/video/checkpoint/archive/installer suite"
+        ],
+        [
+          "iiLocalLLM",
+          "34/34",
+          "focused file/agent suite; two strict wire tests rerun on shorter socket paths"
+        ],
+        [
+          "iiPaintEngine",
+          "45/45",
+          "full source suite"
+        ],
+        [
+          "iiPhotoLibrary",
+          "8/8",
+          "full source suite"
+        ],
+        [
+          "iiSDKBuilder",
+          "12/12",
+          "full source suite"
+        ],
+        [
+          "iiSDKCore",
+          "34/34",
+          "full source suite"
+        ],
+        [
+          "iiWebServer",
+          "10/10",
+          "full source suite"
+        ],
+        [
+          "iiSharedCanvas",
+          "63/63",
+          "full source suite"
+        ],
+        [
+          "iiSocietyContainer",
+          "31/31",
+          "full source suite; corrected iOS package rerun"
+        ],
+        [
+          "iiSocietyGeneration",
+          "1/1",
+          "full source suite"
+        ],
+        [
+          "iiSocietyHelper",
+          "11/11",
+          "full source suite"
+        ],
+        [
+          "iiSocietyMonitor",
+          "2/2",
+          "full source suite"
+        ],
+        [
+          "iiSocietySync",
+          "12/12",
+          "full source suite"
+        ],
+        [
+          "iiUpdateManager",
+          "5/5",
+          "full source suite"
+        ]
+      ]
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 40,
+      "end_line": 40,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 41,
+      "end_line": 41,
+      "raw": "The original broad iiLocalDiffusion run had 17 failures in 107 tests. Publication collision errno, failed-output cleanup, moved temporary directories, checkpoint publication and installer fixture regressions were corrected and rerun. Remaining model-resource checks include incompatible fallback VAE family/class registration and missing `torch` in the selected test interpreter. Recent StandaloneImage/GenericDiffusers runs still report the VAE configuration error. Their strict expectations and model resource files were preserved. The complete AI suite is not green.\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 42,
+      "end_line": 42,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "heading",
+      "start_line": 43,
+      "end_line": 43,
+      "raw": "## Installed packages and products\n",
+      "level": 2,
+      "title": "Installed packages and products"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 44,
+      "end_line": 44,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "list",
+      "start_line": 45,
+      "end_line": 51,
+      "raw": "- The independent installed Qt/Catalog consumer passed 7/7 tests. The native consumer passed 1/1 with Qt package discovery disabled.\n- Provider Python tests verify append/exclusive creation, failed encoder rollback, existing output preservation, suffix retention, original relative destination retention after a working-directory change, idempotent cleanup, and versioned library discovery from SDK `lib/` and app `Contents/Frameworks/` without SDK/dyld overrides.\n- A relocated installed AI worker published through its bundled provider adapter/native library with global SDK/dyld overrides removed. Runtime installation carries Python support, the native library and its licenses. The separately installed ModelPackaging component passed its 12-case CLI suite with the same overrides removed. TLS FTP has a native-backed filesystem adapter and an independent real network test for Unicode creation, append, rename and exclusive upload. External rclone internals remain outside the source-factory audit.\n- 28 changed product C++ translation units compiled independently: Dreamscapes 6, Society 6, Congregation 4, WhatSon 9 and Vincent 3. WhatSon's maintained C++ regression gate was rebuilt and passed. No alternative Product app bundle was created for these checks.\n- The Swift provider contract test passed on macOS, and Alright's changed core sources passed typechecking. TimeScopes' changed storage and shared models compiled to an arm64 iOS 17 object with the actual iOS SDK.\n- Android provider and affected SDK/Society Java bridges compiled against Android SDK 35. This is Java bridge compilation, not APK/device execution.\n- Society's iOS storage/FileProvider/Live Activity packaging regression compiled the native iOS targets without signing. This is cross-build evidence, not an iOS device run.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "The independent installed Qt/Catalog consumer passed 7/7 tests. The native consumer passed 1/1 with Qt package discovery disabled.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Provider Python tests verify append/exclusive creation, failed encoder rollback, existing output preservation, suffix retention, original relative destination retention after a working-directory change, idempotent cleanup, and versioned library discovery from SDK `lib/` and app `Contents/Frameworks/` without SDK/dyld overrides.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "A relocated installed AI worker published through its bundled provider adapter/native library with global SDK/dyld overrides removed. Runtime installation carries Python support, the native library and its licenses. The separately installed ModelPackaging component passed its 12-case CLI suite with the same overrides removed. TLS FTP has a native-backed filesystem adapter and an independent real network test for Unicode creation, append, rename and exclusive upload. External rclone internals remain outside the source-factory audit.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "28 changed product C++ translation units compiled independently: Dreamscapes 6, Society 6, Congregation 4, WhatSon 9 and Vincent 3. WhatSon's maintained C++ regression gate was rebuilt and passed. No alternative Product app bundle was created for these checks.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "The Swift provider contract test passed on macOS, and Alright's changed core sources passed typechecking. TimeScopes' changed storage and shared models compiled to an arm64 iOS 17 object with the actual iOS SDK.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Android provider and affected SDK/Society Java bridges compiled against Android SDK 35. This is Java bridge compilation, not APK/device execution.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Society's iOS storage/FileProvider/Live Activity packaging regression compiled the native iOS targets without signing. This is cross-build evidence, not an iOS device run.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 52,
+      "end_line": 52,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "heading",
+      "start_line": 53,
+      "end_line": 53,
+      "raw": "## Verification boundaries\n",
+      "level": 2,
+      "title": "Verification boundaries"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 54,
+      "end_line": 54,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "paragraph",
+      "start_line": 55,
+      "end_line": 55,
+      "raw": "The Native library is static for iOS/WASM and shared for desktop/Android. Actual Windows/Linux/WASM builds and Android/iOS device execution remain unverified. The AI tests use controlled fixtures and do not establish model/GPU quality. Changed product object compilation does not establish complete app packaging, deployment, device permission or hardware behavior.\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 56,
+      "end_line": 56,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 57,
+      "end_line": 57,
+      "raw": "All build/staging evidence is under repository-local `build/`. Global `~/.local` SDKs, installed applications and live Society stores were not replaced or restarted by this migration. Minimal-backend AI test packages were kept in staging.\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 58,
+      "end_line": 58,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 59,
+      "end_line": 59,
+      "raw": "The complete case-level evidence and paths are in [verification.json](../build/ownership-migration/verification.json). Ownership/API usage is described in [FILE_OWNERSHIP.md](FILE_OWNERSHIP.md). The earlier [metadata catalog report](FILE_CATALOG_VALIDATION.md) records a previous snapshot; this report provides the later ownership migration results.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Workspace file creation migration validation",
+      "anchor": "workspace-file-creation-migration-validation",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000005",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Scope and ownership",
+      "anchor": "scope-and-ownership",
+      "start_line": 5
+    },
+    {
+      "block_id": "b000013",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "SDK results",
+      "anchor": "sdk-results",
+      "start_line": 13
+    },
+    {
+      "block_id": "b000021",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Installed packages and products",
+      "anchor": "installed-packages-and-products",
+      "start_line": 43
+    },
+    {
+      "block_id": "b000025",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Verification boundaries",
+      "anchor": "verification-boundaries",
+      "start_line": 53
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000027",
+        "line": 55,
+        "text": "The Native library is static for iOS/WASM and shared for desktop/Android. Actual Windows/Linux/WASM builds and Android/iOS device execution remain unverified. The AI tests use controlled fixtures and do not establish model/GPU quality. Changed product object compilation does not establish complete app packaging, deployment, device permission or hardware behavior.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000031",
+        "label": "verification.json",
+        "target": "../build/ownership-migration/verification.json",
+        "kind": "relative",
+        "line": 59
+      },
+      {
+        "block_id": "b000031",
+        "label": "FILE_OWNERSHIP.md",
+        "target": "FILE_OWNERSHIP.md",
+        "kind": "relative",
+        "line": 59
+      },
+      {
+        "block_id": "b000031",
+        "label": "metadata catalog report",
+        "target": "FILE_CATALOG_VALIDATION.md",
+        "kind": "relative",
+        "line": 59
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000017",
+        "columns": [
+          "Module",
+          "Passed/tested",
+          "Evidence scope"
+        ],
+        "rows": [
+          [
+            "LVRS",
+            "56/56",
+            "full source suite"
+          ],
+          [
+            "iiAudioGen",
+            "8/8",
+            "full source suite"
+          ],
+          [
+            "iiCalendar",
+            "13/13",
+            "full source suite"
+          ],
+          [
+            "iiCameraIntegration",
+            "21/21",
+            "full source suite"
+          ],
+          [
+            "iiFileProvider",
+            "31/31",
+            "full source suite; relocated worker discovery rerun"
+          ],
+          [
+            "iiGraphicAdjust",
+            "163/163",
+            "full source suite"
+          ],
+          [
+            "iiLicenseManager",
+            "3/3",
+            "full source suite"
+          ],
+          [
+            "iiLocalDiffusion",
+            "10/10",
+            "focused output/video/checkpoint/archive/installer suite"
+          ],
+          [
+            "iiLocalLLM",
+            "34/34",
+            "focused file/agent suite; two strict wire tests rerun on shorter socket paths"
+          ],
+          [
+            "iiPaintEngine",
+            "45/45",
+            "full source suite"
+          ],
+          [
+            "iiPhotoLibrary",
+            "8/8",
+            "full source suite"
+          ],
+          [
+            "iiSDKBuilder",
+            "12/12",
+            "full source suite"
+          ],
+          [
+            "iiSDKCore",
+            "34/34",
+            "full source suite"
+          ],
+          [
+            "iiWebServer",
+            "10/10",
+            "full source suite"
+          ],
+          [
+            "iiSharedCanvas",
+            "63/63",
+            "full source suite"
+          ],
+          [
+            "iiSocietyContainer",
+            "31/31",
+            "full source suite; corrected iOS package rerun"
+          ],
+          [
+            "iiSocietyGeneration",
+            "1/1",
+            "full source suite"
+          ],
+          [
+            "iiSocietyHelper",
+            "11/11",
+            "full source suite"
+          ],
+          [
+            "iiSocietyMonitor",
+            "2/2",
+            "full source suite"
+          ],
+          [
+            "iiSocietySync",
+            "12/12",
+            "full source suite"
+          ],
+          [
+            "iiUpdateManager",
+            "5/5",
+            "full source suite"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

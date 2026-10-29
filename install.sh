@@ -54,3 +54,11 @@ for contract in objects catalog; do
     cmake --build "$consumer_build_dir" --config Release --parallel "${CMAKE_BUILD_PARALLEL_LEVEL:-2}"
     ctest --test-dir "$consumer_build_dir" -C Release --output-on-failure
 done
+
+# Exercise the owned device and atomic-save API through installed headers,
+# independently of the optional Qt compatibility layer.
+native_consumer_build_dir="${build_dir}/ownership-consumer/build"
+cmake -S "${source_dir}/tests/ownership_consumer" -B "$native_consumer_build_dir" \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$install_prefix"
+cmake --build "$native_consumer_build_dir" --config Release --parallel "${CMAKE_BUILD_PARALLEL_LEVEL:-2}"
+ctest --test-dir "$native_consumer_build_dir" -C Release --output-on-failure

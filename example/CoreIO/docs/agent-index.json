@@ -1,0 +1,55 @@
+{
+  "format": "iisacc.agent-document-index",
+  "schema_version": 1,
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider%2Fexample%2FCoreIO",
+    "name": "CoreIO",
+    "root": "SDK/iiFileProvider/example/CoreIO",
+    "kind": "application"
+  },
+  "documentation_root": "docs",
+  "agent_schema": "docs/agent-document.schema.json",
+  "documents": [
+    {
+      "document_id": "urn:iisacc:document:64129cb98bd4b161d55711c947264c8bf2f6a081210b52b27e97ce3145efbda5",
+      "source": "AGENT.md",
+      "agent_json": "docs/entrypoints/AGENT.generated.agent.json",
+      "source_sha256": "b49c89697586258542a2009413f57c3a431882b6bbac40804bcb98e50daf7c16",
+      "role": "instructions"
+    },
+    {
+      "document_id": "urn:iisacc:document:2d9960ef5104a303a9d8fb2a2b247441caf4b19a27969cf2e5fab39e7b4a213d",
+      "source": "README.md",
+      "agent_json": "docs/entrypoints/README.generated.agent.json",
+      "source_sha256": "0cd875e754e833fa0793e9c99e893ea70d29b99ebdafd66dd340a0c6ebdef94f",
+      "role": "overview"
+    },
+    {
+      "document_id": "urn:iisacc:document:fa9786e028f16a6d2047d302e9ab6773b8ed9042422a183719ad50e6d63aa710",
+      "source": "docs/README.md",
+      "agent_json": "docs/README.generated.agent.json",
+      "source_sha256": "9c588722fecc184a047c30397b05a7658c292bf0e4686d5c9d11b2e70491c0be",
+      "role": "overview"
+    },
+    {
+      "document_id": "urn:iisacc:document:5e209d852bd486a6101aa8044795ddbd8edb33640e0b3827d64f4d405f560574",
+      "source": "docs/documentation-structure.md",
+      "agent_json": "docs/documentation-structure.generated.agent.json",
+      "source_sha256": "45265fde3f715ae7023afd5c3e68f6ff45d97f3e9280034345bc5e332df128df",
+      "role": "guide"
+    }
+  ],
+  "layout": {
+    "human_entry": "README.md",
+    "agent_entry": "AGENT.md",
+    "human_format": "markdown",
+    "agent_format": "structured_json",
+    "source_authority": "markdown"
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

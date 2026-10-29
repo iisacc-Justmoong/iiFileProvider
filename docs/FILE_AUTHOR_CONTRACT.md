@@ -111,7 +111,7 @@ if (token && author->setAuthenticationToken(*token, &error)) {
 
 ## 의존성과 검증
 
-Qt Core의 JSON, Unicode, QUrl, QDateTime, QTimeZone을 재사용한다. 기존 Qt 6.8.3 외의 런타임 의존성은 추가하지 않는다. 이미 있는 iiAcountManager는 로그인·Qt Network·QObject 수명을 소유하고 현재 Account는 네 표시 필드만 노출하므로, 파일 작성자 값 객체가 그 매니저를 소유하거나 상위 앱에 의존하도록 만들지 않았다. 두 SDK는 명시적인 서버 JSON 계약으로 연결할 수 있다. 형식·문자열·시각의 API 동작은 [QJsonValue](https://doc.qt.io/qt-6.8/qjsonvalue.html), [QString](https://doc.qt.io/qt-6.8/qstring.html), [QDateTime](https://doc.qt.io/qt-6.8/qdatetime.html)의 공식 문서를 참고했다.
+Qt Core의 JSON, Unicode, QUrl, QDateTime, QTimeZone을 재사용한다. 기존 Qt 6.8.3 외의 런타임 의존성은 추가하지 않는다. 이미 있는 iiAccountManager는 로그인·Qt Network·QObject 수명을 소유하고 현재 Account는 네 표시 필드만 노출하므로, 파일 작성자 값 객체가 그 매니저를 소유하거나 상위 앱에 의존하도록 만들지 않았다. 두 SDK는 명시적인 서버 JSON 계약으로 연결할 수 있다. 형식·문자열·시각의 API 동작은 [QJsonValue](https://doc.qt.io/qt-6.8/qjsonvalue.html), [QString](https://doc.qt.io/qt-6.8/qstring.html), [QDateTime](https://doc.qt.io/qt-6.8/qdatetime.html)의 공식 문서를 참고했다.
 
 `tests/author_contract.cpp`는 실제 서버 필드 형태를 본뜬 합성 fixture로 account/앱 응답, rich metadata 왕복, 이전 모델 호환, 잘못된 필드, Unicode code point 경계, 내부 정보 제외, 세션 만료, 토큰 바인딩·시간 범위·redaction과 실패의 원자성을 검증한다. 같은 계약을 별도 설치 소비자에서 다시 컴파일·실행하여 공개 헤더와 공유 라이브러리 export를 확인한다. 실제 계정·운영 토큰·과금 요청은 사용하지 않는다.
 

@@ -3,7 +3,7 @@
 #include <QCoreApplication>
 #include <QBuffer>
 #include <QDir>
-#include <QFile>
+#include "iiFileProviderDevice.h"
 #include <QLockFile>
 #include <QTemporaryDir>
 #include <cstdlib>
@@ -43,11 +43,12 @@ int main(int argc, char **argv) try {
         TemporaryLease cleaner(std::filesystem::path(QFileInfo(directory.path()).canonicalFilePath().toStdU16String()), TemporaryLease::Mode::TryExclusive);
         require(!cleaner.locked(), "live staged codec output is protected from cleanup");
         abandonedStage = staged.path();
+        require(abandonedStage.endsWith(".unknown"), "codec stage retains its destination suffix");
         const auto moved = abandonedStage + ".moved";
-        require(QFile::rename(abandonedStage, moved), "stage releases native file handle");
-        require(QFile::rename(moved, abandonedStage), "restore stage for cleanup");
+        require(iiFileProvider::FileDevice::rename(abandonedStage, moved), "stage releases native file handle");
+        require(iiFileProvider::FileDevice::rename(moved, abandonedStage), "restore stage for cleanup");
     }
-    require(!QFile::exists(abandonedStage), "unpublished stage is removed");
+    require(!iiFileProvider::FileDevice::exists(abandonedStage), "unpublished stage is removed");
     const QByteArray initial("\0payload\xff", 9);
     File::create(path, initial);
     require(File::read(path) == initial, "opaque bytes round trip");
@@ -85,9 +86,9 @@ int main(int argc, char **argv) try {
     require(!File::publish(std::filesystem::path(path.toStdU16String()),
                           std::filesystem::path(path.toStdU16String())).succeeded,
             "publishing a path over itself is rejected");
-    const auto oldPermissions = QFile::permissions(path);
+    const auto oldPermissions = iiFileProvider::FileDevice::permissions(path);
     File::write(path, "complete");
-    require(QFile::permissions(path) == oldPermissions, "replacement preserves permissions");
+    require(iiFileProvider::FileDevice::permissions(path) == oldPermissions, "replacement preserves permissions");
     const auto copy = directory.filePath("copy.iisc");
     File::copy(path, copy);
     require(File::read(copy) == "complete", "copy bytes");

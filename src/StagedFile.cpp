@@ -1,9 +1,6 @@
 #include "StagedFile.h"
 #include "TemporaryLease.h"
-#include <QDir>
-#include <QFile>
-#include <QFileInfo>
-#include <QTemporaryFile>
+#include "iiFileProviderDevice.h"
 
 namespace iiFileProvider {
 class StagedFile::Impl {
@@ -14,19 +11,22 @@ public:
 };
 StagedFile::StagedFile(const QString &destination) : m_impl(std::make_unique<Impl>()) {
     m_impl->destination = File::absolutePath(destination);
-    const auto directory = QFileInfo(QFileInfo(m_impl->destination).absolutePath()).canonicalFilePath();
+    const auto directory = std::filesystem::canonical(std::filesystem::path(m_impl->destination.toStdU16String()).parent_path());
     m_impl->lease = std::make_unique<TemporaryLease>(
-        std::filesystem::path(directory.toStdU16String()), TemporaryLease::Mode::Shared);
-    QTemporaryFile temporary(QFileInfo(m_impl->destination).dir().filePath(".iifile-stage-XXXXXX"));
+        directory, TemporaryLease::Mode::Shared);
+    auto pattern = directory / ".iifile-stage-XXXXXX";
+    pattern += std::filesystem::path(m_impl->destination.toStdU16String()).extension();
+    TemporaryFile temporary(File::pathString(pattern));
     if (!temporary.open()) throw FileError(FileCode::IoError, temporary.errorString().toStdString());
     m_impl->path = temporary.fileName();
     temporary.setAutoRemove(false);
-    // Destruction closes the native handle; QTemporaryFile::close() does not.
+    // The provider closes its descriptor before handing the path to a codec.
 }
 StagedFile::~StagedFile() {
     // Rename publication leaves no source; link publication may leave one if
     // its first unlink failed. Remove the owned stage before releasing its lease.
-    QFile::remove(m_impl->path);
+    std::error_code ignored;
+    std::filesystem::remove(std::filesystem::path(m_impl->path.toStdU16String()), ignored);
 }
 const QString &StagedFile::path() const noexcept { return m_impl->path; }
 AtomicFileCommitResult StagedFile::publish(bool overwrite) {

@@ -1,0 +1,210 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:4489fdb03f30fd25d72aa55ae0bab3ca0392cf7b0c47aa84366af238b143236b",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider%2FCompatibility",
+    "name": "Compatibility",
+    "root": "SDK/iiFileProvider/Compatibility",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "README.md",
+    "sha256": "38dc0ec89fe887363d3c90a294c84caff2309750cc00d416df98ab3c4670a942",
+    "bytes": 1628,
+    "line_count": 29,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "FileProvider compatibility",
+    "role": "overview",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# FileProvider compatibility\n",
+      "level": 1,
+      "title": "FileProvider compatibility"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 8,
+      "raw": "`iiFileProvider::Compatibility` is a source-composed, Qt-free C++23 bridge for\nthe existing `.iisacc-lock` writer protocol. `FileWriteLock` reserves the lock\npath exclusively, retains a platform lock/handle for its lifetime and publishes\nthe existing PID/application/hostname metadata. Native and former Qt writers\ntherefore exclude one another. `writeCompatible` holds that guard while the\nNative provider stages and atomically publishes complete replacement bytes.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 10,
+      "end_line": 13,
+      "raw": "Only a proven dead process on the same host is eligible for stale-lock recovery.\nThe bridge verifies the held file identity before removing it and never removes\nan active, foreign-host, malformed or unidentifiable owner's guard. It does not\nadd a Qt library or header dependency and does not alter the installed provider.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 14,
+      "end_line": 14,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 15,
+      "end_line": 20,
+      "raw": "Congregation composes this target from source, exercises native exclusion and\ndead-owner recovery without Qt, and uses QLockFile only as an independent test\noracle for compatibility in both directions. Windows MSVC x64 also builds and\nruns `iiFileProvider.Compatibility.Contracts`, including repeated atomic\nreplacement and lock cleanup. This Windows check is distinct from Congregation's\nmacOS bidirectional Qt oracle. See [Windows verification](../docs/WindowsCompatibility.md).\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 21,
+      "end_line": 21,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "html",
+      "start_line": 22,
+      "end_line": 22,
+      "raw": "<!-- workspace-docs:readme:start -->\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "heading",
+      "start_line": 23,
+      "end_line": 23,
+      "raw": "## Documentation entry points\n",
+      "level": 2,
+      "title": "Documentation entry points"
+    },
+    {
+      "id": "b000011",
+      "kind": "blank",
+      "start_line": 24,
+      "end_line": 24,
+      "raw": "\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "list",
+      "start_line": 25,
+      "end_line": 28,
+      "raw": "- Human overview: this English `README.md`.\n- Agent instructions: [AGENT.md](AGENT.md).\n- Human documentation: [documentation index](docs/README.md).\n- Structured agent documentation: [agent index](docs/agent-index.json).\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Human overview: this English `README.md`.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Agent instructions: [AGENT.md](AGENT.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Human documentation: [documentation index](docs/README.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Structured agent documentation: [agent index](docs/agent-index.json).",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000013",
+      "kind": "html",
+      "start_line": 29,
+      "end_line": 29,
+      "raw": "<!-- workspace-docs:readme:end -->\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "FileProvider compatibility",
+      "anchor": "fileprovider-compatibility",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000010",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Documentation entry points",
+      "anchor": "documentation-entry-points",
+      "start_line": 23
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000005",
+        "line": 11,
+        "text": "The bridge verifies the held file identity before removing it and never removes",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000007",
+        "label": "Windows verification",
+        "target": "../docs/WindowsCompatibility.md",
+        "kind": "relative",
+        "line": 20
+      },
+      {
+        "block_id": "b000012",
+        "label": "AGENT.md",
+        "target": "AGENT.md",
+        "kind": "relative",
+        "line": 26
+      },
+      {
+        "block_id": "b000012",
+        "label": "documentation index",
+        "target": "docs/README.md",
+        "kind": "relative",
+        "line": 27
+      },
+      {
+        "block_id": "b000012",
+        "label": "agent index",
+        "target": "docs/agent-index.json",
+        "kind": "relative",
+        "line": 28
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

@@ -1,6 +1,6 @@
 #include <iiFileProvider.h>
 #include <QtCore/QDir>
-#include <QtCore/QFile>
+#include "iiFileProviderDevice.h"
 #include <QtCore/QJsonDocument>
 #include <QtCore/QTemporaryDir>
 #include <QtTest/QTest>
@@ -160,7 +160,7 @@ private slots:
         Authorship history;
         history.setAuthor(sampleAuthor("original"), recordedAt);
         history.setAuthor(sampleAuthor("participant-1"), recordedAt.addSecs(1));
-        QFile file(directory.filePath("metadata.json"));
+        iiFileProvider::FileDevice file(directory.filePath("metadata.json"));
         QVERIFY(file.open(QIODevice::WriteOnly));
         QCOMPARE(file.write(history.dump()), history.dump().size());
         file.close();

@@ -1,0 +1,55 @@
+{
+  "format": "iisacc.agent-document-index",
+  "schema_version": 1,
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider%2FCompatibility",
+    "name": "Compatibility",
+    "root": "SDK/iiFileProvider/Compatibility",
+    "kind": "sdk"
+  },
+  "documentation_root": "docs",
+  "agent_schema": "docs/agent-document.schema.json",
+  "documents": [
+    {
+      "document_id": "urn:iisacc:document:99fc174937314e766c562f1a98e189365ea6096ca13e4a53ae94aa884ba1b3be",
+      "source": "AGENT.md",
+      "agent_json": "docs/entrypoints/AGENT.agent.json",
+      "source_sha256": "02f9afc28f8db81afcd8876aa949d19ab3d1a39f924b651b9e063858f89968a0",
+      "role": "instructions"
+    },
+    {
+      "document_id": "urn:iisacc:document:4489fdb03f30fd25d72aa55ae0bab3ca0392cf7b0c47aa84366af238b143236b",
+      "source": "README.md",
+      "agent_json": "docs/entrypoints/README.agent.json",
+      "source_sha256": "38dc0ec89fe887363d3c90a294c84caff2309750cc00d416df98ab3c4670a942",
+      "role": "overview"
+    },
+    {
+      "document_id": "urn:iisacc:document:628b80cc5c198a500387afa33abba486e6b500a3e2f1dd7aabe5ca6d647c4859",
+      "source": "docs/README.md",
+      "agent_json": "docs/README.agent.json",
+      "source_sha256": "67025f9dae91025101600620bdb84bce3ce8d4b315e0d212a99f1da37757ee50",
+      "role": "overview"
+    },
+    {
+      "document_id": "urn:iisacc:document:70c00b194c2b1464e0b562a9954a5a296018fd86234562e757c4fedef40e048e",
+      "source": "docs/documentation-structure.md",
+      "agent_json": "docs/documentation-structure.agent.json",
+      "source_sha256": "967206e3e46016cadec422dd12e464189ac2367954f1d34d715eb1aaac2b74c4",
+      "role": "guide"
+    }
+  ],
+  "layout": {
+    "human_entry": "README.md",
+    "agent_entry": "AGENT.md",
+    "human_format": "markdown",
+    "agent_format": "structured_json",
+    "source_authority": "markdown"
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

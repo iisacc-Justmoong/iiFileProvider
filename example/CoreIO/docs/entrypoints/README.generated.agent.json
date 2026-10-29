@@ -1,0 +1,307 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:2d9960ef5104a303a9d8fb2a2b247441caf4b19a27969cf2e5fab39e7b4a213d",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider%2Fexample%2FCoreIO",
+    "name": "CoreIO",
+    "root": "SDK/iiFileProvider/example/CoreIO",
+    "kind": "application"
+  },
+  "source": {
+    "path": "README.md",
+    "sha256": "0cd875e754e833fa0793e9c99e893ea70d29b99ebdafd66dd340a0c6ebdef94f",
+    "bytes": 3035,
+    "line_count": 61,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "iiFileProvider Core I/O adapter",
+    "role": "overview",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiFileProvider Core I/O adapter\n",
+      "level": 1,
+      "title": "iiFileProvider Core I/O adapter"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 4,
+      "raw": "Version 0.1.1 is the maintenance release accompanying iiFileProvider 0.7.2\nand Native 0.8.1. Its existing I/O and dependency contracts are unchanged.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 6,
+      "end_line": 9,
+      "raw": "This optional C++23 consumer project composes iiSDKCore 0.13 and iiFileProvider\nNative 0.7. The application builds and links it separately; neither SDK imports\nthe adapter or the other SDK. It is no longer a subdirectory of the provider's\nbuild. Qt is not used.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 10,
+      "end_line": 10,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 11,
+      "end_line": 15,
+      "raw": "`iiFileProvider::core::open_file` owns file creation, exclusive creation,\ntruncation and regular-file validation. It transfers the native descriptor/handle\ninto Core's `NativeFile::adopt`. Read/write/wait and EventLoop/AsyncIO semantics\nstay with Core. Successful writable close, including the last Channel owner,\nnotifies Native Presentation exactly once. Read-only opens do not schedule it.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 17,
+      "end_line": 19,
+      "raw": "`iiFileProvider::core::AtomicFile` owns temporary creation and atomic publication.\nIt retains the old Core transaction's flush, cancel and no-direct-write-fallback\ncontract. Storage errors use Core's I/O result and native error categories.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 20,
+      "end_line": 20,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "fenced_code",
+      "start_line": 21,
+      "end_line": 24,
+      "raw": "```cmake\nfind_package(iiFileProviderCoreIO 0.1 CONFIG REQUIRED)\ntarget_link_libraries(MyApp PRIVATE iiFileProvider::CoreIO)\n```\n",
+      "language": "cmake",
+      "code": "find_package(iiFileProviderCoreIO 0.1 CONFIG REQUIRED)\ntarget_link_libraries(MyApp PRIVATE iiFileProvider::CoreIO)\n",
+      "closed": true
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 25,
+      "end_line": 25,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "fenced_code",
+      "start_line": 26,
+      "end_line": 31,
+      "raw": "```cpp\n#include <iiFileProviderCoreIO.h>\nauto channel = iiFileProvider::core::open_file(path,\n    {ii::io::Access::read_write, ii::io::Creation::create_new});\nauto transaction = iiFileProvider::core::AtomicFile::create(target);\n```\n",
+      "language": "cpp",
+      "code": "#include <iiFileProviderCoreIO.h>\nauto channel = iiFileProvider::core::open_file(path,\n    {ii::io::Access::read_write, ii::io::Creation::create_new});\nauto transaction = iiFileProvider::core::AtomicFile::create(target);\n",
+      "closed": true
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 32,
+      "end_line": 32,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 33,
+      "end_line": 36,
+      "raw": "Build this directory after building/installing Core and Native into Workspace\nstaging prefixes. Use `build/` for outputs. The relocated I/O example and atomic\ntransaction assertions run here; they are not removed from coverage when Core\nis tested without storage dependencies.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 37,
+      "end_line": 37,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 38,
+      "end_line": 41,
+      "raw": "This is the explicit migration from Core 0.12's `ii::io::open_file` and\n`ii::io::AtomicFile`. Link this component and change the include/namespace.\nCore's rooted `File::open` accepts an opener callback, for example\n`File::open(root, relative, iiFileProvider::core::open_file, options)`.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 42,
+      "end_line": 42,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 43,
+      "end_line": 48,
+      "raw": "The 2026-10-16 macOS arm64 Release validation passed 2/2 tests (29 integration\nchecks and the moved loop-I/O example) and a separately installed consumer 1/1.\nThe base Native provider was configured with Core and Qt discovery disabled and\npassed its own 3/3 tests. Results are in `../build/coreio-*.log` and\n`../build/core-independent-*.log`. The declaration-graph check includes this\nadapter above both lower libraries. Other target-platform execution is separate.\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 49,
+      "end_line": 49,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 50,
+      "end_line": 52,
+      "raw": "`NativeFile.h` is a platform integration extension, not a portable file-opening\nAPI. Its intptr_t ownership transfer is reserved for native adapters. Common\napplication code receives a Channel and does not access a native handle.\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 53,
+      "end_line": 53,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "html",
+      "start_line": 54,
+      "end_line": 54,
+      "raw": "<!-- workspace-docs:readme:start -->\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "heading",
+      "start_line": 55,
+      "end_line": 55,
+      "raw": "## Documentation entry points\n",
+      "level": 2,
+      "title": "Documentation entry points"
+    },
+    {
+      "id": "b000025",
+      "kind": "blank",
+      "start_line": 56,
+      "end_line": 56,
+      "raw": "\n"
+    },
+    {
+      "id": "b000026",
+      "kind": "list",
+      "start_line": 57,
+      "end_line": 60,
+      "raw": "- Human overview: this English `README.md`.\n- Agent instructions: [AGENT.md](AGENT.md).\n- Human documentation: [documentation index](docs/README.md).\n- Structured agent documentation: [agent index](docs/agent-index.json).\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Human overview: this English `README.md`.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Agent instructions: [AGENT.md](AGENT.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Human documentation: [documentation index](docs/README.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Structured agent documentation: [agent index](docs/agent-index.json).",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000027",
+      "kind": "html",
+      "start_line": 61,
+      "end_line": 61,
+      "raw": "<!-- workspace-docs:readme:end -->\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiFileProvider Core I/O adapter",
+      "anchor": "iifileprovider-core-io-adapter",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000024",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Documentation entry points",
+      "anchor": "documentation-entry-points",
+      "start_line": 55
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000007",
+        "line": 15,
+        "text": "notifies Native Presentation exactly once. Read-only opens do not schedule it.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000026",
+        "label": "AGENT.md",
+        "target": "AGENT.md",
+        "kind": "relative",
+        "line": 58
+      },
+      {
+        "block_id": "b000026",
+        "label": "documentation index",
+        "target": "docs/README.md",
+        "kind": "relative",
+        "line": 59
+      },
+      {
+        "block_id": "b000026",
+        "label": "agent index",
+        "target": "docs/agent-index.json",
+        "kind": "relative",
+        "line": 60
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

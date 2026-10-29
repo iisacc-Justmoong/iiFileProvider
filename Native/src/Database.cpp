@@ -1,5 +1,6 @@
 #include "iiFileProviderDatabase.h"
 #include "iiFileProviderStorage.h"
+#include "Sha256_p.h"
 #include <sqlite3.h>
 #include <cmath>
 #include <limits>
@@ -8,6 +9,8 @@
 #include <array>
 #include <chrono>
 #include <thread>
+#include <mutex>
+#include <new>
 
 namespace iiFileProvider::native::sql {
 namespace {
@@ -24,11 +27,72 @@ auto failure(sqlite3* db,int result) {
     const auto* message=db && (sqlite3_errcode(db)&255)==(result&255)?sqlite3_errmsg(db):sqlite3_errstr(result);
     return std::unexpected(Error{code,result,message});
 }
+using BlobHandle = std::unique_ptr<sqlite3_blob, decltype(&sqlite3_blob_close)>;
+bool validBlobNames(std::string_view table, std::string_view column) noexcept {
+    return !table.empty() && !column.empty() && table.find('\0') == table.npos &&
+           column.find('\0') == column.npos &&
+           table.size() <= std::size_t(std::numeric_limits<int>::max()) &&
+           column.size() <= std::size_t(std::numeric_limits<int>::max());
+}
+Result<BlobHandle> openBlob(sqlite3 *database, std::string_view table, std::string_view column,
+                            std::int64_t row, bool writing) {
+    const std::string ownedTable(table), ownedColumn(column);
+    sqlite3_blob *raw = nullptr;
+    const auto rc = sqlite3_blob_open(database, "main", ownedTable.c_str(), ownedColumn.c_str(),
+                                     row, writing ? 1 : 0, &raw);
+    BlobHandle result(raw, sqlite3_blob_close);
+    if (rc != SQLITE_OK) return failure(database, rc);
+    return std::move(result);
+}
+// Only private SQL literals enter this guard. Its savepoint is nested inside
+// the caller's transaction and never commits that transaction.
+class BlobSavepoint final {
+    sqlite3 *database_;
+    std::uint64_t &transaction_;
+    void *context_;
+    void (*invalidate_)(void *) noexcept;
+    bool active_ = false;
+public:
+    BlobSavepoint(sqlite3 *database, std::uint64_t &transaction, void *context,
+                   void (*invalidate)(void *) noexcept)
+        : database_(database), transaction_(transaction), context_(context), invalidate_(invalidate) {}
+    ~BlobSavepoint() { rollback(); }
+    int begin() noexcept {
+        const auto rc = sqlite3_exec(database_, "SAVEPOINT ii_fp_blob_ranges", nullptr, nullptr, nullptr);
+        active_ = rc == SQLITE_OK;
+        return rc;
+    }
+    int release() noexcept {
+        const auto rc = sqlite3_exec(database_, "RELEASE ii_fp_blob_ranges", nullptr, nullptr, nullptr);
+        if (rc == SQLITE_OK) active_ = false;
+        return rc;
+    }
+    bool rollback() noexcept {
+        if (!active_) return true;
+        active_ = false;
+        if (sqlite3_get_autocommit(database_)) { transaction_ = 0; return true; }
+        if (sqlite3_exec(database_, "ROLLBACK TO ii_fp_blob_ranges", nullptr, nullptr, nullptr) == SQLITE_OK &&
+            sqlite3_exec(database_, "RELEASE ii_fp_blob_ranges", nullptr, nullptr, nullptr) == SQLITE_OK)
+            return true;
+        const auto rc = sqlite3_exec(database_, "ROLLBACK", nullptr, nullptr, nullptr);
+        if (rc == SQLITE_OK || sqlite3_get_autocommit(database_)) { transaction_ = 0; return true; }
+        // No Native statement may commit an unverified partial batch later.
+        invalidate_(context_);
+        return false;
+    }
+};
 }
 struct Database::State final {
     sqlite3* handle=nullptr;
     std::uint64_t serial=0, transaction=0;
-    ~State() { sqlite3_close_v2(handle); }
+    std::mutex interruption;
+    void invalidate() noexcept {
+        std::lock_guard lock(interruption);
+        if (handle) sqlite3_close_v2(handle);
+        handle = nullptr;
+        transaction = 0;
+    }
+    ~State() { if(handle) sqlite3_close_v2(handle); }
 };
 struct Statement::State final {
     std::shared_ptr<Database::State> database;
@@ -68,7 +132,7 @@ Result<Database> Database::memory(Options options) {
     return result;
 }
 Result<Statement> Database::prepare(std::string_view sql) const {
-    if (!state_) return invalid("Database is closed",Code::closed);
+    if (!state_ || !state_->handle) return invalid("Database is closed",Code::closed);
     if (sql.empty() || sql.size()>std::numeric_limits<int>::max() || sql.find('\0')!=sql.npos)
         return invalid("Expected one SQL statement without NUL");
     auto query=std::make_unique<Statement::State>(); query->database=state_;
@@ -88,11 +152,15 @@ Result<void> Database::execute(std::string_view sql) const {
     auto query=prepare(sql); if (!query) return std::unexpected(query.error());
     while(true) { auto next=query->step(); if(!next) return std::unexpected(next.error()); if(*next==Step::done) return {}; }
 }
-bool Database::in_transaction() const noexcept { return state_ && !sqlite3_get_autocommit(state_->handle); }
-std::int64_t Database::changes() const noexcept { return state_?sqlite3_changes(state_->handle):0; }
-void Database::interrupt() const noexcept { if(state_) sqlite3_interrupt(state_->handle); }
+bool Database::in_transaction() const noexcept { return state_ && state_->handle && !sqlite3_get_autocommit(state_->handle); }
+std::int64_t Database::changes() const noexcept { return state_ && state_->handle?sqlite3_changes(state_->handle):0; }
+void Database::interrupt() const noexcept {
+    if(!state_) return;
+    std::lock_guard lock(state_->interruption);
+    if(state_->handle) sqlite3_interrupt(state_->handle);
+}
 Result<void> Database::configure_durable() const {
-    if(!state_) return invalid("Database is closed",Code::closed);
+    if(!state_ || !state_->handle) return invalid("Database is closed",Code::closed);
     auto rc=sqlite3_db_config(state_->handle,SQLITE_DBCONFIG_DEFENSIVE,1,nullptr);
     if(rc!=SQLITE_OK) return failure(state_->handle,rc);
     for(auto sql:{"PRAGMA trusted_schema=OFF","PRAGMA journal_mode=DELETE","PRAGMA synchronous=EXTRA","PRAGMA fullfsync=ON"})
@@ -105,14 +173,14 @@ Result<void> Database::configure_durable() const {
     return {};
 }
 Result<bool> Database::has_moved() const {
-    if(!state_) return invalid("Database is closed",Code::closed);
+    if(!state_ || !state_->handle) return invalid("Database is closed",Code::closed);
     int moved=0; const auto rc=sqlite3_file_control(state_->handle,"main",SQLITE_FCNTL_HAS_MOVED,&moved);
     if(rc!=SQLITE_OK && rc!=SQLITE_NOTFOUND) return failure(state_->handle,rc);
     return moved!=0;
 }
 Result<std::uint64_t> Database::patch_blob(std::string_view table,std::string_view column,
         std::int64_t row_id,std::span<const std::uint8_t> replacement) const {
-    if(!state_) return invalid("Database is closed",Code::closed);
+    if(!state_ || !state_->handle) return invalid("Database is closed",Code::closed);
     if(!in_transaction()) return invalid("BLOB patches require an explicit transaction");
     if(table.empty() || column.empty() || table.find('\0')!=table.npos || column.find('\0')!=column.npos
             || replacement.size()>std::size_t(std::numeric_limits<int>::max())) return invalid("Invalid BLOB patch");
@@ -136,8 +204,154 @@ Result<std::uint64_t> Database::patch_blob(std::string_view table,std::string_vi
     rc=sqlite3_blob_close(blob.release()); if(rc!=SQLITE_OK) return failure(state_->handle,rc);
     return written;
 }
+Result<Blob> Database::read_blob_range(std::string_view table, std::string_view column,
+                                      std::int64_t row_id, std::uint64_t offset,
+                                      std::size_t count) const {
+    try {
+        if (!state_ || !state_->handle) return invalid("Database is closed", Code::closed);
+        if (!validBlobNames(table, column)) return invalid("Invalid BLOB identifier");
+        auto *database = state_->handle;
+        const auto limit = std::size_t(sqlite3_limit(database, SQLITE_LIMIT_LENGTH, -1));
+        if (count > limit) return invalid("BLOB range exceeds value limit", Code::limit_exceeded);
+        auto opened = openBlob(database, table, column, row_id, false);
+        if (!opened) return std::unexpected(std::move(opened.error()));
+        const auto length = std::uint64_t(sqlite3_blob_bytes(opened->get()));
+        if (offset > length || count > length - offset) return invalid("BLOB range is outside value");
+        Blob result(count);
+        if (count) {
+            const auto rc = sqlite3_blob_read(opened->get(), result.data(), int(count), int(offset));
+            if (rc != SQLITE_OK) return failure(database, rc);
+        }
+        const auto rc = sqlite3_blob_close(opened->release());
+        if (rc != SQLITE_OK) return failure(database, rc);
+        return result;
+    } catch (const std::bad_alloc &) { return invalid("out of memory", Code::limit_exceeded); }
+}
+Result<std::array<std::uint8_t, 32>> Database::blob_sha256(
+        std::string_view table, std::string_view column, std::int64_t row_id,
+        std::uint64_t maximum_bytes) const {
+    try {
+        if (!state_ || !state_->handle) return invalid("Database is closed", Code::closed);
+        if (!validBlobNames(table, column)) return invalid("Invalid BLOB identifier");
+        auto *database = state_->handle;
+        auto opened = openBlob(database, table, column, row_id, false);
+        if (!opened) return std::unexpected(std::move(opened.error()));
+        const auto length = std::uint64_t(sqlite3_blob_bytes(opened->get()));
+        if (length > maximum_bytes) return invalid("BLOB exceeds hash limit", Code::limit_exceeded);
+        iiFileProvider::native::detail::Sha256 hash;
+        std::array<std::uint8_t, 32768> buffer;
+        for (std::uint64_t offset = 0; offset < length;) {
+            const auto count = std::size_t(std::min<std::uint64_t>(buffer.size(), length - offset));
+            const auto rc = sqlite3_blob_read(opened->get(), buffer.data(), int(count), int(offset));
+            if (rc != SQLITE_OK) return failure(database, rc);
+            hash.update(std::as_bytes(std::span(buffer).first(count)));
+            offset += count;
+        }
+        const auto rc = sqlite3_blob_close(opened->release());
+        if (rc != SQLITE_OK) return failure(database, rc);
+        const auto digest = hash.digest();
+        std::array<std::uint8_t, 32> result;
+        for (std::size_t i = 0; i < result.size(); ++i)
+            result[i] = std::to_integer<std::uint8_t>(digest[i]);
+        return result;
+    } catch (const std::bad_alloc &) { return invalid("out of memory", Code::limit_exceeded); }
+}
+Result<BlobPatchStatistics> Database::compare_exchange_blob_ranges(
+        std::string_view table, std::string_view column, std::int64_t row_id,
+        std::span<const BlobRangePatch> ranges) const {
+    try {
+        if (!state_ || !state_->handle) return invalid("Database is closed", Code::closed);
+        if (!validBlobNames(table, column)) return invalid("Invalid BLOB identifier");
+        auto *database = state_->handle;
+        if (sqlite3_db_readonly(database, "main") == 1)
+            return invalid("Database is read only", Code::read_only);
+        if (!in_transaction()) return invalid("BLOB ranges require a transaction");
+        const auto limit = std::size_t(sqlite3_limit(database, SQLITE_LIMIT_LENGTH, -1));
+        if (ranges.size() > 65536 || ranges.size() > limit / sizeof(BlobRangePatch))
+            return invalid("BLOB range metadata exceeds limit", Code::limit_exceeded);
+        std::size_t compared = 0;
+        for (const auto &range : ranges) {
+            if (range.before.size() != range.after.size() ||
+                (range.before.size() && (!range.before.data() || !range.after.data())))
+                return invalid("BLOB expected/replacement sizes differ");
+            if (range.after.size() > limit - compared)
+                return invalid("BLOB compared bytes exceed limit", Code::limit_exceeded);
+            compared += range.after.size();
+        }
+        std::vector<BlobRangePatch> ordered(ranges.begin(), ranges.end());
+        std::ranges::sort(ordered, [](const auto &a, const auto &b) { return a.offset < b.offset; });
+        auto opened = openBlob(database, table, column, row_id, false);
+        if (!opened) return std::unexpected(std::move(opened.error()));
+        const auto length = std::uint64_t(sqlite3_blob_bytes(opened->get()));
+        std::uint64_t priorEnd = 0;
+        bool changes = false;
+        for (const auto &range : ordered) {
+            if (range.offset > length || range.after.size() > length - range.offset)
+                return invalid("BLOB range is outside value");
+            if (!range.after.empty()) {
+                if (range.offset < priorEnd) return invalid("BLOB ranges overlap");
+                priorEnd = range.offset + range.after.size();
+                changes = changes || !std::equal(range.before.begin(), range.before.end(), range.after.begin());
+            }
+        }
+        std::array<std::uint8_t, 4096> scratch;
+        for (const auto &range : ordered)
+            for (std::size_t local = 0; local < range.before.size();) {
+                const auto count = std::min(scratch.size(), range.before.size() - local);
+                const auto rc = sqlite3_blob_read(opened->get(), scratch.data(), int(count),
+                                                  int(range.offset + local));
+                if (rc != SQLITE_OK) return failure(database, rc);
+                if (!std::equal(scratch.begin(), scratch.begin() + count, range.before.begin() + local))
+                    return invalid("BLOB source conflict", Code::conflict);
+                local += count;
+            }
+        const auto readClosed = sqlite3_blob_close(opened->release());
+        if (readClosed != SQLITE_OK) return failure(database, readClosed);
+        BlobPatchStatistics statistics{compared, 0};
+        if (!changes) return statistics;
+        BlobSavepoint savepoint(database, state_->transaction, state_.get(),
+                                 [](void *context) noexcept { static_cast<State *>(context)->invalidate(); });
+        const auto begun = savepoint.begin();
+        if (begun != SQLITE_OK) return failure(database, begun);
+        // End the BLOB handle's lifetime before releasing/rolling back a savepoint.
+        const auto write = [&]() -> Result<std::uint64_t> {
+            auto destination = openBlob(database, table, column, row_id, true);
+            if (!destination) return std::unexpected(std::move(destination.error()));
+            std::uint64_t written = 0;
+            for (const auto &range : ordered) {
+                std::size_t cursor = 0;
+                while (cursor < range.after.size()) {
+                    if (range.before[cursor] == range.after[cursor]) { ++cursor; continue; }
+                    const auto first = cursor;
+                    while (cursor < range.after.size() && range.before[cursor] != range.after[cursor]) ++cursor;
+                    const auto count = cursor - first;
+                    const auto rc = sqlite3_blob_write(destination->get(), range.after.data() + first,
+                                                       int(count), int(range.offset + first));
+                    if (rc != SQLITE_OK) return failure(database, rc);
+                    written += count;
+                }
+            }
+            const auto rc = sqlite3_blob_close(destination->release());
+            if (rc != SQLITE_OK) return failure(database, rc);
+            return written;
+        }();
+        if (!write) {
+            auto error = std::move(write.error());
+            if (!savepoint.rollback()) return invalid("BLOB rollback failed", Code::failure);
+            return std::unexpected(std::move(error));
+        }
+        const auto released = savepoint.release();
+        if (released != SQLITE_OK) {
+            auto error = failure(database, released);
+            savepoint.rollback();
+            return error;
+        }
+        statistics.bytes_written = *write;
+        return statistics;
+    } catch (const std::bad_alloc &) { return invalid("out of memory", Code::limit_exceeded); }
+}
 Result<void> Database::backup_to(Database& destination,std::uint64_t maximum_bytes,int timeout_ms) const {
-    if(!state_ || !destination.state_) return invalid("Database is closed",Code::closed);
+    if(!state_ || !state_->handle || !destination.state_ || !destination.state_->handle) return invalid("Database is closed",Code::closed);
     if(state_==destination.state_ || destination.in_transaction() || timeout_ms<=0 || maximum_bytes==0)
         return invalid("Invalid snapshot destination or bounds");
     auto scalar=[&](std::string_view sql)->Result<std::int64_t> {
@@ -172,7 +386,7 @@ Statement::~Statement()=default;
 Statement::Statement(Statement&&) noexcept=default;
 Statement& Statement::operator=(Statement&&) noexcept=default;
 Result<void> Statement::bind(int index,const Value& value) {
-    if (!state_) return invalid("Statement is closed",Code::closed);
+    if (!state_ || !state_->database->handle) return invalid("Statement is closed",Code::closed);
     if (state_->position!=State::Position::initial) return invalid("Reset the statement before binding");
     auto* db=state_->database->handle; auto* stmt=state_->statement;
     const auto maximum=sqlite3_limit(db,SQLITE_LIMIT_LENGTH,-1);
@@ -190,7 +404,7 @@ Result<void> Statement::bind(int index,const Value& value) {
     if(rc!=SQLITE_OK) return failure(db,rc); return {};
 }
 Result<Step> Statement::step() {
-    if(!state_) return invalid("Statement is closed",Code::closed);
+    if(!state_ || !state_->database->handle) return invalid("Statement is closed",Code::closed);
     if(state_->position==State::Position::done) return Step::done;
     if(state_->position==State::Position::failed) return invalid("Reset the failed statement before stepping");
     auto* db=state_->database->handle; auto rc=sqlite3_step(state_->statement);
@@ -200,13 +414,13 @@ Result<Step> Statement::step() {
     state_->position=State::Position::failed; return failure(db,rc);
 }
 Result<void> Statement::reset(bool clear) {
-    if(!state_) return invalid("Statement is closed",Code::closed);
+    if(!state_ || !state_->database->handle) return invalid("Statement is closed",Code::closed);
     // reset() returns the previous step error, even though reset succeeded.
     sqlite3_reset(state_->statement); state_->position=State::Position::initial;
     if(clear) { auto rc=sqlite3_clear_bindings(state_->statement); if(rc!=SQLITE_OK) return failure(state_->database->handle,rc); }
     return {};
 }
-int Statement::columns() const noexcept { return state_?sqlite3_column_count(state_->statement):0; }
+int Statement::columns() const noexcept { return state_ && state_->database->handle?sqlite3_column_count(state_->statement):0; }
 Result<std::string> Statement::column_name(int column) const {
     if(column<0 || column>=columns()) return invalid("Column index is out of range");
     const auto* name=sqlite3_column_name(state_->statement,column);

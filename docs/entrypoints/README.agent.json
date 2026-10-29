@@ -1,0 +1,1764 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:5797ead501c746517216ed8d6d5630cfdbb91260e8c50f5e0d6c85a3fba0d996",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "README.md",
+    "sha256": "2f2ab9867300bc3fc9d55f838a5310e56c336fe6716ce3bd8a5340ca09294e41",
+    "bytes": 24690,
+    "line_count": 356,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "iiFileProvider",
+    "role": "overview",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiFileProvider\n",
+      "level": 1,
+      "title": "iiFileProvider"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 6,
+      "raw": "`iiFileProvider::Catalog` also owns `FileSearchIndex`, a thread-safe,\nprocess-local FTS snapshot for caller-supplied file metadata. It performs no\nfilesystem access and does not modify the persistent catalog. See\n[the snapshot index contract](docs/FILE_SEARCH_INDEX.md).\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 8,
+      "end_line": 12,
+      "raw": "File I/O and atomic saving are now owned by the native C++23 provider.\n`FileDevice`, `SaveFile` and `TemporaryFile` no longer inherit or call Qt file\nengines. Qt codecs retain a QIODevice adapter; Native 0.10.0 exposes `Device`,\n`AtomicSave` and exclusive publication/rename. The Qt adapter has a new 0.8 ABI,\nso consumers must rebuild. See [owned file I/O](docs/OWNED_FILE_IO.md).\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 13,
+      "end_line": 13,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 14,
+      "end_line": 17,
+      "raw": "`ObjectStore::importDocument()` atomically connects an immutable RAW original to\na mutable working object while sharing stored chunks. `original(workingKey)`\nretains original recovery after edits, moves and deletion. See\n[object storage](docs/OBJECT_STORE.md) for the native C++23 integration contract.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "[Windows build and execution](docs/WindowsBuildAndRun.md)\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 20,
+      "end_line": 20,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 21,
+      "end_line": 51,
+      "raw": "Android, iOS and WebAssembly builds compile pinned public-domain SQLite 3.49.1\nwith FTS5 from the verified official amalgamation. Host builds retain system\nSQLite by default; `IIFILEPROVIDER_USE_BUNDLED_SQLITE=ON` exercises the portable\npath. Installed Native, Catalog and Objects packages export the same SQLite\ntarget after relocation. iOS and WebAssembly use static file-adapter libraries.\nThe `iiFileProvider.portable_sqlite` regression builds and relocates a Qt-free\ninstallation, then runs metadata, search, collections and persistence through\nan independent installed-package consumer.\n`IIFILEPROVIDER_BUILD_TOOLS` defaults to ON for desktop hosts and OFF for\niOS, Android and WASM library packages. The catalog and object-store libraries\nremain available on these targets; the desktop command-line tools are not\ninstalled as unsigned mobile application bundles.\nWebAssembly uses Emscripten pthreads and exports the flag to consumers for the\nnative worker and standard cancellation types. Use a multithread Qt WASM kit\nand cross-origin-isolated browser hosting. Android requires an NDK whose libc++\nships the standard stop-token header; NDK r30 was validated for this release.\nThe LLVM libc++ bundled with the Qt-compatible Emscripten release exposes stop\ntokens through `-fexperimental-library`; the WASM exports carry this C++ flag.\nA compiled WebAssembly cancellation callback was executed successfully with\nthat toolchain before validating the complete provider libraries.\nC and Python adapters expose `normalize_change_time` over pinned stat values.\nConsumers can keep hash/cache identities stable across provider-owned preview\nattributes while still detecting external edits with restored modification time.\nPrivate object batches use standard threads with a scope join guard because the\nQt-compatible Emscripten libc++ has stop tokens but no jthread implementation.\nAll workers still join on success, cancellation and thread-creation failure;\nthe caller's standard stop token and batch concurrency/memory limits are retained.\nWhen the Qt WASM kit omits its timezone database, author metadata validates IANA\nzones through the browser's native Intl API; UTC and bounded fixed offsets are\nvalidated directly. Invalid zones are rejected. Desktop timezone validation\ncontinues to use its platform-backed Qt timezone provider.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 52,
+      "end_line": 52,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 53,
+      "end_line": 55,
+      "raw": "Package release: **0.8.0** (2026-10-27). The GUI read adapter coordinates actual\nsource reads and descriptor closure with Native 0.10.0 source access. Idle open\ndevices do not retain access. Earlier versioned feature notes remain historical.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 56,
+      "end_line": 57,
+      "raw": "\n\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 58,
+      "end_line": 64,
+      "raw": "The optional [Core I/O consumer adapter](example/CoreIO/README.md) composes iiSDKCore 0.13 with\nNative file creation, atomic saves and post-close details/previews. Build it\nas the separately configured `example/CoreIO/` project after finding both\nindependent libraries. `IIFILEPROVIDER_BUILD_CORE_IO=ON` no longer embeds the\nadapter in the provider build and reports an explicit migration error. The\napplication chooses and links `iiFileProvider::CoreIO`; the provider has no\nCore dependency.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 65,
+      "end_line": 65,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 66,
+      "end_line": 70,
+      "raw": "Version 0.7.0 is the common iisacc file creation/provision module. Native\n`iiFileProvider::Catalog` adds editable titles/descriptions, Unicode keywords,\n0–5 ratings, color labels, custom fields, virtual collections, saved filters,\nindexed search and bounded file provision. UTF-8 companions preserve metadata\nwithout changing original media bytes, with a SQLite pending-publication journal.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 71,
+      "end_line": 71,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 72,
+      "end_line": 76,
+      "raw": "Use `find_package(iiFileProviderCatalog 0.6.0 CONFIG REQUIRED)` and link\n`iiFileProvider::Catalog` for the Qt-free C++23 API. The compiled\n`ii-file-provider` CLI exposes creation/import, metadata edits and queries to\nother callers. See [the catalog contract](docs/FILE_CATALOG.md) and\n[the common file ownership policy](docs/FILE_OWNERSHIP.md).\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 77,
+      "end_line": 77,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 78,
+      "end_line": 82,
+      "raw": "Complete app saves and external Society intake now generate persistent file\ndetails and bounded content previews. The native presentation component embeds\nthe document in file attributes/streams and a portable hidden companion while\npreserving the source data fork. See [file presentation](docs/FILE_PRESENTATION.md)\nfor supported formats, lifecycle hooks, native platform adapters and verification.\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 83,
+      "end_line": 83,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "heading",
+      "start_line": 84,
+      "end_line": 84,
+      "raw": "## C++23 Society object store\n",
+      "level": 2,
+      "title": "C++23 Society object store"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 85,
+      "end_line": 85,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "paragraph",
+      "start_line": 86,
+      "end_line": 90,
+      "raw": "`iiFileProvider::Objects` provides a Qt-independent transactional object package:\nstable object/index keys, directory-path projections, SHA-256, attribution,\nversioned binary diffs, mutation journals and work sessions. See\n[the object-store contract and integration boundaries](docs/OBJECT_STORE.md).\nThe existing Qt APIs below are preserved; this new target does not depend on them.\n"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 91,
+      "end_line": 91,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "paragraph",
+      "start_line": 92,
+      "end_line": 102,
+      "raw": "RAW envelopes now retain exact original bytes alongside versioned `FileMetadata`\nannotations. `wrapRaw()` captures a stable source snapshot; `reviseMetadata()`\nchanges annotations without reading or copying the original payload, and\n`metadataDiff()` exposes JSON Pointer changes. `journal()` provides persistent\nkeyset pagination across imports, edits, moves and tombstones, with object/session\nfilters. Work sessions additionally record application/version, project, document\nand caller-defined context through `ObjectSessionContext` and `workSession()`.\nThese APIs require database schema 4 or later; writer migration preserves existing payloads\nand revision hashes. Camera RAW decoding remains a separate concern. See\n[RAW envelopes, file journals and work sessions](docs/FILE_JOURNAL.md) for the\nAPI example, migration rules and verification procedure.\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 103,
+      "end_line": 103,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 104,
+      "end_line": 113,
+      "raw": "`OntologyFileSystem` adds a native semantic filesystem to the same package:\neditable class hierarchies, file and domain entities, typed properties, directed\nrelations, persistent query directories and bounded forward/reverse traversal.\nFiles keep their existing object keys and payloads when moved or classified.\nAtomic ontology batches use revision checks and work-session journals. Queries\nuse indexed candidates and reject stale cursors after file or graph changes.\nThe current database schema is 5; writers migrate schemas 1–4 without rewriting\nfile revisions. Read-only file access still supports schemas 3–5, while ontology\naccess requires schema 5. Link the existing `iiFileProvider::Objects` target and\ninclude `<OntologyFileSystem.h>`. See [the ontology filesystem contract](docs/ONTOLOGY_FILESYSTEM.md).\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 114,
+      "end_line": 114,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 115,
+      "end_line": 127,
+      "raw": "`iiFileProvider::Temporary` is a separate Qt-independent C++23 target, available\nthrough `find_package(iiFileProviderTemporary CONFIG REQUIRED)`. Its move-only\n`TemporaryLease(directory, Mode::Shared)` protects managed temporary files before\ncreation until after removal. `Mode::TryExclusive` gives a cleaner a nonblocking\nexclusive lease; `locked() == false` means that active writers or another cleaner\nmust be left alone. Invalid, missing, symbolic-link or reparse-point directories\nand redirected lock files throw standard exceptions. The directory must be an\nabsolute normalized existing path. `StagedFile`, `ObjectSource`, and\n`ObjectStore::extract()` hold writer leases for their complete staging lifetimes. The zero-byte\n`.iisacc-temporary.lock` sentinel remains in each participating directory so that\nconcurrent processes always lock the same file. It is metadata, not a temporary\npayload to delete. The lease uses `flock` on POSIX and `LockFileEx` on Windows;\ncleanup policy and ownership of user files remain the caller's responsibility.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 128,
+      "end_line": 128,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 129,
+      "end_line": 129,
+      "raw": "A dynamic library, version 0.5.0, using C++20 and Qt 6.8.3 Core. `File` handles format-independent file CRUD, and `Database` handles SQLite storage transactions. `FileAuthor` extends the iisacc.com account model and records a file author's identity, detailed profile, contributions, and authoring device. `Authorship` keeps one initial editor and the subsequent editing-participant list as persistent metadata. `FileLink` represents an optional file link as a name/URL pair, while `AuthenticationToken` holds a separate runtime authentication token. Metadata value objects do not perform file I/O directly. Login HTTP requests and JWT signature verification are outside this SDK's role.\n"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 130,
+      "end_line": 130,
+      "raw": "\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "paragraph",
+      "start_line": 131,
+      "end_line": 131,
+      "raw": "The public repository is [iisacc-Justmoong/iiFileProvider](https://github.com/iisacc-Justmoong/iiFileProvider). On 2026-09-07, SDK identifiers in headers, namespaces, the CMake package, shared library, and installation paths were unified as `iiFileProvider`. Consumers must use the new headers and CMake target below and reconfigure their existing build caches.\n"
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 132,
+      "end_line": 132,
+      "raw": "\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "html",
+      "start_line": 133,
+      "end_line": 133,
+      "raw": "<a id=\"공개-api\"></a>\n"
+    },
+    {
+      "id": "b000038",
+      "kind": "blank",
+      "start_line": 134,
+      "end_line": 134,
+      "raw": "\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "heading",
+      "start_line": 135,
+      "end_line": 135,
+      "raw": "## Public API\n",
+      "level": 2,
+      "title": "Public API"
+    },
+    {
+      "id": "b000040",
+      "kind": "blank",
+      "start_line": 136,
+      "end_line": 136,
+      "raw": "\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "paragraph",
+      "start_line": 137,
+      "end_line": 137,
+      "raw": "Using `<src/iiFileProvider.h>`, the author model, file links, and authentication tokens can be used. The public headers are `src/FileAuthor.h`, `src/AuthenticationToken.h`, `src/Authorship.h`, and `src/FileLink.h`. `Authorship` stores the distinction between the first editor and participants, the first and recent contribution times per author, file links, and change numbers, and updates the JSON dump immediately after changes. Classes are C++ value objects, not QObject, and do not depend on the lifespan of Qt Network or account managers.\n"
+    },
+    {
+      "id": "b000042",
+      "kind": "blank",
+      "start_line": 138,
+      "end_line": 138,
+      "raw": "\n"
+    },
+    {
+      "id": "b000043",
+      "kind": "fenced_code",
+      "start_line": 139,
+      "end_line": 155,
+      "raw": "```cpp\n#include <iiFileProvider.h>\n\nQString error;\nauto author = iiFileProvider::FileAuthor::fromIisaccAccount(\n    accountJson, QUrl(\"https://iisacc.com\"), QDateTime::currentDateTimeUtc(), &error);\nif (author) {\n    auto metadata = author->metadata();\n    metadata.details.organization = \"Example Studio\";\n    metadata.attribution.roles = {\"creator\", \"editor\"};\n    // Specify the actual file creation time known to the host.\n    metadata.attribution.createdAt = actualFileCreationTime;\n    if (author->setMetadata(metadata, &error)) {\n        const QJsonObject fileMetadata = author->toJson(); // Excludes tokens and login sessions\n    }\n}\n```\n",
+      "language": "cpp",
+      "code": "#include <iiFileProvider.h>\n\nQString error;\nauto author = iiFileProvider::FileAuthor::fromIisaccAccount(\n    accountJson, QUrl(\"https://iisacc.com\"), QDateTime::currentDateTimeUtc(), &error);\nif (author) {\n    auto metadata = author->metadata();\n    metadata.details.organization = \"Example Studio\";\n    metadata.attribution.roles = {\"creator\", \"editor\"};\n    // Specify the actual file creation time known to the host.\n    metadata.attribution.createdAt = actualFileCreationTime;\n    if (author->setMetadata(metadata, &error)) {\n        const QJsonObject fileMetadata = author->toJson(); // Excludes tokens and login sessions\n    }\n}\n",
+      "closed": true
+    },
+    {
+      "id": "b000044",
+      "kind": "blank",
+      "start_line": 156,
+      "end_line": 156,
+      "raw": "\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "paragraph",
+      "start_line": 157,
+      "end_line": 157,
+      "raw": "`fromIisaccAccount()` receives the account object, and `fromIisaccAppSession()` receives the `{account, session, ...}` app response. The latter also checks the app device and session time. `fromJson()` reads file author metadata with a specified version. All return errors with `std::nullopt` and value not included.\n"
+    },
+    {
+      "id": "b000046",
+      "kind": "blank",
+      "start_line": 158,
+      "end_line": 158,
+      "raw": "\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "paragraph",
+      "start_line": 159,
+      "end_line": 159,
+      "raw": "Specify token type, account subject, service origin, issue/expiration time, and token raw text at `AuthenticationToken::create()`. The created token is linked to the author object at `setAuthenticationToken()`. Only `secret()` returns the raw text, and `toJson()` and debug output do not include the raw text. `isWithinValidityWindow(at)` is a time range check and does not prove authentication success or access rights. iisacc .com app's token is in HttpOnly cookie, not JSON response, so the host's authentication layer must manage it separately.\n"
+    },
+    {
+      "id": "b000048",
+      "kind": "blank",
+      "start_line": 160,
+      "end_line": 160,
+      "raw": "\n"
+    },
+    {
+      "id": "b000049",
+      "kind": "paragraph",
+      "start_line": 161,
+      "end_line": 161,
+      "raw": "Field list, observed server files, validation conditions, and examples are in [file author contract](docs/FILE_AUTHOR_CONTRACT.md).\n"
+    },
+    {
+      "id": "b000050",
+      "kind": "blank",
+      "start_line": 162,
+      "end_line": 162,
+      "raw": "\n"
+    },
+    {
+      "id": "b000051",
+      "kind": "html",
+      "start_line": 163,
+      "end_line": 163,
+      "raw": "<a id=\"최초-편집자와-편집-참여자\"></a>\n"
+    },
+    {
+      "id": "b000052",
+      "kind": "blank",
+      "start_line": 164,
+      "end_line": 164,
+      "raw": "\n"
+    },
+    {
+      "id": "b000053",
+      "kind": "heading",
+      "start_line": 165,
+      "end_line": 165,
+      "raw": "### First editor and editing participants\n",
+      "level": 3,
+      "title": "First editor and editing participants"
+    },
+    {
+      "id": "b000054",
+      "kind": "blank",
+      "start_line": 166,
+      "end_line": 166,
+      "raw": "\n"
+    },
+    {
+      "id": "b000055",
+      "kind": "paragraph",
+      "start_line": 167,
+      "end_line": 167,
+      "raw": "The first successful `setAuthor()` fixes one first editor. Subsequently, the first appearing account is added once at the end of the participant list. Account distinction is a combination of service origin and `sub`, and changing display name or email does not create a new participant. The first editor is not duplicated in the participant list.\n"
+    },
+    {
+      "id": "b000056",
+      "kind": "blank",
+      "start_line": 168,
+      "end_line": 168,
+      "raw": "\n"
+    },
+    {
+      "id": "b000057",
+      "kind": "fenced_code",
+      "start_line": 169,
+      "end_line": 180,
+      "raw": "```cpp\niiFileProvider::Authorship history;\nhistory.setAuthor(firstAuthor, firstEditTime); // Host-provided FileAuthor and actual recording time\nhistory.setAuthor(collaborator, nextEditTime);\n\nconst std::optional<iiFileProvider::FileAuthor> original = history.firstEditor();\nconst QList<iiFileProvider::FileAuthor> participants = history.participants();\nhistory.clearActiveAuthor(); // Clears only the current editing context and retains the participant list.\n\nconst QByteArray metadata = history.dump(); // The host stores this in the file metadata.\nauto restored = iiFileProvider::Authorship::fromDump(metadata);\n```\n",
+      "language": "cpp",
+      "code": "iiFileProvider::Authorship history;\nhistory.setAuthor(firstAuthor, firstEditTime); // Host-provided FileAuthor and actual recording time\nhistory.setAuthor(collaborator, nextEditTime);\n\nconst std::optional<iiFileProvider::FileAuthor> original = history.firstEditor();\nconst QList<iiFileProvider::FileAuthor> participants = history.participants();\nhistory.clearActiveAuthor(); // Clears only the current editing context and retains the participant list.\n\nconst QByteArray metadata = history.dump(); // The host stores this in the file metadata.\nauto restored = iiFileProvider::Authorship::fromDump(metadata);\n",
+      "closed": true
+    },
+    {
+      "id": "b000058",
+      "kind": "blank",
+      "start_line": 181,
+      "end_line": 181,
+      "raw": "\n"
+    },
+    {
+      "id": "b000059",
+      "kind": "paragraph",
+      "start_line": 182,
+      "end_line": 182,
+      "raw": "Query results are copies without authentication tokens. APIs for deleting, resetting, or swapping roles in the list do not exist, and profile updates for the same account also preserve the first editor and participant order and initial contribution time. Up to 256 entries (including the first editor) and full metadata 2 MiB limit are reached, existing records are not deleted, and new registrations are atomically rejected. Lists filling up to the existing limit of schema 1 · 2 are also transformed while preserving full records. Files with only unspecified author changes have no first editor and an empty participant list.\n"
+    },
+    {
+      "id": "b000060",
+      "kind": "blank",
+      "start_line": 183,
+      "end_line": 183,
+      "raw": "\n"
+    },
+    {
+      "id": "b000061",
+      "kind": "paragraph",
+      "start_line": 184,
+      "end_line": 184,
+      "raw": "Save schema 3 stores the first editor key or null at `firstEditor`, subsequent participant key list at `participants`, each key's profile and contribution time at `authors`, and optional name and URL list at `links`. Schema 1 · 2 input reads preserving the existing list and revision and adding an empty link list. Consumers must rebuild with iiFileProvider 0.4.0 or higher headers and libraries. Shared library ABI identifier also changed to `0.4` as per link save member addition. Preservation contract applies to APIs using the same file's `Authorship` and save/restore paths, and is not a function to prevent external file tampering or replacement with separate empty values.\n"
+    },
+    {
+      "id": "b000062",
+      "kind": "blank",
+      "start_line": 185,
+      "end_line": 185,
+      "raw": "\n"
+    },
+    {
+      "id": "b000063",
+      "kind": "html",
+      "start_line": 186,
+      "end_line": 186,
+      "raw": "<a id=\"이름과-url-파일-메타데이터\"></a>\n"
+    },
+    {
+      "id": "b000064",
+      "kind": "blank",
+      "start_line": 187,
+      "end_line": 187,
+      "raw": "\n"
+    },
+    {
+      "id": "b000065",
+      "kind": "heading",
+      "start_line": 188,
+      "end_line": 188,
+      "raw": "### Name and URL file metadata\n",
+      "level": 3,
+      "title": "Name and URL file metadata"
+    },
+    {
+      "id": "b000066",
+      "kind": "blank",
+      "start_line": 189,
+      "end_line": 189,
+      "raw": "\n"
+    },
+    {
+      "id": "b000067",
+      "kind": "paragraph",
+      "start_line": 190,
+      "end_line": 190,
+      "raw": "Create links with `FileLink::fromString(\"[Name|URL]\")` or `FileLink::create(name, QString/QUrl)` and pass as an additional argument during author registration. HTTP (S) specific restrictions do not exist, and Society address, local files, SMB · IPFS · URN ·app scheme, and relative URLs can be received. URLs received as strings preserve case and encoding original text and are queried with `urlText()`.\n"
+    },
+    {
+      "id": "b000068",
+      "kind": "blank",
+      "start_line": 191,
+      "end_line": 191,
+      "raw": "\n"
+    },
+    {
+      "id": "b000069",
+      "kind": "fenced_code",
+      "start_line": 192,
+      "end_line": 201,
+      "raw": "```cpp\nauto address = iiFileProvider::FileLink::fromString(\"[Society original|society:document-1]\");\nif (address) {\n    history.setAuthor(author, {*address}, actualEditTime);\n}\n// The entire file-link list can also be updated separately from author registration.\nhistory.setLinksFromStrings({\"[Original|file:///files/original.png]\", \"[Reference|../reference.svg]\"});\nconst auto fileLinks = history.links();\nconst auto metadata = history.dump();\n```\n",
+      "language": "cpp",
+      "code": "auto address = iiFileProvider::FileLink::fromString(\"[Society original|society:document-1]\");\nif (address) {\n    history.setAuthor(author, {*address}, actualEditTime);\n}\n// The entire file-link list can also be updated separately from author registration.\nhistory.setLinksFromStrings({\"[Original|file:///files/original.png]\", \"[Reference|../reference.svg]\"});\nconst auto fileLinks = history.links();\nconst auto metadata = history.dump();\n",
+      "closed": true
+    },
+    {
+      "id": "b000070",
+      "kind": "blank",
+      "start_line": 202,
+      "end_line": 202,
+      "raw": "\n"
+    },
+    {
+      "id": "b000071",
+      "kind": "paragraph",
+      "start_line": 203,
+      "end_line": 203,
+      "raw": "Existing `setAuthor(author, at)` with omitted additional arguments maintains the link. Explicit empty link lists empty only URL metadata while maintaining the permanent editor list. Links do not automatically execute or query registered URLs. Supported formats, encodings, atomic updates, and version contracts are in the [file link document](docs/FILE_LINKS.md).\n"
+    },
+    {
+      "id": "b000072",
+      "kind": "blank",
+      "start_line": 204,
+      "end_line": 204,
+      "raw": "\n"
+    },
+    {
+      "id": "b000073",
+      "kind": "paragraph",
+      "start_line": 205,
+      "end_line": 205,
+      "raw": "The following bootstrap API is also maintained for compatibility with existing consumers.\n"
+    },
+    {
+      "id": "b000074",
+      "kind": "blank",
+      "start_line": 206,
+      "end_line": 206,
+      "raw": "\n"
+    },
+    {
+      "id": "b000075",
+      "kind": "fenced_code",
+      "start_line": 207,
+      "end_line": 211,
+      "raw": "```cpp\n#include <iiFileProvider.h>\n\nconst QString message = iiFileProvider::helloWorld();\n```\n",
+      "language": "cpp",
+      "code": "#include <iiFileProvider.h>\n\nconst QString message = iiFileProvider::helloWorld();\n",
+      "closed": true
+    },
+    {
+      "id": "b000076",
+      "kind": "blank",
+      "start_line": 212,
+      "end_line": 212,
+      "raw": "\n"
+    },
+    {
+      "id": "b000077",
+      "kind": "paragraph",
+      "start_line": 213,
+      "end_line": 213,
+      "raw": "`[[nodiscard]] QString iiFileProvider::helloWorld()` returns `Hello world!` on every call. Public headers and implementation are placed together in the source root. The existing adapter uses Qt 6.8.3 Core. Native APIs use SQLite; Catalog also reuses the pinned JSON/utf8proc sources under `Native/third_party`. Qt usage and distribution conditions follow the installed Qt license.\n"
+    },
+    {
+      "id": "b000078",
+      "kind": "blank",
+      "start_line": 214,
+      "end_line": 214,
+      "raw": "\n"
+    },
+    {
+      "id": "b000079",
+      "kind": "html",
+      "start_line": 215,
+      "end_line": 215,
+      "raw": "<a id=\"빌드-테스트-설치\"></a>\n"
+    },
+    {
+      "id": "b000080",
+      "kind": "blank",
+      "start_line": 216,
+      "end_line": 216,
+      "raw": "\n"
+    },
+    {
+      "id": "b000081",
+      "kind": "heading",
+      "start_line": 217,
+      "end_line": 217,
+      "raw": "## Build, test, install\n",
+      "level": 2,
+      "title": "Build, test, install"
+    },
+    {
+      "id": "b000082",
+      "kind": "blank",
+      "start_line": 218,
+      "end_line": 218,
+      "raw": "\n"
+    },
+    {
+      "id": "b000083",
+      "kind": "paragraph",
+      "start_line": 219,
+      "end_line": 219,
+      "raw": "CMake 3.24+, a C++23 compiler and SQLite 3.27+ with FTS5 are required. The default legacy adapter additionally requires Qt 6.8.3 Core. Set `IIFILEPROVIDER_BUILD_QT_API=OFF` to build Catalog, Objects, Temporary and their native tools without Qt. Use `QT_PREFIX_PATH` to select Qt when running the installer.\n"
+    },
+    {
+      "id": "b000084",
+      "kind": "blank",
+      "start_line": 220,
+      "end_line": 220,
+      "raw": "\n"
+    },
+    {
+      "id": "b000085",
+      "kind": "fenced_code",
+      "start_line": 221,
+      "end_line": 223,
+      "raw": "```sh\n./install.sh\n```\n",
+      "language": "sh",
+      "code": "./install.sh\n",
+      "closed": true
+    },
+    {
+      "id": "b000086",
+      "kind": "blank",
+      "start_line": 224,
+      "end_line": 224,
+      "raw": "\n"
+    },
+    {
+      "id": "b000087",
+      "kind": "paragraph",
+      "start_line": 225,
+      "end_line": 225,
+      "raw": "When configured as a standalone project, the default installation path is set, so the installation path of the parent project included via `add_subdirectory()` is maintained.\n"
+    },
+    {
+      "id": "b000088",
+      "kind": "blank",
+      "start_line": 226,
+      "end_line": 226,
+      "raw": "\n"
+    },
+    {
+      "id": "b000089",
+      "kind": "paragraph",
+      "start_line": 227,
+      "end_line": 227,
+      "raw": "The script executes Release build and CTest from `build/`, installs to the default path `~/.local/SDK/iiFileProvider`, and builds and tests a separate executable that uses only the installed CMake package from `build/consumer/build/`. The bootstrap test checks return strings, C++23 compile settings, Qt 6.8.3 header version, and runtime version. The author contract test checks account mapping, detailed metadata round-trip, Unicode, invalid formats, session expiration, token binding, original exclusion, and atomic updates from both source and installed consumers. The `Authorship` test checks initial editor fixation, participant order, duplicate prevention, profile update, query copy, file restore after save, schema 1, 2 compatibility, invalid role reference, and record preservation on failure and limit exceedance from both sides. `FileLink` tests verify atomic recording of various schemes, relative addresses, string/JSON/file round-trips, encoding, additional arguments, link omission, clearing, and list preservation. Tests include native C++ executables, Python CLI/dependency checks and the existing Qt Test suites. The installer also verifies separate Catalog and Objects consumers without loading Qt.\n"
+    },
+    {
+      "id": "b000090",
+      "kind": "blank",
+      "start_line": 228,
+      "end_line": 228,
+      "raw": "\n"
+    },
+    {
+      "id": "b000091",
+      "kind": "paragraph",
+      "start_line": 229,
+      "end_line": 229,
+      "raw": "The installer consumer configuration explicitly specifies the package directory of the current installation path, so changing `INSTALL_PREFIX` and re-running does not reuse the previous package cache.\n"
+    },
+    {
+      "id": "b000092",
+      "kind": "blank",
+      "start_line": 230,
+      "end_line": 230,
+      "raw": "\n"
+    },
+    {
+      "id": "b000093",
+      "kind": "paragraph",
+      "start_line": 231,
+      "end_line": 231,
+      "raw": "Settings are passed as environment variables instead of command-line arguments. `INSTALL_PREFIX` must be an absolute path, and `CMAKE_PREFIX_PATH` receives additional search paths separated by semicolons or colons. The number of parallel builds is specified as `CMAKE_BUILD_PARALLEL_LEVEL`, with a default of 2.\n"
+    },
+    {
+      "id": "b000094",
+      "kind": "blank",
+      "start_line": 232,
+      "end_line": 232,
+      "raw": "\n"
+    },
+    {
+      "id": "b000095",
+      "kind": "fenced_code",
+      "start_line": 233,
+      "end_line": 237,
+      "raw": "```sh\nQT_PREFIX_PATH=\"/Volumes/Storage/Qt/6.8.3/macos\" \\\nINSTALL_PREFIX=\"$HOME/.local/SDK/iiFileProvider\" \\\n./install.sh\n```\n",
+      "language": "sh",
+      "code": "QT_PREFIX_PATH=\"/Volumes/Storage/Qt/6.8.3/macos\" \\\nINSTALL_PREFIX=\"$HOME/.local/SDK/iiFileProvider\" \\\n./install.sh\n",
+      "closed": true
+    },
+    {
+      "id": "b000096",
+      "kind": "blank",
+      "start_line": 238,
+      "end_line": 238,
+      "raw": "\n"
+    },
+    {
+      "id": "b000097",
+      "kind": "paragraph",
+      "start_line": 239,
+      "end_line": 239,
+      "raw": "Even in manual execution, the build directory uses `build/`.\n"
+    },
+    {
+      "id": "b000098",
+      "kind": "blank",
+      "start_line": 240,
+      "end_line": 240,
+      "raw": "\n"
+    },
+    {
+      "id": "b000099",
+      "kind": "fenced_code",
+      "start_line": 241,
+      "end_line": 251,
+      "raw": "```sh\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build --config Release\nctest --test-dir build -C Release --output-on-failure\ncmake --install build --config Release\ncmake -S tests/consumer -B build/consumer/build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$HOME/.local/SDK/iiFileProvider;/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build/consumer/build --config Release\nctest --test-dir build/consumer/build -C Release --output-on-failure\n```\n",
+      "language": "sh",
+      "code": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build --config Release\nctest --test-dir build -C Release --output-on-failure\ncmake --install build --config Release\ncmake -S tests/consumer -B build/consumer/build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$HOME/.local/SDK/iiFileProvider;/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build/consumer/build --config Release\nctest --test-dir build/consumer/build -C Release --output-on-failure\n",
+      "closed": true
+    },
+    {
+      "id": "b000100",
+      "kind": "blank",
+      "start_line": 252,
+      "end_line": 252,
+      "raw": "\n"
+    },
+    {
+      "id": "b000101",
+      "kind": "html",
+      "start_line": 253,
+      "end_line": 253,
+      "raw": "<a id=\"설치-결과와-소비\"></a>\n"
+    },
+    {
+      "id": "b000102",
+      "kind": "blank",
+      "start_line": 254,
+      "end_line": 254,
+      "raw": "\n"
+    },
+    {
+      "id": "b000103",
+      "kind": "heading",
+      "start_line": 255,
+      "end_line": 255,
+      "raw": "## Installation results and consumption\n",
+      "level": 2,
+      "title": "Installation results and consumption"
+    },
+    {
+      "id": "b000104",
+      "kind": "blank",
+      "start_line": 256,
+      "end_line": 256,
+      "raw": "\n"
+    },
+    {
+      "id": "b000105",
+      "kind": "paragraph",
+      "start_line": 257,
+      "end_line": 257,
+      "raw": "The default installation path generates `include/` umbrella, author, file link, authentication token, and export header, `lib/` shared libraries, `lib/cmake/iiFileProvider/` CMake package, and `share/iiFileProvider/` README and contract documents. Private `src/JsonContract.h` is not installed. The Windows shared library executable is installed to `bin/`. Consumers are informed of C++20 and `Qt6::Core` link requirements. Qt is not bundled and copied, and the installed Qt runtime is required. The shared library installation RPATH includes the external library paths used in the link.\n"
+    },
+    {
+      "id": "b000106",
+      "kind": "blank",
+      "start_line": 258,
+      "end_line": 258,
+      "raw": "\n"
+    },
+    {
+      "id": "b000107",
+      "kind": "fenced_code",
+      "start_line": 259,
+      "end_line": 262,
+      "raw": "```cmake\nfind_package(iiFileProvider 0.5.0 CONFIG REQUIRED)\ntarget_link_libraries(my_app PRIVATE iiFileProvider::iiFileProvider)\n```\n",
+      "language": "cmake",
+      "code": "find_package(iiFileProvider 0.5.0 CONFIG REQUIRED)\ntarget_link_libraries(my_app PRIVATE iiFileProvider::iiFileProvider)\n",
+      "closed": true
+    },
+    {
+      "id": "b000108",
+      "kind": "blank",
+      "start_line": 263,
+      "end_line": 263,
+      "raw": "\n"
+    },
+    {
+      "id": "b000109",
+      "kind": "paragraph",
+      "start_line": 264,
+      "end_line": 264,
+      "raw": "Includes `CMAKE_PREFIX_PATH` installation path and SDK path at Qt. Provides only build, test, and installation, with no commit, remote upload, or deployment stages.\n"
+    },
+    {
+      "id": "b000110",
+      "kind": "blank",
+      "start_line": 265,
+      "end_line": 265,
+      "raw": "\n"
+    },
+    {
+      "id": "b000111",
+      "kind": "heading",
+      "start_line": 266,
+      "end_line": 266,
+      "raw": "## License\n",
+      "level": 2,
+      "title": "License"
+    },
+    {
+      "id": "b000112",
+      "kind": "blank",
+      "start_line": 267,
+      "end_line": 267,
+      "raw": "\n"
+    },
+    {
+      "id": "b000113",
+      "kind": "paragraph",
+      "start_line": 268,
+      "end_line": 268,
+      "raw": "SPDX-License-Identifier: MIT\n"
+    },
+    {
+      "id": "b000114",
+      "kind": "blank",
+      "start_line": 269,
+      "end_line": 269,
+      "raw": "\n"
+    },
+    {
+      "id": "b000115",
+      "kind": "paragraph",
+      "start_line": 270,
+      "end_line": 270,
+      "raw": "Self-written code and documents of iiFileProvider are distributed under the MIT License. The full terms follow [LICENSE](LICENSE).\n"
+    },
+    {
+      "id": "b000116",
+      "kind": "blank",
+      "start_line": 271,
+      "end_line": 271,
+      "raw": "\n"
+    },
+    {
+      "id": "b000117",
+      "kind": "paragraph",
+      "start_line": 272,
+      "end_line": 272,
+      "raw": "External libraries including Qt and third-party code with separate notices maintain their own licenses. This project's license declaration does not replace the corresponding third-party license.\n"
+    },
+    {
+      "id": "b000118",
+      "kind": "blank",
+      "start_line": 273,
+      "end_line": 273,
+      "raw": "\n"
+    },
+    {
+      "id": "b000119",
+      "kind": "html",
+      "start_line": 274,
+      "end_line": 274,
+      "raw": "<a id=\"계정-프로필-동기화\"></a>\n"
+    },
+    {
+      "id": "b000120",
+      "kind": "blank",
+      "start_line": 275,
+      "end_line": 275,
+      "raw": "\n"
+    },
+    {
+      "id": "b000121",
+      "kind": "heading",
+      "start_line": 276,
+      "end_line": 276,
+      "raw": "## Account profile synchronization\n",
+      "level": 2,
+      "title": "Account profile synchronization"
+    },
+    {
+      "id": "b000122",
+      "kind": "blank",
+      "start_line": 277,
+      "end_line": 277,
+      "raw": "\n"
+    },
+    {
+      "id": "b000123",
+      "kind": "paragraph",
+      "start_line": 278,
+      "end_line": 278,
+      "raw": "`fromIisaccAccount()` and `fromIisaccAppSession()` reflect iisacc.com's `account.authorDetails` to the file author's `metadata().details`. `toIisaccProfileUpdate()` explicitly exports only the display name allowed by the web service and the author profile. Authentication tokens and per-file ownership information are not included in the account update.\n"
+    },
+    {
+      "id": "b000124",
+      "kind": "blank",
+      "start_line": 279,
+      "end_line": 279,
+      "raw": "\n"
+    },
+    {
+      "id": "b000125",
+      "kind": "fenced_code",
+      "start_line": 280,
+      "end_line": 283,
+      "raw": "```cpp\nconst auto update = author->toIisaccProfileUpdate();\n// The host authenticates and sends update as variables.input of the updateAccountAuthor GraphQL mutation.\n```\n",
+      "language": "cpp",
+      "code": "const auto update = author->toIisaccProfileUpdate();\n// The host authenticates and sends update as variables.input of the updateAccountAuthor GraphQL mutation.\n",
+      "closed": true
+    },
+    {
+      "id": "b000126",
+      "kind": "blank",
+      "start_line": 284,
+      "end_line": 284,
+      "raw": "\n"
+    },
+    {
+      "id": "b000127",
+      "kind": "paragraph",
+      "start_line": 285,
+      "end_line": 286,
+      "raw": "The account-side model and API are the service's `docs/ACCOUNT_AUTHORS.md`, and the file model is\nDefined in [FILE_AUTHOR_CONTRACT.md](docs/FILE_AUTHOR_CONTRACT.md).\n"
+    },
+    {
+      "id": "b000128",
+      "kind": "blank",
+      "start_line": 287,
+      "end_line": 287,
+      "raw": "\n"
+    },
+    {
+      "id": "b000129",
+      "kind": "html",
+      "start_line": 288,
+      "end_line": 288,
+      "raw": "<a id=\"파일-crud\"></a>\n"
+    },
+    {
+      "id": "b000130",
+      "kind": "blank",
+      "start_line": 289,
+      "end_line": 289,
+      "raw": "\n"
+    },
+    {
+      "id": "b000131",
+      "kind": "heading",
+      "start_line": 290,
+      "end_line": 290,
+      "raw": "## File CRUD\n",
+      "level": 2,
+      "title": "File CRUD"
+    },
+    {
+      "id": "b000132",
+      "kind": "blank",
+      "start_line": 291,
+      "end_line": 291,
+      "raw": "\n"
+    },
+    {
+      "id": "b000133",
+      "kind": "paragraph",
+      "start_line": 292,
+      "end_line": 292,
+      "raw": "Since 0.5, this SDK owns file creation, reading, updating, deletion, and SQLite storage transactions. It does not reference other iisacc SDKs and takes bytes, streams, and schemas as input. It follows the [complete contract](docs/FILE_CRUD.md). The ABI of the existing 0.4 value types is retained.\n"
+    },
+    {
+      "id": "b000134",
+      "kind": "blank",
+      "start_line": 293,
+      "end_line": 293,
+      "raw": "\n"
+    },
+    {
+      "id": "b000135",
+      "kind": "heading",
+      "start_line": 294,
+      "end_line": 294,
+      "raw": "## Source layout\n",
+      "level": 2,
+      "title": "Source layout"
+    },
+    {
+      "id": "b000136",
+      "kind": "blank",
+      "start_line": 295,
+      "end_line": 295,
+      "raw": "\n"
+    },
+    {
+      "id": "b000137",
+      "kind": "paragraph",
+      "start_line": 296,
+      "end_line": 296,
+      "raw": "Implementation files and their headers live together under `src/`. Existing feature and platform subdirectories retain their responsibilities. Build configuration, tests, documentation, resources, and maintenance scripts remain at the project root. Configure and build using the repository-local `build/` directory.\n"
+    },
+    {
+      "id": "b000138",
+      "kind": "blank",
+      "start_line": 297,
+      "end_line": 298,
+      "raw": "\n\n"
+    },
+    {
+      "id": "b000139",
+      "kind": "heading",
+      "start_line": 299,
+      "end_line": 299,
+      "raw": "## Standard C++23 native component\n",
+      "level": 2,
+      "title": "Standard C++23 native component"
+    },
+    {
+      "id": "b000140",
+      "kind": "blank",
+      "start_line": 300,
+      "end_line": 300,
+      "raw": "\n"
+    },
+    {
+      "id": "b000141",
+      "kind": "paragraph",
+      "start_line": 301,
+      "end_line": 305,
+      "raw": "`Native/` provides the independent `iiFileProviderNative` package and\n`iiFileProvider::Native` target for standard strings/maps, file access, staged\npublication, scoped temporary directories and compatible author metadata.\nIt can be configured directly into `build/native` without loading Qt or the\nlegacy provider package. See [the Native component](Native/README.md).\n"
+    },
+    {
+      "id": "b000142",
+      "kind": "blank",
+      "start_line": 306,
+      "end_line": 306,
+      "raw": "\n"
+    },
+    {
+      "id": "b000143",
+      "kind": "heading",
+      "start_line": 307,
+      "end_line": 307,
+      "raw": "## Workspace file creation ownership\n",
+      "level": 2,
+      "title": "Workspace file creation ownership"
+    },
+    {
+      "id": "b000144",
+      "kind": "blank",
+      "start_line": 308,
+      "end_line": 308,
+      "raw": "\n"
+    },
+    {
+      "id": "b000145",
+      "kind": "paragraph",
+      "start_line": 309,
+      "end_line": 316,
+      "raw": "Application and SDK file factories, including AI model workers, use the native,\nQt-device, Python C ABI, Swift and Android adapters described in\n[FILE_OWNERSHIP.md](docs/FILE_OWNERSHIP.md). Native consumers use\n`find_package(iiFileProviderNative 0.6 CONFIG REQUIRED)` and\n`iiFileProvider::Native`; they import no Qt runtime. The workspace audit is\n`python3 tools/audit_file_creation.py --check`.\nThe [migration validation](docs/FILE_CREATION_VALIDATION.md) records source,\ninstalled-package, AI worker and platform compilation evidence and its limits.\n"
+    },
+    {
+      "id": "b000146",
+      "kind": "heading",
+      "start_line": 317,
+      "end_line": 317,
+      "raw": "## Coordinated GUI file reads\n",
+      "level": 2,
+      "title": "Coordinated GUI file reads"
+    },
+    {
+      "id": "b000147",
+      "kind": "blank",
+      "start_line": 318,
+      "end_line": 318,
+      "raw": "\n"
+    },
+    {
+      "id": "b000148",
+      "kind": "paragraph",
+      "start_line": 319,
+      "end_line": 325,
+      "raw": "The 0.8.0 Qt value/device adapter requires Native 0.10.0. `File::read` and\n`readPrefix` hold one native source access scope for each complete payload read.\n`openRead` retains the same `QIODevice` API and uses a provider-owned native device that\ncoordinates actual open/read/seek/close operations with native document writers.\nIdle open devices retain identity without retaining an access lock. Public file\nand device layouts are unchanged. Source access supplements the file format's\noperating-system locks; the native implementation has no Qt dependency.\n"
+    },
+    {
+      "id": "b000149",
+      "kind": "blank",
+      "start_line": 326,
+      "end_line": 326,
+      "raw": "\n"
+    },
+    {
+      "id": "b000150",
+      "kind": "paragraph",
+      "start_line": 327,
+      "end_line": 329,
+      "raw": "`iiFileProvider.source_access` verifies blocked reads and descriptor closure while\nanother thread owns the source, retained prefix/content behavior, and presentation\ncompletion while an idle device remains open.\n"
+    },
+    {
+      "id": "b000151",
+      "kind": "blank",
+      "start_line": 330,
+      "end_line": 330,
+      "raw": "\n"
+    },
+    {
+      "id": "b000152",
+      "kind": "heading",
+      "start_line": 331,
+      "end_line": 331,
+      "raw": "## Source header layout\n",
+      "level": 2,
+      "title": "Source header layout"
+    },
+    {
+      "id": "b000153",
+      "kind": "blank",
+      "start_line": 332,
+      "end_line": 332,
+      "raw": "\n"
+    },
+    {
+      "id": "b000154",
+      "kind": "paragraph",
+      "start_line": 333,
+      "end_line": 337,
+      "raw": "The native file compatibility API headers live next to their implementation in `Compatibility/src/`.\nThere is no separate authored `include/` tree. Existing public `#include` names\nand exported CMake targets are unchanged; installation still places only public\nheaders in the package include directory. Generated export headers belong to\n`build/`, not to the authored source tree.\n"
+    },
+    {
+      "id": "b000155",
+      "kind": "blank",
+      "start_line": 338,
+      "end_line": 338,
+      "raw": "\n"
+    },
+    {
+      "id": "b000156",
+      "kind": "paragraph",
+      "start_line": 339,
+      "end_line": 341,
+      "raw": "Validate this layout from the SDK workspace with\n`python3 -B tests/test_source_header_layout.py`. Reconfigure, build, run CTest,\nand verify a staged installed consumer after changing source/header paths.\n"
+    },
+    {
+      "id": "b000157",
+      "kind": "blank",
+      "start_line": 342,
+      "end_line": 342,
+      "raw": "\n"
+    },
+    {
+      "id": "b000158",
+      "kind": "html",
+      "start_line": 343,
+      "end_line": 343,
+      "raw": "<!-- workspace-docs:readme:start -->\n"
+    },
+    {
+      "id": "b000159",
+      "kind": "heading",
+      "start_line": 344,
+      "end_line": 344,
+      "raw": "## Documentation entry points\n",
+      "level": 2,
+      "title": "Documentation entry points"
+    },
+    {
+      "id": "b000160",
+      "kind": "blank",
+      "start_line": 345,
+      "end_line": 345,
+      "raw": "\n"
+    },
+    {
+      "id": "b000161",
+      "kind": "list",
+      "start_line": 346,
+      "end_line": 349,
+      "raw": "- Human overview: this English `README.md`.\n- Agent instructions: [AGENT.md](AGENT.md).\n- Human documentation: [documentation index](docs/README.md).\n- Structured agent documentation: [agent index](docs/agent-index.json).\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Human overview: this English `README.md`.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Agent instructions: [AGENT.md](AGENT.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Human documentation: [documentation index](docs/README.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Structured agent documentation: [agent index](docs/agent-index.json).",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000162",
+      "kind": "blank",
+      "start_line": 350,
+      "end_line": 350,
+      "raw": "\n"
+    },
+    {
+      "id": "b000163",
+      "kind": "heading",
+      "start_line": 351,
+      "end_line": 351,
+      "raw": "### Child projects\n",
+      "level": 3,
+      "title": "Child projects"
+    },
+    {
+      "id": "b000164",
+      "kind": "blank",
+      "start_line": 352,
+      "end_line": 352,
+      "raw": "\n"
+    },
+    {
+      "id": "b000165",
+      "kind": "list",
+      "start_line": 353,
+      "end_line": 355,
+      "raw": "- [`SDK/iiFileProvider/Compatibility`](Compatibility/README.md)\n- [`SDK/iiFileProvider/example/CoreIO`](example/CoreIO/README.md)\n- [`SDK/iiFileProvider/Native`](Native/README.md)\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "[`SDK/iiFileProvider/Compatibility`](Compatibility/README.md)",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "[`SDK/iiFileProvider/example/CoreIO`](example/CoreIO/README.md)",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "[`SDK/iiFileProvider/Native`](Native/README.md)",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000166",
+      "kind": "html",
+      "start_line": 356,
+      "end_line": 356,
+      "raw": "<!-- workspace-docs:readme:end -->\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiFileProvider",
+      "anchor": "iifileprovider",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000023",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "C++23 Society object store",
+      "anchor": "c23-society-object-store",
+      "start_line": 84
+    },
+    {
+      "block_id": "b000039",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Public API",
+      "anchor": "public-api",
+      "start_line": 135
+    },
+    {
+      "block_id": "b000053",
+      "parent_id": "b000039",
+      "level": 3,
+      "title": "First editor and editing participants",
+      "anchor": "first-editor-and-editing-participants",
+      "start_line": 165
+    },
+    {
+      "block_id": "b000065",
+      "parent_id": "b000039",
+      "level": 3,
+      "title": "Name and URL file metadata",
+      "anchor": "name-and-url-file-metadata",
+      "start_line": 188
+    },
+    {
+      "block_id": "b000081",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Build, test, install",
+      "anchor": "build-test-install",
+      "start_line": 217
+    },
+    {
+      "block_id": "b000103",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Installation results and consumption",
+      "anchor": "installation-results-and-consumption",
+      "start_line": 255
+    },
+    {
+      "block_id": "b000111",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "License",
+      "anchor": "license",
+      "start_line": 266
+    },
+    {
+      "block_id": "b000121",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Account profile synchronization",
+      "anchor": "account-profile-synchronization",
+      "start_line": 276
+    },
+    {
+      "block_id": "b000131",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "File CRUD",
+      "anchor": "file-crud",
+      "start_line": 290
+    },
+    {
+      "block_id": "b000135",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Source layout",
+      "anchor": "source-layout",
+      "start_line": 294
+    },
+    {
+      "block_id": "b000139",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Standard C++23 native component",
+      "anchor": "standard-c23-native-component",
+      "start_line": 299
+    },
+    {
+      "block_id": "b000143",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Workspace file creation ownership",
+      "anchor": "workspace-file-creation-ownership",
+      "start_line": 307
+    },
+    {
+      "block_id": "b000146",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Coordinated GUI file reads",
+      "anchor": "coordinated-gui-file-reads",
+      "start_line": 317
+    },
+    {
+      "block_id": "b000152",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Source header layout",
+      "anchor": "source-header-layout",
+      "start_line": 331
+    },
+    {
+      "block_id": "b000159",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Documentation entry points",
+      "anchor": "documentation-entry-points",
+      "start_line": 344
+    },
+    {
+      "block_id": "b000163",
+      "parent_id": "b000159",
+      "level": 3,
+      "title": "Child projects",
+      "anchor": "child-projects",
+      "start_line": 351
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000005",
+        "line": 12,
+        "text": "so consumers must rebuild. See [owned file I/O](docs/OWNED_FILE_IO.md).",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000013",
+        "line": 55,
+        "text": "devices do not retain access. Earlier versioned feature notes remain historical.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000019",
+        "line": 72,
+        "text": "Use `find_package(iiFileProviderCatalog 0.6.0 CONFIG REQUIRED)` and link",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000031",
+        "line": 116,
+        "text": "through `find_package(iiFileProviderTemporary CONFIG REQUIRED)`. Its move-only",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000031",
+        "line": 120,
+        "text": "must be left alone. Invalid, missing, symbolic-link or reparse-point directories",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000031",
+        "line": 121,
+        "text": "and redirected lock files throw standard exceptions. The directory must be an",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000033",
+        "line": 129,
+        "text": "A dynamic library, version 0.5.0, using C++20 and Qt 6.8.3 Core. `File` handles format-independent file CRUD, and `Database` handles SQLite storage transactions. `FileAuthor` extends the iisacc.com account model and records a file author's identity, detailed profile, contributions, and authoring device. `Authorship` keeps one initial editor and the subsequent editing-participant list as persistent metadata. `FileLink` represents an optional file link as a name/URL pair, while `AuthenticationToken` holds a separate runtime authentication token. Metadata value objects do not perform file I/O directly. Login HTTP requests and JWT signature verification are outside this SDK's role.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000035",
+        "line": 131,
+        "text": "The public repository is [iisacc-Justmoong/iiFileProvider](https://github.com/iisacc-Justmoong/iiFileProvider). On 2026-09-07, SDK identifiers in headers, namespaces, the CMake package, shared library, and installation paths were unified as `iiFileProvider`. Consumers must use the new headers and CMake target below and reconfigure their existing build caches.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000041",
+        "line": 137,
+        "text": "Using `<src/iiFileProvider.h>`, the author model, file links, and authentication tokens can be used. The public headers are `src/FileAuthor.h`, `src/AuthenticationToken.h`, `src/Authorship.h`, and `src/FileLink.h`. `Authorship` stores the distinction between the first editor and participants, the first and recent contribution times per author, file links, and change numbers, and updates the JSON dump immediately after changes. Classes are C++ value objects, not QObject, and do not depend on the lifespan of Qt Network or account managers.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000047",
+        "line": 159,
+        "text": "Specify token type, account subject, service origin, issue/expiration time, and token raw text at `AuthenticationToken::create()`. The created token is linked to the author object at `setAuthenticationToken()`. Only `secret()` returns the raw text, and `toJson()` and debug output do not include the raw text. `isWithinValidityWindow(at)` is a time range check and does not prove authentication success or access rights. iisacc .com app's token is in HttpOnly cookie, not JSON response, so the host's authentication layer must manage it separately.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000059",
+        "line": 182,
+        "text": "Query results are copies without authentication tokens. APIs for deleting, resetting, or swapping roles in the list do not exist, and profile updates for the same account also preserve the first editor and participant order and initial contribution time. Up to 256 entries (including the first editor) and full metadata 2 MiB limit are reached, existing records are not deleted, and new registrations are atomically rejected. Lists filling up to the existing limit of schema 1 · 2 are also transformed while preserving full records. Files with only unspecified author changes have no first editor and an empty participant list.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000061",
+        "line": 184,
+        "text": "Save schema 3 stores the first editor key or null at `firstEditor`, subsequent participant key list at `participants`, each key's profile and contribution time at `authors`, and optional name and URL list at `links`. Schema 1 · 2 input reads preserving the existing list and revision and adding an empty link list. Consumers must rebuild with iiFileProvider 0.4.0 or higher headers and libraries. Shared library ABI identifier also changed to `0.4` as per link save member addition. Preservation contract applies to APIs using the same file's `Authorship` and save/restore paths, and is not a function to prevent external file tampering or replacement with separate empty values.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000067",
+        "line": 190,
+        "text": "Create links with `FileLink::fromString(\"[Name|URL]\")` or `FileLink::create(name, QString/QUrl)` and pass as an additional argument during author registration. HTTP (S) specific restrictions do not exist, and Society address, local files, SMB · IPFS · URN ·app scheme, and relative URLs can be received. URLs received as strings preserve case and encoding original text and are queried with `urlText()`.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000071",
+        "line": 203,
+        "text": "Existing `setAuthor(author, at)` with omitted additional arguments maintains the link. Explicit empty link lists empty only URL metadata while maintaining the permanent editor list. Links do not automatically execute or query registered URLs. Supported formats, encodings, atomic updates, and version contracts are in the [file link document](docs/FILE_LINKS.md).",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000083",
+        "line": 219,
+        "text": "CMake 3.24+, a C++23 compiler and SQLite 3.27+ with FTS5 are required. The default legacy adapter additionally requires Qt 6.8.3 Core. Set `IIFILEPROVIDER_BUILD_QT_API=OFF` to build Catalog, Objects, Temporary and their native tools without Qt. Use `QT_PREFIX_PATH` to select Qt when running the installer.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000093",
+        "line": 231,
+        "text": "Settings are passed as environment variables instead of command-line arguments. `INSTALL_PREFIX` must be an absolute path, and `CMAKE_PREFIX_PATH` receives additional search paths separated by semicolons or colons. The number of parallel builds is specified as `CMAKE_BUILD_PARALLEL_LEVEL`, with a default of 2.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000105",
+        "line": 257,
+        "text": "The default installation path generates `include/` umbrella, author, file link, authentication token, and export header, `lib/` shared libraries, `lib/cmake/iiFileProvider/` CMake package, and `share/iiFileProvider/` README and contract documents. Private `src/JsonContract.h` is not installed. The Windows shared library executable is installed to `bin/`. Consumers are informed of C++20 and `Qt6::Core` link requirements. Qt is not bundled and copied, and the installed Qt runtime is required. The shared library installation RPATH includes the external library paths used in the link.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000145",
+        "line": 312,
+        "text": "`find_package(iiFileProviderNative 0.6 CONFIG REQUIRED)` and",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [
+      {
+        "block_id": "b000085",
+        "language": "sh",
+        "code": "./install.sh\n"
+      },
+      {
+        "block_id": "b000095",
+        "language": "sh",
+        "code": "QT_PREFIX_PATH=\"/Volumes/Storage/Qt/6.8.3/macos\" \\\nINSTALL_PREFIX=\"$HOME/.local/SDK/iiFileProvider\" \\\n./install.sh\n"
+      },
+      {
+        "block_id": "b000099",
+        "language": "sh",
+        "code": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON \\\n  -DCMAKE_PREFIX_PATH=\"/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build --config Release\nctest --test-dir build -C Release --output-on-failure\ncmake --install build --config Release\ncmake -S tests/consumer -B build/consumer/build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$HOME/.local/SDK/iiFileProvider;/Volumes/Storage/Qt/6.8.3/macos\"\ncmake --build build/consumer/build --config Release\nctest --test-dir build/consumer/build -C Release --output-on-failure\n"
+      }
+    ],
+    "links": [
+      {
+        "block_id": "b000003",
+        "label": "the snapshot index contract",
+        "target": "docs/FILE_SEARCH_INDEX.md",
+        "kind": "relative",
+        "line": 6
+      },
+      {
+        "block_id": "b000005",
+        "label": "owned file I/O",
+        "target": "docs/OWNED_FILE_IO.md",
+        "kind": "relative",
+        "line": 12
+      },
+      {
+        "block_id": "b000007",
+        "label": "object storage",
+        "target": "docs/OBJECT_STORE.md",
+        "kind": "relative",
+        "line": 17
+      },
+      {
+        "block_id": "b000009",
+        "label": "Windows build and execution",
+        "target": "docs/WindowsBuildAndRun.md",
+        "kind": "relative",
+        "line": 19
+      },
+      {
+        "block_id": "b000015",
+        "label": "Core I/O consumer adapter",
+        "target": "example/CoreIO/README.md",
+        "kind": "relative",
+        "line": 58
+      },
+      {
+        "block_id": "b000019",
+        "label": "the catalog contract",
+        "target": "docs/FILE_CATALOG.md",
+        "kind": "relative",
+        "line": 75
+      },
+      {
+        "block_id": "b000019",
+        "label": "the common file ownership policy",
+        "target": "docs/FILE_OWNERSHIP.md",
+        "kind": "relative",
+        "line": 76
+      },
+      {
+        "block_id": "b000021",
+        "label": "file presentation",
+        "target": "docs/FILE_PRESENTATION.md",
+        "kind": "relative",
+        "line": 81
+      },
+      {
+        "block_id": "b000025",
+        "label": "the object-store contract and integration boundaries",
+        "target": "docs/OBJECT_STORE.md",
+        "kind": "relative",
+        "line": 89
+      },
+      {
+        "block_id": "b000027",
+        "label": "RAW envelopes, file journals and work sessions",
+        "target": "docs/FILE_JOURNAL.md",
+        "kind": "relative",
+        "line": 101
+      },
+      {
+        "block_id": "b000029",
+        "label": "the ontology filesystem contract",
+        "target": "docs/ONTOLOGY_FILESYSTEM.md",
+        "kind": "relative",
+        "line": 113
+      },
+      {
+        "block_id": "b000035",
+        "label": "iisacc-Justmoong/iiFileProvider",
+        "target": "https://github.com/iisacc-Justmoong/iiFileProvider",
+        "kind": "external",
+        "line": 131
+      },
+      {
+        "block_id": "b000049",
+        "label": "file author contract",
+        "target": "docs/FILE_AUTHOR_CONTRACT.md",
+        "kind": "relative",
+        "line": 161
+      },
+      {
+        "block_id": "b000071",
+        "label": "file link document",
+        "target": "docs/FILE_LINKS.md",
+        "kind": "relative",
+        "line": 203
+      },
+      {
+        "block_id": "b000115",
+        "label": "LICENSE",
+        "target": "LICENSE",
+        "kind": "relative",
+        "line": 270
+      },
+      {
+        "block_id": "b000127",
+        "label": "FILE_AUTHOR_CONTRACT.md",
+        "target": "docs/FILE_AUTHOR_CONTRACT.md",
+        "kind": "relative",
+        "line": 286
+      },
+      {
+        "block_id": "b000133",
+        "label": "complete contract",
+        "target": "docs/FILE_CRUD.md",
+        "kind": "relative",
+        "line": 292
+      },
+      {
+        "block_id": "b000141",
+        "label": "the Native component",
+        "target": "Native/README.md",
+        "kind": "relative",
+        "line": 305
+      },
+      {
+        "block_id": "b000145",
+        "label": "FILE_OWNERSHIP.md",
+        "target": "docs/FILE_OWNERSHIP.md",
+        "kind": "relative",
+        "line": 311
+      },
+      {
+        "block_id": "b000145",
+        "label": "migration validation",
+        "target": "docs/FILE_CREATION_VALIDATION.md",
+        "kind": "relative",
+        "line": 315
+      },
+      {
+        "block_id": "b000161",
+        "label": "AGENT.md",
+        "target": "AGENT.md",
+        "kind": "relative",
+        "line": 347
+      },
+      {
+        "block_id": "b000161",
+        "label": "documentation index",
+        "target": "docs/README.md",
+        "kind": "relative",
+        "line": 348
+      },
+      {
+        "block_id": "b000161",
+        "label": "agent index",
+        "target": "docs/agent-index.json",
+        "kind": "relative",
+        "line": 349
+      },
+      {
+        "block_id": "b000165",
+        "label": "`SDK/iiFileProvider/Compatibility`",
+        "target": "Compatibility/README.md",
+        "kind": "relative",
+        "line": 353
+      },
+      {
+        "block_id": "b000165",
+        "label": "`SDK/iiFileProvider/example/CoreIO`",
+        "target": "example/CoreIO/README.md",
+        "kind": "relative",
+        "line": 354
+      },
+      {
+        "block_id": "b000165",
+        "label": "`SDK/iiFileProvider/Native`",
+        "target": "Native/README.md",
+        "kind": "relative",
+        "line": 355
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

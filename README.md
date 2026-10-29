@@ -1,11 +1,22 @@
 # iiFileProvider
 
+`iiFileProvider::Catalog` also owns `FileSearchIndex`, a thread-safe,
+process-local FTS snapshot for caller-supplied file metadata. It performs no
+filesystem access and does not modify the persistent catalog. See
+[the snapshot index contract](docs/FILE_SEARCH_INDEX.md).
+
+File I/O and atomic saving are now owned by the native C++23 provider.
+`FileDevice`, `SaveFile` and `TemporaryFile` no longer inherit or call Qt file
+engines. Qt codecs retain a QIODevice adapter; Native 0.10.0 exposes `Device`,
+`AtomicSave` and exclusive publication/rename. The Qt adapter has a new 0.8 ABI,
+so consumers must rebuild. See [owned file I/O](docs/OWNED_FILE_IO.md).
+
 `ObjectStore::importDocument()` atomically connects an immutable RAW original to
 a mutable working object while sharing stored chunks. `original(workingKey)`
 retains original recovery after edits, moves and deletion. See
 [object storage](docs/OBJECT_STORE.md) for the native C++23 integration contract.
 
-[Windows 빌드 및 실행](docs/WindowsBuildAndRun.md)
+[Windows build and execution](docs/WindowsBuildAndRun.md)
 
 Android, iOS and WebAssembly builds compile pinned public-domain SQLite 3.49.1
 with FTS5 from the verified official amalgamation. Host builds retain system
@@ -39,16 +50,18 @@ zones through the browser's native Intl API; UTC and bounded fixed offsets are
 validated directly. Invalid zones are rejected. Desktop timezone validation
 continues to use its platform-backed Qt timezone provider.
 
-Package release: **0.7.3** (2026-10-20). The GUI read adapter coordinates actual
-source reads and descriptor closure with Native 0.8.3 source access. Idle open
+Package release: **0.8.0** (2026-10-27). The GUI read adapter coordinates actual
+source reads and descriptor closure with Native 0.10.0 source access. Idle open
 devices do not retain access. Earlier versioned feature notes remain historical.
 
 
-The optional [Core I/O adapter](CoreIO/README.md) composes iiSDKCore 0.13 with
+The optional [Core I/O consumer adapter](example/CoreIO/README.md) composes iiSDKCore 0.13 with
 Native file creation, atomic saves and post-close details/previews. Build it
-separately from `CoreIO/` or enable `IIFILEPROVIDER_BUILD_CORE_IO=ON`. Its
-`iiFileProvider::CoreIO` target sits above both independent libraries; the base
-Native provider has no Core dependency.
+as the separately configured `example/CoreIO/` project after finding both
+independent libraries. `IIFILEPROVIDER_BUILD_CORE_IO=ON` no longer embeds the
+adapter in the provider build and reports an explicit migration error. The
+application chooses and links `iiFileProvider::CoreIO`; the provider has no
+Core dependency.
 
 Version 0.7.0 is the common iisacc file creation/provision module. Native
 `iiFileProvider::Catalog` adds editable titles/descriptions, Unicode keywords,
@@ -303,9 +316,9 @@ The [migration validation](docs/FILE_CREATION_VALIDATION.md) records source,
 installed-package, AI worker and platform compilation evidence and its limits.
 ## Coordinated GUI file reads
 
-The 0.7.3 Qt value/device adapter requires Native 0.8.3. `File::read` and
+The 0.8.0 Qt value/device adapter requires Native 0.10.0. `File::read` and
 `readPrefix` hold one native source access scope for each complete payload read.
-`openRead` retains the same `QIODevice` API and uses a private QFile adapter that
+`openRead` retains the same `QIODevice` API and uses a provider-owned native device that
 coordinates actual open/read/seek/close operations with native document writers.
 Idle open devices retain identity without retaining an access lock. Public file
 and device layouts are unchanged. Source access supplements the file format's
@@ -326,3 +339,18 @@ headers in the package include directory. Generated export headers belong to
 Validate this layout from the SDK workspace with
 `python3 -B tests/test_source_header_layout.py`. Reconfigure, build, run CTest,
 and verify a staged installed consumer after changing source/header paths.
+
+<!-- workspace-docs:readme:start -->
+## Documentation entry points
+
+- Human overview: this English `README.md`.
+- Agent instructions: [AGENT.md](AGENT.md).
+- Human documentation: [documentation index](docs/README.md).
+- Structured agent documentation: [agent index](docs/agent-index.json).
+
+### Child projects
+
+- [`SDK/iiFileProvider/Compatibility`](Compatibility/README.md)
+- [`SDK/iiFileProvider/example/CoreIO`](example/CoreIO/README.md)
+- [`SDK/iiFileProvider/Native`](Native/README.md)
+<!-- workspace-docs:readme:end -->

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(iiFileProvider VERSION 0.7.3 LANGUAGES C CXX)
+project(iiFileProvider VERSION 0.8.0 LANGUAGES C CXX)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF) # NDK kits omit clang-scan-deps; no named modules are used.
 if(MSVC)
     add_compile_options(/utf-8)
@@ -46,9 +46,9 @@ if(IIFILEPROVIDER_BUILD_NATIVE_API)
     add_subdirectory(Native)
     install(DIRECTORY python/ii_file_provider DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/python PATTERN __pycache__ EXCLUDE)
 endif()
-option(IIFILEPROVIDER_BUILD_CORE_IO "Build the optional adapter above Native and iiSDKCore" OFF)
+option(IIFILEPROVIDER_BUILD_CORE_IO "Deprecated: build the Core I/O consumer separately" OFF)
 if(IIFILEPROVIDER_BUILD_CORE_IO)
-    add_subdirectory(CoreIO)
+    message(FATAL_ERROR "Core I/O is a separate consumer project: configure example/CoreIO independently")
 endif()
 option(IIFILEPROVIDER_BUILD_QT_API "Build the existing Qt value/file adapters" ON)
 
@@ -89,7 +89,7 @@ foreach(_index RANGE 0 ${_catalog_dependency_last})
         message(FATAL_ERROR "Pinned Catalog dependency mismatch: ${_file}")
     endif()
 endforeach()
-add_library(iiFileProviderCatalog STATIC src/FileCatalog.cpp Native/third_party/utf8proc/utf8proc.c)
+add_library(iiFileProviderCatalog STATIC src/FileCatalog.cpp src/FileSearchIndex.cpp Native/third_party/utf8proc/utf8proc.c)
 add_library(iiFileProvider::Catalog ALIAS iiFileProviderCatalog)
 set_target_properties(iiFileProviderCatalog PROPERTIES EXPORT_NAME Catalog POSITION_INDEPENDENT_CODE ON
     CXX_EXTENSIONS OFF C_VISIBILITY_PRESET hidden)
@@ -105,7 +105,7 @@ if(TARGET iiFileProviderNative)
     target_compile_definitions(iiFileProviderCatalog PRIVATE IIFILEPROVIDER_HAS_PRESENTATION)
 endif()
 install(TARGETS iiFileProviderCatalog EXPORT iiFileProviderCatalogTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES src/FileCatalog.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES src/FileCatalog.h src/FileSearchIndex.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT iiFileProviderCatalogTargets NAMESPACE iiFileProvider:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderCatalog)
 configure_package_config_file(cmake/iiFileProviderCatalogConfig.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderCatalogConfig.cmake"
@@ -121,7 +121,10 @@ install(FILES Native/third_party/utf8proc/LICENSE.md
     DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/iiFileProviderCatalog/utf8proc)
 install(FILES docs/FILE_CATALOG.md docs/FILE_OWNERSHIP.md docs/FILE_CRUD.md docs/FILE_PRESENTATION.md docs/FILE_PRESENTATION_VALIDATION.md
     DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs)
+install(FILES docs/FILE_SEARCH_INDEX.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs)
+install(FILES docs/FILE_SEARCH_INDEX.agent.json DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs OPTIONAL)
 install(FILES README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider)
+install(FILES docs/OWNED_FILE_IO.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs)
 set(_iifp_tools_default ON)
 if(ANDROID OR EMSCRIPTEN OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
     set(_iifp_tools_default OFF)
@@ -158,6 +161,9 @@ target_link_libraries(iiFileProviderObjectPackage PRIVATE iiFileProvider::Object
 install(TARGETS iiFileProviderObjectPackage RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 if(BUILD_TESTING)
+    add_executable(iiFileProvider_file_search_index tests/file_search_index.cpp)
+    target_link_libraries(iiFileProvider_file_search_index PRIVATE iiFileProvider::Catalog Threads::Threads)
+    add_test(NAME iiFileProvider.file_search_index COMMAND iiFileProvider_file_search_index)
     foreach(_test IN ITEMS object_document object_journal object_journal_storage object_metadata_limits ontology_filesystem ontology_storage ontology_boundaries)
         add_executable(iiFileProvider_${_test} tests/${_test}.cpp)
         target_compile_definitions(iiFileProvider_${_test} PRIVATE OBJECT_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")
@@ -190,6 +196,11 @@ if(BUILD_TESTING)
     add_test(NAME iiFileProvider.file_catalog_objects COMMAND iiFileProvider_file_catalog_objects)
     set_tests_properties(iiFileProvider.file_catalog_objects PROPERTIES TIMEOUT 120)
     add_executable(iiFileProvider_temporary_lease tests/temporary_lease.cpp)
+    if(NOT WIN32)
+        add_executable(iiFileProvider_temporary_anchor tests/temporary_anchor.cpp)
+        target_link_libraries(iiFileProvider_temporary_anchor PRIVATE iiFileProvider::Temporary)
+        add_test(NAME iiFileProvider.temporary_anchor COMMAND iiFileProvider_temporary_anchor)
+    endif()
     target_link_libraries(iiFileProvider_temporary_lease PRIVATE iiFileProvider::Temporary Threads::Threads)
     add_test(NAME iiFileProvider.temporary_lease COMMAND iiFileProvider_temporary_lease)
     set_tests_properties(iiFileProvider.temporary_lease PROPERTIES TIMEOUT 30)
@@ -231,6 +242,8 @@ if(BUILD_TESTING)
     add_test(NAME iiFileProvider.object_batch COMMAND iiFileProvider_object_batch)
     set_tests_properties(iiFileProvider.object_batch PROPERTIES TIMEOUT 240)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    add_test(NAME iiFileProvider.coreio_boundary COMMAND ${Python3_EXECUTABLE} -B
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/coreio_boundary.py)
     add_test(NAME iiFileProvider.creation_audit COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/creation_audit.py ${CMAKE_CURRENT_BINARY_DIR})
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../Product" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../iiSDKCore")
@@ -278,7 +291,7 @@ endif()
 if(IIFILEPROVIDER_BUILD_QT_API)
 find_package(Qt6 6.8.3 EXACT REQUIRED COMPONENTS Core)
 if(NOT TARGET iiFileProvider::Native)
-    find_package(iiFileProviderNative 0.8.3 CONFIG REQUIRED)
+    find_package(iiFileProviderNative 0.10.0 CONFIG REQUIRED)
 endif()
 
 set(_iifp_qt_library_kind SHARED)
@@ -305,7 +318,8 @@ if(BUILD_TESTING)
             endif()
         endforeach()
     endif()
-    add_executable(iiFileProvider_file_devices tests/file_devices.cpp)
+    add_executable(iiFileProvider_file_devices tests/file_devices.cpp tests/device_resource.qrc)
+    set_target_properties(iiFileProvider_file_devices PROPERTIES AUTORCC ON)
     target_link_libraries(iiFileProvider_file_devices PRIVATE iiFileProvider Qt6::Gui)
     add_test(NAME iiFileProvider.file_devices COMMAND iiFileProvider_file_devices ${CMAKE_CURRENT_BINARY_DIR})
 endif()
@@ -327,8 +341,8 @@ set_target_properties(iiFileProvider PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
     VERSION ${PROJECT_VERSION}
-    # Storage APIs are additive; preserve the existing 0.4 value-type ABI.
-    SOVERSION 0.4
+    # File devices now inherit QIODevice directly; never load them as the old QFile ABI.
+    SOVERSION 0.8
     INSTALL_RPATH_USE_LINK_PATH TRUE
 )
 

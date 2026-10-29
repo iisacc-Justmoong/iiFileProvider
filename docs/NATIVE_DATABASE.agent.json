@@ -1,0 +1,346 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:f4d0493b69057b4d9d457f705e6e0e2ff96c44bdabdc1d0aed3bd78634d19533",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/NATIVE_DATABASE.md",
+    "sha256": "77026753766985b8bf8ba3ec87c382f84abd3bf017d9c115d8d107430a999135",
+    "bytes": 5042,
+    "line_count": 48,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "Qt 독립 SQLite 실행 API",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Qt 독립 SQLite 실행 API\n",
+      "level": 1,
+      "title": "Qt 독립 SQLite 실행 API"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "`iiFileProviderNative` 0.9.0은 `iiFileProviderDatabase.h`와 `iiFileProvider::native::sql`을 제공한다. 파일과 SQLite 실행의 기존 소유권을 유지하며 별도 상위 SQL 모듈이나 ORM을 만들지 않는다. 스키마, 데이터 의미, 마이그레이션 정책은 소비자가 소유한다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "fenced_code",
+      "start_line": 5,
+      "end_line": 8,
+      "raw": "```cmake\nfind_package(iiFileProviderNative 0.9 CONFIG REQUIRED)\ntarget_link_libraries(backend PRIVATE iiFileProvider::Native)\n```\n",
+      "language": "cmake",
+      "code": "find_package(iiFileProviderNative 0.9 CONFIG REQUIRED)\ntarget_link_libraries(backend PRIVATE iiFileProvider::Native)\n",
+      "closed": true
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 10,
+      "end_line": 10,
+      "raw": "`Database::open(path, options)`의 기본 모드는 기존 파일 읽기/쓰기이다. 생성은 `OpenMode::create`, 읽기 전용은 `read_only`, 메모리 DB는 `Database::memory()`로 명시한다. Qt 패키지, `QString`, `QVariant`, 전역 연결 이름이나 Qt SQL 드라이버가 필요하지 않다. 원시 SQLite 핸들은 공개하지 않는다. 기존 `Database.h`의 Qt 연결 구현은 이 추가 API에 의해 자동 전환되지 않는다.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 11,
+      "end_line": 11,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 12,
+      "end_line": 12,
+      "raw": "`prepare`는 NUL이 없는 단일 문장만 허용하며 바인딩은 1부터 시작한다. 값은 NULL, int64, 유한 double, 길이가 보존되는 UTF-8 문자열, BLOB이다. 빈 BLOB과 NULL을 구분한다. `value()`는 현재 행에서만 유효한 소유 값의 복사본을 반환한다. `step()`의 완료는 `reset()` 전까지 완료로 유지되므로 SQLite의 암묵적 재실행을 노출하지 않는다. 실패한 문장도 reset 후 재사용할 수 있다. 바인딩된 문자열/BLOB을 호출 후 유지할 필요는 없다.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 13,
+      "end_line": 13,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 14,
+      "end_line": 14,
+      "raw": "문장과 트랜잭션은 연결 상태를 공유 소유하므로 원래 `Database` 객체를 제거해도 조기에 연결을 해제하지 않는다. 트랜잭션은 commit 또는 명시적 rollback 전 제거되면 rollback한다. 실패한 commit은 성공으로 취급하지 않는다. 외부 SQL의 COMMIT으로 종료한 이전 트랜잭션이 새 트랜잭션을 rollback하지 않도록 소유 번호를 확인한다. 소멸자의 rollback 실패는 반환할 수 없으므로 오류 처리가 필요한 경로에서는 `rollback()` 결과를 직접 확인한다.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 15,
+      "end_line": 15,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "연결과 문장의 논리적 작업은 소비자의 한 실행 영역, 예컨대 Core SerialQueue에서 직렬화한다. SQLite FULLMUTEX가 여러 문장의 트랜잭션 순서를 보장하는 것은 아니다. `interrupt()`만 다른 스레드에서 호출할 수 있으며 그동안 Database 객체의 수명을 유지해야 한다. 이동·파괴와 동시에 호출하지 않는다. 바쁜 잠금 대기 시간과 값 크기를 옵션으로 제한하고 원시 SQLite 오류 코드를 보존한다. 조회 결과 행 수의 누적 제한은 소비자 책임이다.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 17,
+      "end_line": 17,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "독립 검증은 Native 프로젝트의 `build/`에서 수행한다. 전체 provider의 Qt 어댑터 및 다른 사용자의 작업을 재구성할 필요가 없다.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "fenced_code",
+      "start_line": 20,
+      "end_line": 25,
+      "raw": "```sh\ncmake -S Native -B Native/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=ON\ncmake --build Native/build --parallel 4\nctest --test-dir Native/build --output-on-failure\ncmake --install Native/build --prefix \"$PWD/Native/build/install\"\n```\n",
+      "language": "sh",
+      "code": "cmake -S Native -B Native/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=ON\ncmake --build Native/build --parallel 4\nctest --test-dir Native/build --output-on-failure\ncmake --install Native/build --prefix \"$PWD/Native/build/install\"\n",
+      "closed": true
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 26,
+      "end_line": 26,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 27,
+      "end_line": 27,
+      "raw": "테스트는 Unicode 경로, 읽기 전용, 형식별 바인딩, NUL 문자열, 빈 BLOB, 중복/복수 문장 거절, rollback/commit, 한도, 연결 제거 후 문장 수명을 검증한다. 이 API의 제공은 SocietyHelper의 기존 QSqlDatabase/QSqlQuery 사용처가 모두 이행했다는 뜻이 아니다.\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "heading",
+      "start_line": 28,
+      "end_line": 28,
+      "raw": "# 내구성 있는 편집과 스냅샷\n",
+      "level": 1,
+      "title": "내구성 있는 편집과 스냅샷"
+    },
+    {
+      "id": "b000021",
+      "kind": "blank",
+      "start_line": 29,
+      "end_line": 29,
+      "raw": "\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "paragraph",
+      "start_line": 30,
+      "end_line": 36,
+      "raw": "`Database::configure_durable()`은 defensive 모드, 신뢰하지 않는 스키마,\nDELETE journal과 EXTRA 동기화를 선택한다. `has_moved()`는 SQLite 핸들을 노출하지 않고\n파일 경로 교체를 감지한다. `patch_blob()`은 명시적 트랜잭션 안에서 크기가 같은 BLOB의\n변경한 바이트 구간만 기록한다. 롤백하면 원래 바이트가 복원된다.\n`backup_to()`는 커밋된 WAL을 포함하는 일관된 스냅샷을 바이트·단조 시계 시간 한도 안에서\n복사한다. 대상은 트랜잭션 밖에 있는 다른 연결이어야 한다. SQLite 실행과 핸들은\nFileProvider가 소유하며 문서 스키마의 의미는 소비하는 문서 SDK에 남긴다.\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "blank",
+      "start_line": 37,
+      "end_line": 38,
+      "raw": "\n\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "heading",
+      "start_line": 39,
+      "end_line": 39,
+      "raw": "## 기존 쓰기 잠금 호환 패키지\n",
+      "level": 2,
+      "title": "기존 쓰기 잠금 호환 패키지"
+    },
+    {
+      "id": "b000025",
+      "kind": "blank",
+      "start_line": 40,
+      "end_line": 40,
+      "raw": "\n"
+    },
+    {
+      "id": "b000026",
+      "kind": "paragraph",
+      "start_line": 41,
+      "end_line": 41,
+      "raw": "`Compatibility/`는 `iiFileProviderCompatibility` 설치 패키지와 `iiFileProvider::Compatibility` 타깃을 제공한다. 기존 `.iisacc-lock` 프로토콜과 원자적 교체는 네이티브 파일 제공자에 유지한다. 설치 타깃에는 소스 경로를 포함하지 않는다. `iiFileProvider.Compatibility.Contracts`는 연속 교체와 잠금 정리를 검사한다.\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "blank",
+      "start_line": 42,
+      "end_line": 42,
+      "raw": "\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "heading",
+      "start_line": 43,
+      "end_line": 43,
+      "raw": "## 바이트 범위와 스트리밍 해시 · Native 0.11.0\n",
+      "level": 2,
+      "title": "바이트 범위와 스트리밍 해시 · Native 0.11.0"
+    },
+    {
+      "id": "b000029",
+      "kind": "blank",
+      "start_line": 44,
+      "end_line": 44,
+      "raw": "\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "paragraph",
+      "start_line": 45,
+      "end_line": 48,
+      "raw": "전체 값의 비교 버퍼를 요구하는 기존 patch_blob과 별도로 범위 읽기·배치 before/after\n비교·교체·고정 버퍼 SHA-256을 제공한다. 공개 의미와 실패·예산·검증 범위는\n[Native BLOB 범위 계약](../Native/docs/BLOB_RANGES.md)에 명시한다. 문서 스키마와\n전체 해시를 타일별 저장 형식으로 교체하는 일은 상위 문서 모듈의 후속 범위이다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Qt 독립 SQLite 실행 API",
+      "anchor": "qt-독립-sqlite-실행-api",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000020",
+      "parent_id": null,
+      "level": 1,
+      "title": "내구성 있는 편집과 스냅샷",
+      "anchor": "내구성-있는-편집과-스냅샷",
+      "start_line": 28
+    },
+    {
+      "block_id": "b000024",
+      "parent_id": "b000020",
+      "level": 2,
+      "title": "기존 쓰기 잠금 호환 패키지",
+      "anchor": "기존-쓰기-잠금-호환-패키지",
+      "start_line": 39
+    },
+    {
+      "block_id": "b000028",
+      "parent_id": "b000020",
+      "level": 2,
+      "title": "바이트 범위와 스트리밍 해시 · Native 0.11.0",
+      "anchor": "바이트-범위와-스트리밍-해시--native-0110",
+      "start_line": 43
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000007",
+        "line": 10,
+        "text": "`Database::open(path, options)`의 기본 모드는 기존 파일 읽기/쓰기이다. 생성은 `OpenMode::create`, 읽기 전용은 `read_only`, 메모리 DB는 `Database::memory()`로 명시한다. Qt 패키지, `QString`, `QVariant`, 전역 연결 이름이나 Qt SQL 드라이버가 필요하지 않다. 원시 SQLite 핸들은 공개하지 않는다. 기존 `Database.h`의 Qt 연결 구현은 이 추가 API에 의해 자동 전환되지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000009",
+        "line": 12,
+        "text": "`prepare`는 NUL이 없는 단일 문장만 허용하며 바인딩은 1부터 시작한다. 값은 NULL, int64, 유한 double, 길이가 보존되는 UTF-8 문자열, BLOB이다. 빈 BLOB과 NULL을 구분한다. `value()`는 현재 행에서만 유효한 소유 값의 복사본을 반환한다. `step()`의 완료는 `reset()` 전까지 완료로 유지되므로 SQLite의 암묵적 재실행을 노출하지 않는다. 실패한 문장도 reset 후 재사용할 수 있다. 바인딩된 문자열/BLOB을 호출 후 유지할 필요는 없다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000011",
+        "line": 14,
+        "text": "문장과 트랜잭션은 연결 상태를 공유 소유하므로 원래 `Database` 객체를 제거해도 조기에 연결을 해제하지 않는다. 트랜잭션은 commit 또는 명시적 rollback 전 제거되면 rollback한다. 실패한 commit은 성공으로 취급하지 않는다. 외부 SQL의 COMMIT으로 종료한 이전 트랜잭션이 새 트랜잭션을 rollback하지 않도록 소유 번호를 확인한다. 소멸자의 rollback 실패는 반환할 수 없으므로 오류 처리가 필요한 경로에서는 `rollback()` 결과를 직접 확인한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000013",
+        "line": 16,
+        "text": "연결과 문장의 논리적 작업은 소비자의 한 실행 영역, 예컨대 Core SerialQueue에서 직렬화한다. SQLite FULLMUTEX가 여러 문장의 트랜잭션 순서를 보장하는 것은 아니다. `interrupt()`만 다른 스레드에서 호출할 수 있으며 그동안 Database 객체의 수명을 유지해야 한다. 이동·파괴와 동시에 호출하지 않는다. 바쁜 잠금 대기 시간과 값 크기를 옵션으로 제한하고 원시 SQLite 오류 코드를 보존한다. 조회 결과 행 수의 누적 제한은 소비자 책임이다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000026",
+        "line": 41,
+        "text": "`Compatibility/`는 `iiFileProviderCompatibility` 설치 패키지와 `iiFileProvider::Compatibility` 타깃을 제공한다. 기존 `.iisacc-lock` 프로토콜과 원자적 교체는 네이티브 파일 제공자에 유지한다. 설치 타깃에는 소스 경로를 포함하지 않는다. `iiFileProvider.Compatibility.Contracts`는 연속 교체와 잠금 정리를 검사한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [
+      {
+        "block_id": "b000017",
+        "language": "sh",
+        "code": "cmake -S Native -B Native/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=ON\ncmake --build Native/build --parallel 4\nctest --test-dir Native/build --output-on-failure\ncmake --install Native/build --prefix \"$PWD/Native/build/install\"\n"
+      }
+    ],
+    "links": [
+      {
+        "block_id": "b000030",
+        "label": "Native BLOB 범위 계약",
+        "target": "../Native/docs/BLOB_RANGES.md",
+        "kind": "relative",
+        "line": 47
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

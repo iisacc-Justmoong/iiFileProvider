@@ -1,5 +1,21 @@
 # iiFileProvider native component
 
+Version 0.11.1 adds exclusive atomic publication of a staged sibling directory.
+Consumers requiring this API must request at least 0.11.1; an older 0.11.0
+installation does not provide the symbol.
+
+Version 0.11.0 adds bounded SQLite BLOB range reads, batch compare-and-exchange,
+and streaming SHA-256 without copying a complete value. Expected source ranges
+are checked before any write; an internal savepoint protects the batch inside
+the caller's explicit transaction. Database object layout and the 0.5 dylib ABI
+remain unchanged. See [BLOB range contracts](docs/BLOB_RANGES.md).
+
+Version 0.10.1 validates the fixed ISO-8601 timestamp grammar without a lazy
+regular-expression allocation. Fractions and timezone offsets retain their
+existing canonical UTC meaning. Allocation-failure regression checks preserve
+authorship until an entire change is prepared. The public 0.5 dylib ABI is
+unchanged. See [timestamp allocation safety](docs/TIMESTAMP_SAFETY.md).
+
 Version 0.9.0 adds a Qt-free SQLite execution API in `iiFileProviderDatabase.h`:
 owned connections/statements, typed bindings, bounded values, native errors,
 read-only/create modes and RAII transactions. See
@@ -132,3 +148,26 @@ transaction are unsafe in its [locking guidance](https://sqlite.org/howtocorrupt
 `iiFileProvider.Native.SourceAccess` exercises blocked same-file reads,
 independent other-file reads, reentrancy, hard-link identity and completion after
 the authoring scope is released. It runs without Qt.
+
+Set `IIFILEPROVIDER_NATIVE_STATIC=ON` for embedded native runtimes. The exported target carries its static visibility definition; the default desktop library remains shared. See [static linking contract](../docs/NATIVE_STATIC.md).
+
+## Owned device and atomic-save API
+
+Native 0.10.0 adds `<iiFileProviderNativeDevice.h>` with descriptor-backed `Device`,
+`AtomicSave`, `publishFile` and `renameFileExclusive`. The implementation owns
+read/write/append/seek/resize, permissions, mappings, borrowed-handle lifetime,
+cancellation, file sync and exclusive publication without Qt. See
+[the owned I/O contract](../docs/OWNED_FILE_IO.md).
+
+Native 0.11.1 provides `publishDirectoryExclusive` to atomically publish a
+complete staged directory to a new sibling name without replacing an existing path. Its platform support,
+ownership and durability boundaries are in [directory publication](docs/DIRECTORY_PUBLICATION.md).
+
+<!-- workspace-docs:readme:start -->
+## Documentation entry points
+
+- Human overview: this English `README.md`.
+- Agent instructions: [AGENT.md](AGENT.md).
+- Human documentation: [documentation index](docs/README.md).
+- Structured agent documentation: [agent index](docs/agent-index.json).
+<!-- workspace-docs:readme:end -->

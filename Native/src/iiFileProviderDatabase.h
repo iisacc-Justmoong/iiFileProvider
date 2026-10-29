@@ -1,5 +1,6 @@
 #pragma once
 #include "iiFileProviderNativeExport.h"
+#include <array>
 #include <cstdint>
 #include <expected>
 #include <filesystem>
@@ -11,7 +12,7 @@
 #include <vector>
 
 namespace iiFileProvider::native::sql {
-enum class Code { invalid_input, closed, busy, constraint, read_only, limit_exceeded, failure };
+enum class Code { invalid_input, closed, busy, constraint, read_only, limit_exceeded, failure, conflict };
 struct Error final { Code code; int native_code; std::string message; };
 template<class T> using Result = std::expected<T, Error>;
 using Blob = std::vector<std::uint8_t>;
@@ -23,6 +24,15 @@ struct Options final {
     int maximum_value_bytes = 16 * 1024 * 1024;
 };
 enum class Step { row, done };
+struct BlobRangePatch final {
+    std::uint64_t offset = 0;
+    std::span<const std::uint8_t> before;
+    std::span<const std::uint8_t> after;
+};
+struct BlobPatchStatistics final {
+    std::uint64_t bytes_compared = 0;
+    std::uint64_t bytes_written = 0;
+};
 class Statement;
 class Transaction;
 class IIFILEPROVIDER_NATIVE_EXPORT Database final {
@@ -46,6 +56,16 @@ public:
     // Returns the number of changed bytes actually written; rollback restores them.
     [[nodiscard]] Result<std::uint64_t> patch_blob(std::string_view table, std::string_view column,
         std::int64_t row_id, std::span<const std::uint8_t>) const;
+    // Borrowed input ranges are stable for this synchronous call. Validate all
+    // expected bytes before writing; the explicit outer transaction stays open.
+    [[nodiscard]] Result<Blob> read_blob_range(std::string_view table, std::string_view column,
+        std::int64_t row_id, std::uint64_t offset, std::size_t count) const;
+    [[nodiscard]] Result<BlobPatchStatistics> compare_exchange_blob_ranges(
+        std::string_view table, std::string_view column, std::int64_t row_id,
+        std::span<const BlobRangePatch>) const;
+    // Hash a stable SQLite BLOB read with fixed scratch storage; no full value copy.
+    [[nodiscard]] Result<std::array<std::uint8_t, 32>> blob_sha256(std::string_view table,
+        std::string_view column, std::int64_t row_id, std::uint64_t maximum_bytes) const;
     // Consistent SQLite snapshot, including committed WAL content, bounded by size/time.
     [[nodiscard]] Result<void> backup_to(Database& destination, std::uint64_t maximum_bytes,
         int timeout_ms=30000) const;

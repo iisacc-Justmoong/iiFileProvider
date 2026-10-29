@@ -1,0 +1,135 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:d1f1c7b014423d06ff1c334fcc91e762dfffc1e83bfa0f45e8d16dcf03d458bb",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/FILE_SEARCH_INDEX.md",
+    "sha256": "b85c9ac6b3fa26163ffb8062a213097657e192468389795a3b5c534ae5393fd5",
+    "bytes": 1586,
+    "line_count": 22,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "파일 검색 스냅샷",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 파일 검색 스냅샷\n",
+      "level": 1,
+      "title": "파일 검색 스냅샷"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 7,
+      "raw": "`iiFileProvider::FileSearchIndex`는 호출자가 전달한 상대 경로와 파일 상세·\n분류·검색어를 메모리 SQLite FTS5 색인에 저장한다. 이 객체는 파일을 열거나\n경로의 안전성을 판단하지 않는다. 호출자가 소스와 접근 경계를 검증한다.\n`iiFileProvider::Catalog`에 포함되며 Qt, iiSDKCore, Society 모듈을 요구하지\n않는다. 새 인스턴스는 빈 스냅샷이다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 8,
+      "end_line": 8,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 9,
+      "end_line": 14,
+      "raw": "같은 경로를 갱신할 때 첫 분류 데이터가 제목·키·원문·대기 상태를 소유하며\n프레젠테이션 MIME과 검색어를 합친다. 첫 삽입은 true, 기존 경로 갱신은 false를\n반환한다. 공백으로 나눈 입력은 리터럴 FTS 접두어로 처리하며 Unicode 악센트는\n정규화한다. 최대 질의 길이는 4096바이트, 반환 한도는 1–1024개이다. 연산은\n내부 잠금으로 직렬화된다. 검색 결과는 기록한 스냅샷이므로 실제 파일의 존재와\n접근 여부는 호출자가 다시 검증해야 한다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 15,
+      "end_line": 15,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 16,
+      "end_line": 19,
+      "raw": "영구 `FileCatalog`는 별도의 커서, 필터 및 변경·게시 기능과 디스크 수명을\n가진다. 이 API는 그 데이터베이스를 갱신하지 않으며 두 색인은 서로 다른\n수명과 질의 계약을 가진다. iiGlobalSearch는 Society 경로 검증과 비동기 작업을\n소유하고 이 객체의 파일 검색 연산을 사용한다.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 20,
+      "end_line": 20,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 21,
+      "end_line": 22,
+      "raw": "`iiFileProvider.file_search_index`는 중복 병합, Unicode, 제한, 동시 갱신 및\n빈 스냅샷을 검사한다. 운영체제별 앱 실행을 의미하지 않는다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "파일 검색 스냅샷",
+      "anchor": "파일-검색-스냅샷",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000003",
+        "line": 5,
+        "text": "경로의 안전성을 판단하지 않는다. 호출자가 소스와 접근 경계를 검증한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000005",
+        "line": 14,
+        "text": "접근 여부는 호출자가 다시 검증해야 한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000009",
+        "line": 22,
+        "text": "빈 스냅샷을 검사한다. 운영체제별 앱 실행을 의미하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

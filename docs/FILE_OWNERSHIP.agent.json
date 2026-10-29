@@ -1,0 +1,540 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:c0316af2f1f4b539b401a3c2e1babead6251ba1e6c44cda3a8a9f297301e9286",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/FILE_OWNERSHIP.md",
+    "sha256": "e804e2703427a31959c4a4e85f7d01ae47d37ae0f579c79c1b68a89c6d8778b8",
+    "bytes": 6949,
+    "line_count": 101,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "iisacc file creation and provision ownership",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iisacc file creation and provision ownership\n",
+      "level": 1,
+      "title": "iisacc file creation and provision ownership"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 6,
+      "raw": "From version 0.6.0, iiFileProvider is the common owner of iisacc file creation,\nopening, streaming, staging and publication. Products and format SDKs delegate\nthese operations to provider APIs rather than independently opening final output\nfiles. Format validation/serialization remains with each domain SDK.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "table",
+      "start_line": 8,
+      "end_line": 15,
+      "raw": "| Caller need | Provider API | Caller responsibility |\n| --- | --- | --- |\n| Native classified files | `FileCatalog::createFileWith`, `createFile`, `importFile`, `registerFiles` | Metadata, collections, encoder, pending companion recovery |\n| Classified search/provision | `FileCatalog::search`, `lookup`, `read` | UI, transport authority, bounded result consumption |\n| Existing Qt codecs | `File::openRead`, `writeWith`, `create`, `update`, `copyToUrl` | Domain validation/serialization, optional catalog registration |\n| Path-only external codecs | `StagedFile`, `File::publish` | Write borrowed temporary path, validate before publication |\n| Society object packages | `iiFileProvider::Objects` | Domain objects, authors, sessions, synchronization authority |\n| Domain SQLite schemas | `Database`, `Statement`, `Transaction` | Schema, record semantics, domain revision rules |\n",
+      "columns": [
+        "Caller need",
+        "Provider API",
+        "Caller responsibility"
+      ],
+      "rows": [
+        [
+          "Native classified files",
+          "`FileCatalog::createFileWith`, `createFile`, `importFile`, `registerFiles`",
+          "Metadata, collections, encoder, pending companion recovery"
+        ],
+        [
+          "Classified search/provision",
+          "`FileCatalog::search`, `lookup`, `read`",
+          "UI, transport authority, bounded result consumption"
+        ],
+        [
+          "Existing Qt codecs",
+          "`File::openRead`, `writeWith`, `create`, `update`, `copyToUrl`",
+          "Domain validation/serialization, optional catalog registration"
+        ],
+        [
+          "Path-only external codecs",
+          "`StagedFile`, `File::publish`",
+          "Write borrowed temporary path, validate before publication"
+        ],
+        [
+          "Society object packages",
+          "`iiFileProvider::Objects`",
+          "Domain objects, authors, sessions, synchronization authority"
+        ],
+        [
+          "Domain SQLite schemas",
+          "`Database`, `Statement`, `Transaction`",
+          "Schema, record semantics, domain revision rules"
+        ]
+      ]
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 17,
+      "end_line": 20,
+      "raw": "The direction is `product -> domain/transport SDK -> iiFileProvider`. Native\nCatalog/Objects/Temporary have no Qt dependency; existing adapters retain Qt Core.\nProvider never imports an upper SDK, model engine, account client or renderer.\nNative APIs do not run application logic through an interpreter or VM.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 21,
+      "end_line": 21,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 22,
+      "end_line": 25,
+      "raw": "Use Catalog for user-visible classified files. Temporary codec data, database\ninternals and transport caches do not acquire user collections merely because\nbytes were written. The owner explicitly registers results; implicit recursive\naccess to unrelated directories is outside the contract.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 26,
+      "end_line": 26,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 27,
+      "end_line": 33,
+      "raw": "The SharedCanvas, document, MIDI, bitmap and XML adapters already use the common\npaths listed in [FILE_CRUD.md](FILE_CRUD.md). Society Helper media export now\ndelegates file opening and final URL publication to provider; media validation\nstays with Helper. Android selected `content:` destinations use the OS-granted\ndocument stream inside the adapter. Portable companion export needs a filesystem\ndestination supporting the payload/companion pair; the generic single-stream URL\nAPI transfers only supplied bytes.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 34,
+      "end_line": 34,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 35,
+      "end_line": 42,
+      "raw": "Repository-controlled SDK and Product runtime factories, including deprecated\nproduct source and Python AI workers, use provider entry points. The workspace\ngate is `tools/audit_file_creation.py --check`; unreadable source is reported.\nGenerated builds, bootstrap/development tools, fixtures and vendored engines are\ncounted separately. Shipping Python entry points, plural `runtimes/` workers and\nthe TLS FTP host are runtime scope even when kept under a tools directory. External codecs receive provider-owned streams, staging\nfiles or private directories. The gate is a source boundary check, not a syscall\nsandbox for arbitrary shell commands or OS-managed stores.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 43,
+      "end_line": 43,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 44,
+      "end_line": 46,
+      "raw": "`tests/dependency_direction.py` rejects upward edges and SDK cycles, including\nNative/Catalog/Temporary component dependencies. New file-producing features\nmust select a provider entry point and retain domain regression coverage.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 47,
+      "end_line": 47,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 48,
+      "end_line": 49,
+      "raw": "Source tests, installed native/Qt consumers and integration tests are distinct\nevidence. A local build alone does not imply product deployment or device proof.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 50,
+      "end_line": 50,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "heading",
+      "start_line": 51,
+      "end_line": 51,
+      "raw": "## Native and platform adapters\n",
+      "level": 2,
+      "title": "Native and platform adapters"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 52,
+      "end_line": 52,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "table",
+      "start_line": 53,
+      "end_line": 63,
+      "raw": "| Need | Entry point | Behavior |\n| --- | --- | --- |\n| Qt-free streams and descriptors | `iiFileProvider::Native`, `iiFileProviderStorage.h` | C++23, native platform calls, append/seek/exclusive/no-follow flags retained |\n| Complete native output | `native::StagedFile`, `native::File::write` | Suffix-preserving private path, publish on success, discard unsuccessful stages |\n| Existing Qt devices | `FileDevice`, `SaveFile`, `Directory`, `TemporaryFile`, `TemporaryDirectory`, `LockFile` | Preserve Qt errors, permissions, attributes and stream behavior inside the provider |\n| Image serialization | `File::saveImage` | Caller-owned image codec, provider-owned atomic stream |\n| Existing Qt SQL schemas | `File::prepareDatabase` | Reserve an empty missing database without truncating existing bytes before the domain driver opens it |\n| Native SQL schemas | `native::openDatabase` | Provider opens storage; caller retains schema and query semantics |\n| Python model workers | `ii_file_provider` | Native C ABI creation/publication, owned streams and codec staging |\n| Native Swift | `iiFileProviderSwift` | Compile `IisaccFileProvider.swift` from the installed SDK |\n| Android services | `FileStorage`, `iiFileProvider_add_android_storage` | Existing OS bridge retains granted content URIs and descriptor flags |\n",
+      "columns": [
+        "Need",
+        "Entry point",
+        "Behavior"
+      ],
+      "rows": [
+        [
+          "Qt-free streams and descriptors",
+          "`iiFileProvider::Native`, `iiFileProviderStorage.h`",
+          "C++23, native platform calls, append/seek/exclusive/no-follow flags retained"
+        ],
+        [
+          "Complete native output",
+          "`native::StagedFile`, `native::File::write`",
+          "Suffix-preserving private path, publish on success, discard unsuccessful stages"
+        ],
+        [
+          "Existing Qt devices",
+          "`FileDevice`, `SaveFile`, `Directory`, `TemporaryFile`, `TemporaryDirectory`, `LockFile`",
+          "Preserve Qt errors, permissions, attributes and stream behavior inside the provider"
+        ],
+        [
+          "Image serialization",
+          "`File::saveImage`",
+          "Caller-owned image codec, provider-owned atomic stream"
+        ],
+        [
+          "Existing Qt SQL schemas",
+          "`File::prepareDatabase`",
+          "Reserve an empty missing database without truncating existing bytes before the domain driver opens it"
+        ],
+        [
+          "Native SQL schemas",
+          "`native::openDatabase`",
+          "Provider opens storage; caller retains schema and query semantics"
+        ],
+        [
+          "Python model workers",
+          "`ii_file_provider`",
+          "Native C ABI creation/publication, owned streams and codec staging"
+        ],
+        [
+          "Native Swift",
+          "`iiFileProviderSwift`",
+          "Compile `IisaccFileProvider.swift` from the installed SDK"
+        ],
+        [
+          "Android services",
+          "`FileStorage`, `iiFileProvider_add_android_storage`",
+          "Existing OS bridge retains granted content URIs and descriptor flags"
+        ]
+      ]
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 64,
+      "end_line": 64,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "paragraph",
+      "start_line": 65,
+      "end_line": 70,
+      "raw": "The native API imports no Qt and introduces no common VM/interpreter for app\nlogic. Python support serves existing model workers through a compiled storage\nlibrary. Android Java support is an OS bridge for existing services. Core Values\nand PhotoLibrary Albums retain their independent dependency boundaries.\nThe Swift package contains architecture-independent source. iOS helpers locate\nit outside the target sysroot and compile it with the selected native toolchain.\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 71,
+      "end_line": 71,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "heading",
+      "start_line": 72,
+      "end_line": 72,
+      "raw": "## AI output and control files\n",
+      "level": 2,
+      "title": "AI output and control files"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 73,
+      "end_line": 73,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "paragraph",
+      "start_line": 74,
+      "end_line": 77,
+      "raw": "PNG generation, video frames, PCM/WAV, JSON reports, checkpoint conversion and\nmodel archives use owned streams or staging. Generation History stays PNG;\neditor persistence owns IISC conversion. Sampling, encoding and validation remain\nwith model/format modules. Path-only encoders borrow the provider's output path.\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 78,
+      "end_line": 78,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "fenced_code",
+      "start_line": 79,
+      "end_line": 83,
+      "raw": "```python\nfrom ii_file_provider import staged_path\nwith staged_path(output_png, overwrite=False) as temporary:\n    image.save(temporary, format=\"PNG\")\n```\n",
+      "language": "python",
+      "code": "from ii_file_provider import staged_path\nwith staged_path(output_png, overwrite=False) as temporary:\n    image.save(temporary, format=\"PNG\")\n",
+      "closed": true
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 84,
+      "end_line": 84,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 85,
+      "end_line": 94,
+      "raw": "`IIFILEPROVIDER_NATIVE_LIBRARY` selects the native library explicitly;\n`IIFILEPROVIDER_PREFIX` selects its installed support files. Missing native\nsupport is an error, never a fallback to an independent final-file writer.\nTemporary-directory cleanup is idempotent and tolerates completed stages moving\nto their final names. Staged destinations are resolved when the stage is reserved,\nso an encoder changing the current directory cannot redirect publication.\nThe native CMake package exports its Python support and license directories.\nAI runtime packages include that adapter and the native shared library; macOS\nworkers can discover a bundled versioned library in `Contents/Frameworks` without\nrelying on a developer's global SDK installation.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 95,
+      "end_line": 95,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 96,
+      "end_line": 101,
+      "raw": "`.iisacc-temporary.lock`, `.iisacc-file-provider` and `.iifile-stage-*` are control\nartifacts. Lease sentinels persist to preserve interprocess lock identity. Python\nworkers use `provider.iterdir`/`rglob` to omit them from media/model payloads.\nPortable `.iisacc.json` companions remain transferable file metadata. Internal\nlogs and databases do not gain user collections implicitly; owners explicitly\nregister user-visible classified results in Catalog.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iisacc file creation and provision ownership",
+      "anchor": "iisacc-file-creation-and-provision-ownership",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000019",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Native and platform adapters",
+      "anchor": "native-and-platform-adapters",
+      "start_line": 51
+    },
+    {
+      "block_id": "b000025",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "AI output and control files",
+      "anchor": "ai-output-and-control-files",
+      "start_line": 72
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000007",
+        "line": 19,
+        "text": "Provider never imports an upper SDK, model engine, account client or renderer.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000007",
+        "line": 20,
+        "text": "Native APIs do not run application logic through an interpreter or VM.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000009",
+        "line": 23,
+        "text": "internals and transport caches do not acquire user collections merely because",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000015",
+        "line": 46,
+        "text": "must select a provider entry point and retain domain regression coverage.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000031",
+        "line": 87,
+        "text": "support is an error, never a fallback to an independent final-file writer.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000033",
+        "line": 100,
+        "text": "logs and databases do not gain user collections implicitly; owners explicitly",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000011",
+        "label": "FILE_CRUD.md",
+        "target": "FILE_CRUD.md",
+        "kind": "relative",
+        "line": 28
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000005",
+        "columns": [
+          "Caller need",
+          "Provider API",
+          "Caller responsibility"
+        ],
+        "rows": [
+          [
+            "Native classified files",
+            "`FileCatalog::createFileWith`, `createFile`, `importFile`, `registerFiles`",
+            "Metadata, collections, encoder, pending companion recovery"
+          ],
+          [
+            "Classified search/provision",
+            "`FileCatalog::search`, `lookup`, `read`",
+            "UI, transport authority, bounded result consumption"
+          ],
+          [
+            "Existing Qt codecs",
+            "`File::openRead`, `writeWith`, `create`, `update`, `copyToUrl`",
+            "Domain validation/serialization, optional catalog registration"
+          ],
+          [
+            "Path-only external codecs",
+            "`StagedFile`, `File::publish`",
+            "Write borrowed temporary path, validate before publication"
+          ],
+          [
+            "Society object packages",
+            "`iiFileProvider::Objects`",
+            "Domain objects, authors, sessions, synchronization authority"
+          ],
+          [
+            "Domain SQLite schemas",
+            "`Database`, `Statement`, `Transaction`",
+            "Schema, record semantics, domain revision rules"
+          ]
+        ]
+      },
+      {
+        "block_id": "b000021",
+        "columns": [
+          "Need",
+          "Entry point",
+          "Behavior"
+        ],
+        "rows": [
+          [
+            "Qt-free streams and descriptors",
+            "`iiFileProvider::Native`, `iiFileProviderStorage.h`",
+            "C++23, native platform calls, append/seek/exclusive/no-follow flags retained"
+          ],
+          [
+            "Complete native output",
+            "`native::StagedFile`, `native::File::write`",
+            "Suffix-preserving private path, publish on success, discard unsuccessful stages"
+          ],
+          [
+            "Existing Qt devices",
+            "`FileDevice`, `SaveFile`, `Directory`, `TemporaryFile`, `TemporaryDirectory`, `LockFile`",
+            "Preserve Qt errors, permissions, attributes and stream behavior inside the provider"
+          ],
+          [
+            "Image serialization",
+            "`File::saveImage`",
+            "Caller-owned image codec, provider-owned atomic stream"
+          ],
+          [
+            "Existing Qt SQL schemas",
+            "`File::prepareDatabase`",
+            "Reserve an empty missing database without truncating existing bytes before the domain driver opens it"
+          ],
+          [
+            "Native SQL schemas",
+            "`native::openDatabase`",
+            "Provider opens storage; caller retains schema and query semantics"
+          ],
+          [
+            "Python model workers",
+            "`ii_file_provider`",
+            "Native C ABI creation/publication, owned streams and codec staging"
+          ],
+          [
+            "Native Swift",
+            "`iiFileProviderSwift`",
+            "Compile `IisaccFileProvider.swift` from the installed SDK"
+          ],
+          [
+            "Android services",
+            "`FileStorage`, `iiFileProvider_add_android_storage`",
+            "Existing OS bridge retains granted content URIs and descriptor flags"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

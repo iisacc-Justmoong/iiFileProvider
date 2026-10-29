@@ -1,0 +1,618 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:194fb80a7c4a6410e043a5a7031152ffc9343e1669bdb6f9be781c2c04fd6ac7",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider%2FNative",
+    "name": "Native",
+    "root": "SDK/iiFileProvider/Native",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "README.md",
+    "sha256": "156e5e1bbe10ea17d6cf7823ed60633b331e5e6022e68d117fab62e36871dc2c",
+    "bytes": 11234,
+    "line_count": 173,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "iiFileProvider native component",
+    "role": "overview",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiFileProvider native component\n",
+      "level": 1,
+      "title": "iiFileProvider native component"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 5,
+      "raw": "Version 0.11.1 adds exclusive atomic publication of a staged sibling directory.\nConsumers requiring this API must request at least 0.11.1; an older 0.11.0\ninstallation does not provide the symbol.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 7,
+      "end_line": 11,
+      "raw": "Version 0.11.0 adds bounded SQLite BLOB range reads, batch compare-and-exchange,\nand streaming SHA-256 without copying a complete value. Expected source ranges\nare checked before any write; an internal savepoint protects the batch inside\nthe caller's explicit transaction. Database object layout and the 0.5 dylib ABI\nremain unchanged. See [BLOB range contracts](docs/BLOB_RANGES.md).\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 12,
+      "end_line": 12,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 13,
+      "end_line": 17,
+      "raw": "Version 0.10.1 validates the fixed ISO-8601 timestamp grammar without a lazy\nregular-expression allocation. Fractions and timezone offsets retain their\nexisting canonical UTC meaning. Allocation-failure regression checks preserve\nauthorship until an entire change is prepared. The public 0.5 dylib ABI is\nunchanged. See [timestamp allocation safety](docs/TIMESTAMP_SAFETY.md).\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 19,
+      "end_line": 23,
+      "raw": "Version 0.9.0 adds a Qt-free SQLite execution API in `iiFileProviderDatabase.h`:\nowned connections/statements, typed bindings, bounded values, native errors,\nread-only/create modes and RAII transactions. See\n[native database contracts](../docs/NATIVE_DATABASE.md). Existing 0.5 dylib ABI\nand the independently selected legacy Qt API are retained.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 24,
+      "end_line": 24,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 25,
+      "end_line": 34,
+      "raw": "Version 0.8.3 adds `SourceAccess`, an in-process native-identity access token for\nin-place writers and read/copy scopes. Nested same-thread reads and hard links\nshare access; unrelated files remain independent. Idle streams do not hold it.\nDomain renderers acquire access only for their source reads, then render detached\ndata. Presentation releases its intake scope across a renderer callback, reacquires\nit before publication, and rejects changed source versions. A regression pauses a\nrenderer, accepts a concurrent scoped write and rejects its obsolete preview.\nConcurrent requests for the same unchanged source can reuse the first completed\nprojection. Normalized provider attribute changes are distinguished from external\nedits; they do not cause a valid second preview request to fail.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 35,
+      "end_line": 35,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 36,
+      "end_line": 38,
+      "raw": "The C++23 build uses headers and translation units, with named-module scanning\ndisabled. This supports Android NDK toolchains that do not ship clang-scan-deps;\nit does not change the language level or runtime behavior.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 39,
+      "end_line": 39,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 40,
+      "end_line": 53,
+      "raw": "Version 0.8.1 retains `File::create`, `File::update` and `File::remove` for the Qt-free\niiCSMIDI document consumer. `create` writes complete staged bytes, then publishes\nwith an exclusive same-directory hard link: an existing file/symlink/directory\nis never replaced. Filesystems lacking hard links fail explicitly; no partial or\ndirect-write fallback is used. `update` checks expected bytes and atomically\nreplaces the file using the existing publication path. It does not lock external\nwriters across checking/publication. `remove` removes one file/symlink, refuses\ndirectories, and drains presentation work/removes its companion. These functions\naccept native filesystem paths and preserve binary NUL in file content while\nrejecting NUL in paths. FileCode distinguishes existing destinations, conflicts,\ninvalid paths, limits and I/O failure. Provider presentation is enqueued for\nvisible completed files; private/hidden staging trees remain excluded. CRUD,\npreservation, conflict and presentation regression checks run in native_test.cpp.\nCore/JSON remain outside the Native dependency graph.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 54,
+      "end_line": 54,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 55,
+      "end_line": 59,
+      "raw": "C++23 byte-oriented file CRUD, atomic staged publication, scoped temporary directories,\ncredential-free file-author snapshots and schema-v1/v2/v3 authorship ledgers. Public\ninterfaces contain only standard types. Existing Qt adapters and object-store services\nremain separate. JSON uses pinned nlohmann-json and Unicode normalization uses utf8proc;\nfull notices are preserved. SHA-256 is first-party standard C++ with preserved provenance.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 60,
+      "end_line": 60,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 61,
+      "end_line": 66,
+      "raw": "Configure `Native` into `build/native` and install alongside iiFileProvider. Consumers use\n`find_package(iiFileProviderNative 0.8 CONFIG REQUIRED)` and `iiFileProvider::Native`.\nOld schema-v3 profiles, nested details, attribution, device and named links are retained;\nreading a ledger clears its active identity. Rejected mutations leave its dump unchanged.\nPhysical writes use reserved files in the destination directory and preserve permissions.\nThe native component shares the existing temporary lease with storage cleanup services.\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 67,
+      "end_line": 67,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 68,
+      "end_line": 73,
+      "raw": "`iiFileProviderPresentation.h` provides native detail extraction, PNG thumbnails,\nUTF-8 text cards, PCM waveform previews, domain renderer registration, stable\nthumbnail change tokens and recursive intake. Apple builds use Image I/O and\nQuick Look Thumbnailing; the portable image backend uses SHA-256-pinned stb\nsources already reviewed in iiPaintEngine. No Qt, Python, VM or higher SDK is\nlinked into this component. See `../docs/FILE_PRESENTATION.md` in the source tree.\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 74,
+      "end_line": 75,
+      "raw": "\n\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "paragraph",
+      "start_line": 76,
+      "end_line": 82,
+      "raw": "The authored code is C++23 with extensions disabled. nlohmann/json 3.12.0 and\nutf8proc 2.11.3 sources/licenses are vendored and SHA-256 checked during CMake\nconfiguration. utf8proc retains its upstream C source. The component keeps the\nprovider's existing MIT license; dependency licenses are installed.\nNew POSIX files use ordinary `0666 & umask` permissions; replacement preserves\nthe destination's permissions. Directory cleanup is scoped to each owned random\ndirectory, and staged files participate in the provider's shared temporary lease.\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 83,
+      "end_line": 83,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "paragraph",
+      "start_line": 84,
+      "end_line": 88,
+      "raw": "`Native.AuthorLinks` verifies relative/file/custom/signed URL text, malformed\nURLs, Unicode email lowercase behavior, strict schema types, legacy ledgers and\nUTC offset normalization. `IIFILEPROVIDER_NATIVE_SANITIZERS=ON` enables address and\nundefined-behavior instrumentation in a build directory such as\n`build/native-sanitized`. The module never resolves Qt during configuration.\n"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 89,
+      "end_line": 89,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "heading",
+      "start_line": 90,
+      "end_line": 90,
+      "raw": "## Native storage adapters (0.6)\n",
+      "level": 2,
+      "title": "Native storage adapters (0.6)"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 91,
+      "end_line": 91,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 92,
+      "end_line": 102,
+      "raw": "`iiFileProviderStorage.h` provides C++23 output/read-write streams, native\ndescriptor-relative operations and SQLite opening without Qt. The C ABI in\n`FileProviderC.h` supports existing Python workers with typed error codes,\nsuffix-preserving staging and final publication. Native dependencies include\nSQLite >= 3.27 and the pinned JSON/Unicode code already vendored here.\nThe native target is static for iOS/WASM and shared for desktop/Android.\nUse the root SDK installation to obtain Native, Catalog, Objects, Temporary,\nPython, Swift and Android support together.\nThe native package exports `iiFileProviderNative_PYTHON_DIRECTORY` and\n`iiFileProviderNative_LICENSE_DIRECTORY` for runtime packaging. Existing 0.5\nnative consumers remain compatible; new storage adapters require 0.6.\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 103,
+      "end_line": 103,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 104,
+      "end_line": 130,
+      "raw": "On MSVC, each exported `Authorship` compile-time limit has its own declaration.\n`Native.AuthorLinks` checks the byte and link limits at compile time as well as\nexercising author metadata through the imported native library.\nThe relocated bundled-SQLite consumer test prepends its own installed `bin/`\ndirectory on Windows so DLL loading also exercises the relocated package.\nUnicode filesystem fixtures use UTF-8 path literals explicitly on Windows.\nNative and device contract executables print caught failures before returning a\nnonzero status, so Windows test logs retain the original error information.\nWindows native read handles share deletion, allowing an atomic replacement while\nexisting readers retain the old file. The native contract checks both old-reader\nbytes and replacement bytes. Existing Windows files use `ReplaceFileW` to retain\nthat behavior with a live reader. Windows writes drain pending presentation work for\nthe destination before replacement so NTFS metadata streams cannot block commit.\nThe presentation contract compares source and derived-file Windows DACLs; POSIX\nbuilds retain the owner-only mode check. Windows permission bits do not represent\nNTFS access-control entries.\nThe catalog safety test verifies Windows denial when an open SQLite connection\nprevents renaming its state directory and checks that the original catalog stays\nintact. Filesystems that allow the rename retain the foreign-directory identity\nrejection check.\nWindows stream renames also drain pending presentation work for both paths; the\nnative contract closes an OutputFile and immediately replaces an existing file.\nThe public storage header forward-declares NT syscall pointer types. Only the\nimplementation includes winternl.h, so consumers can include Dokan's NT types.\nWindows installations also colocate an external SQLite DLL with the native\nprovider when it is available beside the imported SQLite library. The installed\nruntime test loads a staged Native DLL with Python's normal safe DLL search mode.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "heading",
+      "start_line": 131,
+      "end_line": 131,
+      "raw": "## Coordinated source access\n",
+      "level": 2,
+      "title": "Coordinated source access"
+    },
+    {
+      "id": "b000033",
+      "kind": "blank",
+      "start_line": 132,
+      "end_line": 132,
+      "raw": "\n"
+    },
+    {
+      "id": "b000034",
+      "kind": "paragraph",
+      "start_line": 133,
+      "end_line": 139,
+      "raw": "`SourceAccess` is a native C++23 access token for an existing regular file. A\ndocument owner uses `std::lock_guard<SourceAccess>` across an in-place authoring\ntransaction; provider `ReadFile` operations and `Presentation::prepare/attach`\nuse the same source identity. Idle open streams do not retain a lock. Hard\nlinks share ownership, nested reads on one thread are allowed, and unrelated\nfiles use independent locks. Weak identity entries are retired after their last\ntoken, keeping the registry bounded by live access tokens.\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "blank",
+      "start_line": 140,
+      "end_line": 140,
+      "raw": "\n"
+    },
+    {
+      "id": "b000036",
+      "kind": "paragraph",
+      "start_line": 141,
+      "end_line": 146,
+      "raw": "The scope does not replace operating-system database locks or coordinate other\nprocesses. Document adapters must opt into it for their writes; a provider read\nscope alone cannot coordinate an unadapted external writer. This prevents the\nprovider's own preview reads and descriptor closes from overlapping an opted-in\nauthoring transaction. SQLite documents why raw descriptor closes during an open\ntransaction are unsafe in its [locking guidance](https://sqlite.org/howtocorrupt.html#posix_advisory_locks_canceled_by_a_separate_thread_doing_close).\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "blank",
+      "start_line": 147,
+      "end_line": 147,
+      "raw": "\n"
+    },
+    {
+      "id": "b000038",
+      "kind": "paragraph",
+      "start_line": 148,
+      "end_line": 150,
+      "raw": "`iiFileProvider.Native.SourceAccess` exercises blocked same-file reads,\nindependent other-file reads, reentrancy, hard-link identity and completion after\nthe authoring scope is released. It runs without Qt.\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "blank",
+      "start_line": 151,
+      "end_line": 151,
+      "raw": "\n"
+    },
+    {
+      "id": "b000040",
+      "kind": "paragraph",
+      "start_line": 152,
+      "end_line": 152,
+      "raw": "Set `IIFILEPROVIDER_NATIVE_STATIC=ON` for embedded native runtimes. The exported target carries its static visibility definition; the default desktop library remains shared. See [static linking contract](../docs/NATIVE_STATIC.md).\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "blank",
+      "start_line": 153,
+      "end_line": 153,
+      "raw": "\n"
+    },
+    {
+      "id": "b000042",
+      "kind": "heading",
+      "start_line": 154,
+      "end_line": 154,
+      "raw": "## Owned device and atomic-save API\n",
+      "level": 2,
+      "title": "Owned device and atomic-save API"
+    },
+    {
+      "id": "b000043",
+      "kind": "blank",
+      "start_line": 155,
+      "end_line": 155,
+      "raw": "\n"
+    },
+    {
+      "id": "b000044",
+      "kind": "paragraph",
+      "start_line": 156,
+      "end_line": 160,
+      "raw": "Native 0.10.0 adds `<iiFileProviderNativeDevice.h>` with descriptor-backed `Device`,\n`AtomicSave`, `publishFile` and `renameFileExclusive`. The implementation owns\nread/write/append/seek/resize, permissions, mappings, borrowed-handle lifetime,\ncancellation, file sync and exclusive publication without Qt. See\n[the owned I/O contract](../docs/OWNED_FILE_IO.md).\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "blank",
+      "start_line": 161,
+      "end_line": 161,
+      "raw": "\n"
+    },
+    {
+      "id": "b000046",
+      "kind": "paragraph",
+      "start_line": 162,
+      "end_line": 164,
+      "raw": "Native 0.11.1 provides `publishDirectoryExclusive` to atomically publish a\ncomplete staged directory to a new sibling name without replacing an existing path. Its platform support,\nownership and durability boundaries are in [directory publication](docs/DIRECTORY_PUBLICATION.md).\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "blank",
+      "start_line": 165,
+      "end_line": 165,
+      "raw": "\n"
+    },
+    {
+      "id": "b000048",
+      "kind": "html",
+      "start_line": 166,
+      "end_line": 166,
+      "raw": "<!-- workspace-docs:readme:start -->\n"
+    },
+    {
+      "id": "b000049",
+      "kind": "heading",
+      "start_line": 167,
+      "end_line": 167,
+      "raw": "## Documentation entry points\n",
+      "level": 2,
+      "title": "Documentation entry points"
+    },
+    {
+      "id": "b000050",
+      "kind": "blank",
+      "start_line": 168,
+      "end_line": 168,
+      "raw": "\n"
+    },
+    {
+      "id": "b000051",
+      "kind": "list",
+      "start_line": 169,
+      "end_line": 172,
+      "raw": "- Human overview: this English `README.md`.\n- Agent instructions: [AGENT.md](AGENT.md).\n- Human documentation: [documentation index](docs/README.md).\n- Structured agent documentation: [agent index](docs/agent-index.json).\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Human overview: this English `README.md`.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Agent instructions: [AGENT.md](AGENT.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Human documentation: [documentation index](docs/README.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Structured agent documentation: [agent index](docs/agent-index.json).",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000052",
+      "kind": "html",
+      "start_line": 173,
+      "end_line": 173,
+      "raw": "<!-- workspace-docs:readme:end -->\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiFileProvider native component",
+      "anchor": "iifileprovider-native-component",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000027",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Native storage adapters (0.6)",
+      "anchor": "native-storage-adapters-06",
+      "start_line": 90
+    },
+    {
+      "block_id": "b000032",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Coordinated source access",
+      "anchor": "coordinated-source-access",
+      "start_line": 131
+    },
+    {
+      "block_id": "b000042",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Owned device and atomic-save API",
+      "anchor": "owned-device-and-atomic-save-api",
+      "start_line": 154
+    },
+    {
+      "block_id": "b000049",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Documentation entry points",
+      "anchor": "documentation-entry-points",
+      "start_line": 167
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000003",
+        "line": 4,
+        "text": "Consumers requiring this API must request at least 0.11.1; an older 0.11.0",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000011",
+        "line": 27,
+        "text": "share access; unrelated files remain independent. Idle streams do not hold it.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000011",
+        "line": 34,
+        "text": "edits; they do not cause a valid second preview request to fail.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000013",
+        "line": 37,
+        "text": "disabled. This supports Android NDK toolchains that do not ship clang-scan-deps;",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000015",
+        "line": 43,
+        "text": "is never replaced. Filesystems lacking hard links fail explicitly; no partial or",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000019",
+        "line": 62,
+        "text": "`find_package(iiFileProviderNative 0.8 CONFIG REQUIRED)` and `iiFileProvider::Native`.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000025",
+        "line": 88,
+        "text": "`build/native-sanitized`. The module never resolves Qt during configuration.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000031",
+        "line": 118,
+        "text": "builds retain the owner-only mode check. Windows permission bits do not represent",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000034",
+        "line": 136,
+        "text": "use the same source identity. Idle open streams do not retain a lock. Hard",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000036",
+        "line": 142,
+        "text": "processes. Document adapters must opt into it for their writes; a provider read",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000005",
+        "label": "BLOB range contracts",
+        "target": "docs/BLOB_RANGES.md",
+        "kind": "relative",
+        "line": 11
+      },
+      {
+        "block_id": "b000007",
+        "label": "timestamp allocation safety",
+        "target": "docs/TIMESTAMP_SAFETY.md",
+        "kind": "relative",
+        "line": 17
+      },
+      {
+        "block_id": "b000009",
+        "label": "native database contracts",
+        "target": "../docs/NATIVE_DATABASE.md",
+        "kind": "relative",
+        "line": 22
+      },
+      {
+        "block_id": "b000036",
+        "label": "locking guidance",
+        "target": "https://sqlite.org/howtocorrupt.html#posix_advisory_locks_canceled_by_a_separate_thread_doing_close",
+        "kind": "external",
+        "line": 146
+      },
+      {
+        "block_id": "b000040",
+        "label": "static linking contract",
+        "target": "../docs/NATIVE_STATIC.md",
+        "kind": "relative",
+        "line": 152
+      },
+      {
+        "block_id": "b000044",
+        "label": "the owned I/O contract",
+        "target": "../docs/OWNED_FILE_IO.md",
+        "kind": "relative",
+        "line": 160
+      },
+      {
+        "block_id": "b000046",
+        "label": "directory publication",
+        "target": "docs/DIRECTORY_PUBLICATION.md",
+        "kind": "relative",
+        "line": 164
+      },
+      {
+        "block_id": "b000051",
+        "label": "AGENT.md",
+        "target": "AGENT.md",
+        "kind": "relative",
+        "line": 170
+      },
+      {
+        "block_id": "b000051",
+        "label": "documentation index",
+        "target": "docs/README.md",
+        "kind": "relative",
+        "line": 171
+      },
+      {
+        "block_id": "b000051",
+        "label": "agent index",
+        "target": "docs/agent-index.json",
+        "kind": "relative",
+        "line": 172
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

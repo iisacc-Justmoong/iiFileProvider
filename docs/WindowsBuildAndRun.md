@@ -1,5 +1,7 @@
 # iiFileProvider: Windows 빌드 및 실행
 
+> 아래 실행 결과는 Core I/O 어댑터 분리 이전 기록이다. 현재 Core I/O는 `example/CoreIO`를 별도로 구성하고 iiSDKCore와 iiFileProvider Native를 소비자에서 연결한다.
+
 파일 I/O, 임시 파일·카탈로그·미리보기와 Native/C/Python/Qt 어댑터를 제공하는 저장소 SDK이다.
 
 검증 기록 갱신: `2026-10-20T02:45:37+09:00`. 변경 전 소스 기준 commit: `ae5463a2bad7d811e402fe3fb68cb50351566b7a`. 아래 결과는 이번 변경을 포함한 작업 트리의 검증이다.
@@ -60,7 +62,7 @@ $configure = @(
     "-DPython_EXECUTABLE=$python"
     '-DQt6_DIR=C:/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6'
     '-DBUILD_TESTING=ON'
-    '-DIIFILEPROVIDER_BUILD_CORE_IO=ON'
+    '-DIIFILEPROVIDER_BUILD_CORE_IO=OFF'
     '-DIIFILEPROVIDER_BUILD_NATIVE_API=ON'
     '-DIIFILEPROVIDER_BUILD_QT_API=ON'
     '-DIIFILEPROVIDER_BUILD_TOOLS=ON'

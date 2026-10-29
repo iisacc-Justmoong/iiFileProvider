@@ -1,5 +1,7 @@
 #include "TemporaryLease.h"
+#include "TemporaryDirectory.h"
 #include <cerrno>
+#include <cstdlib>
 #include <stdexcept>
 #include <system_error>
 #ifdef _WIN32
@@ -13,6 +15,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
 #endif
 
 namespace iiFileProvider {
@@ -38,12 +43,39 @@ struct Descriptor {
     ~Descriptor() { if (value >= 0) ::close(value); }
     void reset(int next) { if (value >= 0) ::close(value); value = next; }
 };
+bool beneath(const fs::path& directory, const fs::path& root) {
+    if (directory == root) return true;
+    const auto relative = directory.lexically_relative(root);
+    if (relative.empty() || relative.is_absolute()) return false;
+    for (const auto& component : relative) if (component == "..") return false;
+    return true;
+}
 int openDirectory(const fs::path &directory) {
+#if defined(__APPLE__) && TARGET_OS_IOS
+    // iPadOS permits access to the app container, but opening protected system
+    // ancestors for directory reading is forbidden. HOME is the OS-assigned
+    // container boundary; descendants retain the no-follow contract.
+    if (const auto* home = std::getenv("HOME")) {
+        const auto root = fs::path(home).lexically_normal();
+        if (root.is_absolute() && beneath(directory, root))
+            return detail::open_lease_directory(directory, root);
+        std::error_code error;
+        const auto canonical = fs::canonical(root, error);
+        if (!error && beneath(directory, canonical))
+            return detail::open_lease_directory(directory, canonical);
+    }
+#endif
+    return detail::open_lease_directory(directory, "/");
+}
+int openRelative(const fs::path& directory, const fs::path& root) {
+    if (!root.is_absolute() || root.lexically_normal() != root ||
+        !directory.is_absolute() || directory.lexically_normal() != directory ||
+        !beneath(directory, root)) fail("temporary lease path escapes its trusted root");
     Descriptor parent;
-    parent.value = ::open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    parent.value = ::open(root.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
     if (parent.value < 0) io("cannot open temporary lease root", errno);
-    for (const auto &part : directory.relative_path()) {
-        if (part.empty()) continue;
+    for (const auto &part : directory.lexically_relative(root)) {
+        if (part.empty() || part == ".") continue;
         const auto next = ::openat(parent.value, part.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
         if (next < 0) io("temporary lease directory is unavailable or redirected", errno);
         parent.reset(next);
@@ -75,6 +107,11 @@ void directDirectory(const fs::path &directory) {
 }
 #endif
 }
+#ifndef _WIN32
+int detail::open_lease_directory(const fs::path& directory, const fs::path& trusted_root) {
+    return openRelative(directory, trusted_root);
+}
+#endif
 class TemporaryLease::Impl {
 public:
     bool acquired = false;

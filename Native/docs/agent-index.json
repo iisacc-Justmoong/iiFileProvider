@@ -1,0 +1,76 @@
+{
+  "format": "iisacc.agent-document-index",
+  "schema_version": 1,
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider%2FNative",
+    "name": "Native",
+    "root": "SDK/iiFileProvider/Native",
+    "kind": "sdk"
+  },
+  "documentation_root": "docs",
+  "agent_schema": "docs/agent-document.schema.json",
+  "documents": [
+    {
+      "document_id": "urn:iisacc:document:157aa969ca216318f3dd79b7e5eda59f01899165873ab39ac76fdafa9e1c0bb8",
+      "source": "AGENT.md",
+      "agent_json": "docs/entrypoints/AGENT.agent.json",
+      "source_sha256": "df4324e154dccaa5a35267b32d1bb318797639ced5975d7e1a52866aa886a2d9",
+      "role": "instructions"
+    },
+    {
+      "document_id": "urn:iisacc:document:194fb80a7c4a6410e043a5a7031152ffc9343e1669bdb6f9be781c2c04fd6ac7",
+      "source": "README.md",
+      "agent_json": "docs/entrypoints/README.agent.json",
+      "source_sha256": "156e5e1bbe10ea17d6cf7823ed60633b331e5e6022e68d117fab62e36871dc2c",
+      "role": "overview"
+    },
+    {
+      "document_id": "urn:iisacc:document:cbe96c07852717754e6007518da4f8bf53dab60195d436e5d88b05f63272595f",
+      "source": "docs/BLOB_RANGES.md",
+      "agent_json": "docs/BLOB_RANGES.agent.json",
+      "source_sha256": "b14c9f2629f8d26e36b6cb46b765faad31cadde095c54e05ca7a4141d25400d1",
+      "role": "guide"
+    },
+    {
+      "document_id": "urn:iisacc:document:2719eac02c1a09ac3dbe481f219ada1e2d26a66658e73644f5713a28fda58572",
+      "source": "docs/DIRECTORY_PUBLICATION.md",
+      "agent_json": "docs/DIRECTORY_PUBLICATION.agent.json",
+      "source_sha256": "59fb2e5e90c0fa5ede6176c1335c9c3a08166559e556533a6331a7e8155bc9cd",
+      "role": "guide"
+    },
+    {
+      "document_id": "urn:iisacc:document:71ed9d982dd7fc51396242b3a2138bc985e1629e6ed3ecf60dd9a1b5dfd9e838",
+      "source": "docs/README.md",
+      "agent_json": "docs/README.agent.json",
+      "source_sha256": "457f53e46c21be5131eda7e21e87173629f026e51b2247bb180c6102ffeebb2b",
+      "role": "overview"
+    },
+    {
+      "document_id": "urn:iisacc:document:da17950c8c7a3c6c688dc833dc031a1e3c1cda5ba1f1ccd21c88a8b1f2f96cc1",
+      "source": "docs/TIMESTAMP_SAFETY.md",
+      "agent_json": "docs/TIMESTAMP_SAFETY.agent.json",
+      "source_sha256": "7a5339027792622d233a4b4f337d31700f267d5cb11dcf557cae3797681d9648",
+      "role": "guide"
+    },
+    {
+      "document_id": "urn:iisacc:document:cefbc0ff4414e47f764a0d98142949630d93f384259dfa4cdd2ef6bab96296b0",
+      "source": "docs/documentation-structure.md",
+      "agent_json": "docs/documentation-structure.agent.json",
+      "source_sha256": "82651b951f2872aedbde89f434b87559121b8becd73fb67906d1e02c66eadd93",
+      "role": "guide"
+    }
+  ],
+  "layout": {
+    "human_entry": "README.md",
+    "agent_entry": "AGENT.md",
+    "human_format": "markdown",
+    "agent_format": "structured_json",
+    "source_authority": "markdown"
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

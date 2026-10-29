@@ -1,6 +1,6 @@
 #include <iiFileProvider.h>
 #include <QtCore/QDir>
-#include <QtCore/QFile>
+#include "iiFileProviderDevice.h"
 #include <QtCore/QJsonDocument>
 #include <QtCore/QTemporaryDir>
 #include <QtTest/QTest>
@@ -177,7 +177,7 @@ private slots:
         QCOMPARE(history.revision(), quint64(1));
         QTemporaryDir directory(QDir::currentPath() + "/named-url-XXXXXX");
         QVERIFY(directory.isValid());
-        QFile file(directory.filePath("metadata.json"));
+        iiFileProvider::FileDevice file(directory.filePath("metadata.json"));
         QVERIFY(file.open(QIODevice::WriteOnly));
         QCOMPARE(file.write(history.dump()), history.dump().size());
         file.close();

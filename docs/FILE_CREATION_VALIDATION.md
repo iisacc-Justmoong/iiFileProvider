@@ -19,7 +19,7 @@ Focused corrections were rerun after fixing the relevant boundary. A row with a 
 | LVRS | 56/56 | full source suite |
 | iiAudioGen | 8/8 | full source suite |
 | iiCalendar | 13/13 | full source suite |
-| iiCameraIntergration | 21/21 | full source suite |
+| iiCameraIntegration | 21/21 | full source suite |
 | iiFileProvider | 31/31 | full source suite; relocated worker discovery rerun |
 | iiGraphicAdjust | 163/163 | full source suite |
 | iiLicenseManager | 3/3 | full source suite |

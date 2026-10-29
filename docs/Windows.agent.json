@@ -1,0 +1,191 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:4d47f2b5ba165c01d201856fa10b1718f06fbdfdcda1c5585e2690cf2ce2c3f5",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/Windows.md",
+    "sha256": "6a5d6cbad365f26a5d76122abff24effe1cc9e2e5e6d77d94411365ac5402ced",
+    "bytes": 1674,
+    "line_count": 25,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "Windows 검증",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Windows 검증\r\n",
+      "level": 1,
+      "title": "Windows 검증"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 7,
+      "raw": "Native 0.8.2 exposes `cache_change_token(path)` in the Python adapter and\r\n`iifp_cache_change_token` in its C ABI. Identity and change time are read under\r\nthe same lock as preview metadata publication, avoiding intermediate NTFS change\r\ntimes and mismatched Win32/Python volume identifiers. The adapter regression\r\npreserves tokens across a preview and invalidates them after a restored-mtime edit.\r\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 8,
+      "end_line": 8,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "Windows에서 Unicode 경로의 패키지 생성은 `_wsopen_s`의 `_O_EXCL`로 원자적으로 수행한다. 기존 패키지 덮어쓰기는 거부하며 `object_store` 런타임 테스트가 이를 검증한다.\r\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "heading",
+      "start_line": 10,
+      "end_line": 10,
+      "raw": "# 소스 경로 검사\r\n",
+      "level": 1,
+      "title": "소스 경로 검사"
+    },
+    {
+      "id": "b000007",
+      "kind": "blank",
+      "start_line": 11,
+      "end_line": 11,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "paragraph",
+      "start_line": 12,
+      "end_line": 12,
+      "raw": "Windows에서는 파일과 모든 상위 경로의 reparse point를 네이티브 속성 조회로 검사한다. MinGW의 `canonical()` 결과만으로 디렉터리 심볼릭 링크를 판별하지 않는다. 패키징 테스트는 파일 링크와 상위 디렉터리 링크를 각각 생성하여 거부 동작을 검증한다.\r\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "heading",
+      "start_line": 13,
+      "end_line": 13,
+      "raw": "# Directory publication\r\n",
+      "level": 1,
+      "title": "Directory publication"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 14,
+      "end_line": 14,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 15,
+      "end_line": 17,
+      "raw": "Preview sampling and NTFS alternate-stream publication share read, write and\r\ndelete access. A Windows regression holds DELETE access to a source while its\r\nportable preview and embedded document are regenerated.\r\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\r\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 19,
+      "end_line": 22,
+      "raw": "The Python `replace`/`rename` bridge uses native storage rename. On Windows it\r\ndrains presentation work for both paths, including children of a renamed\r\ndirectory, before publication or rollback. The Python adapter regression moves\r\na directory with queued child previews and restores all of its original files.\r\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 23,
+      "end_line": 24,
+      "raw": "\r\n\r\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 25,
+      "end_line": 25,
+      "raw": "최신 구성·실행 결과와 복구 조치는 [Windows 빌드 및 실행](WindowsBuildAndRun.md)에 기록한다.\r\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Windows 검증",
+      "anchor": "windows-검증",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000006",
+      "parent_id": null,
+      "level": 1,
+      "title": "소스 경로 검사",
+      "anchor": "소스-경로-검사",
+      "start_line": 10
+    },
+    {
+      "block_id": "b000009",
+      "parent_id": null,
+      "level": 1,
+      "title": "Directory publication",
+      "anchor": "directory-publication",
+      "start_line": 13
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000008",
+        "line": 12,
+        "text": "Windows에서는 파일과 모든 상위 경로의 reparse point를 네이티브 속성 조회로 검사한다. MinGW의 `canonical()` 결과만으로 디렉터리 심볼릭 링크를 판별하지 않는다. 패키징 테스트는 파일 링크와 상위 디렉터리 링크를 각각 생성하여 거부 동작을 검증한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000015",
+        "label": "Windows 빌드 및 실행",
+        "target": "WindowsBuildAndRun.md",
+        "kind": "relative",
+        "line": 25
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

@@ -322,8 +322,8 @@ TemporaryDirectory::TemporaryDirectory(const std::filesystem::path &parent) {
     throw FileError("Cannot reserve a native temporary directory");
 }
 TemporaryDirectory::~TemporaryDirectory() {
-    Presentation::cancelPending(path_);
     if (!path_.empty()) {
+        Presentation::cancelPending(path_);
         std::error_code error;
         std::filesystem::remove_all(path_, error);
     }

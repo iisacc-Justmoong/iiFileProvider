@@ -2,12 +2,8 @@
 #include "StagedFile.h"
 #include "Presentation_p.h"
 #include <iiFileProviderNative.h>
-#include <QDir>
-#include <QFile>
-#include <QFileInfo>
+#include "iiFileProviderDevice.h"
 #include <QLockFile>
-#include <QSaveFile>
-#include <QTemporaryFile>
 #include <algorithm>
 #include <cerrno>
 #include <mutex>
@@ -25,7 +21,10 @@
 #endif
 
 namespace iiFileProvider {
-QByteArray File::imageFormat(const QString &path) { return QFileInfo(path).suffix().toLatin1(); }
+QByteArray File::imageFormat(const QString &path) {
+    const auto name=path.sliced(std::max(path.lastIndexOf('/'),path.lastIndexOf('\\'))+1);
+    const auto dot=name.lastIndexOf('.');return dot<=0?QByteArray{}:name.sliced(dot+1).toLatin1();
+}
 FileError::FileError(FileCode code, const std::string &message)
     : std::runtime_error(message), m_code(code) {}
 FileCode FileError::code() const noexcept { return m_code; }
@@ -33,43 +32,33 @@ namespace {
 [[noreturn]] void fail(FileCode code, const QString &message) {
     throw FileError(code, message.toStdString());
 }
-class CoordinatedReadFile final : public QFile {
+class UnpublishedDevice final : public FileDevice {
 public:
-    explicit CoordinatedReadFile(const QString &path)
-        : QFile(path), m_access(std::filesystem::path(path.toStdU16String())) {}
-    ~CoordinatedReadFile() override { close(); }
-    native::SourceAccess &sourceAccess() { return m_access; }
-    bool open(OpenMode mode) override { std::lock_guard lock(m_access); return QFile::open(mode); }
-    void close() override {
-        if (!isOpen()) return;
-        std::lock_guard lock(m_access); QFile::close();
+    using FileDevice::FileDevice;
+    bool open(OpenMode mode) override {
+        const bool result=FileDevice::open(mode);setPresentationEnabled(false);return result;
     }
-    bool seek(qint64 offset) override { std::lock_guard lock(m_access); return QFile::seek(offset); }
-protected:
-    qint64 readData(char *bytes, qint64 count) override {
-        std::lock_guard lock(m_access); return QFile::readData(bytes, count);
-    }
-    qint64 readLineData(char *bytes, qint64 count) override {
-        std::lock_guard lock(m_access); return QFile::readLineData(bytes, count);
-    }
-private:
-    native::SourceAccess m_access;
 };
-std::unique_ptr<CoordinatedReadFile> openSource(const QString &path) {
+std::unique_ptr<FileDevice> openSource(const QString &path) {
     const auto absolute = File::absolutePath(path);
-    const QFileInfo info(absolute);
-    if (!info.exists()) fail(FileCode::NotFound, "file does not exist");
-    if (!info.isFile()) fail(FileCode::InvalidPath, "input must be a regular file");
+    std::error_code error;
+    const auto info=std::filesystem::status(std::filesystem::path(absolute.toStdU16String()),error);
+    if (error==std::errc::no_such_file_or_directory) fail(FileCode::NotFound, "file does not exist");
+    if (error) fail(FileCode::IoError, QString::fromStdString(error.message()));
+    if (!std::filesystem::exists(info)) fail(FileCode::NotFound, "file does not exist");
+    if (!std::filesystem::is_regular_file(info)) fail(FileCode::InvalidPath, "input must be a regular file");
     try {
-        auto file = std::make_unique<CoordinatedReadFile>(absolute);
+        auto file = std::make_unique<FileDevice>(absolute);
         if (!file->open(QIODevice::ReadOnly)) fail(FileCode::IoError, file->errorString());
         return file;
     } catch (const native::FileError &error) { fail(FileCode::IoError, QString::fromUtf8(error.what())); }
 }
 QString destination(const QString &path) {
     const auto absolute = File::absolutePath(path);
-    const QFileInfo info(absolute);
-    if (info.isSymLink() || (info.exists() && !info.isFile()))
+    std::error_code error;
+    const auto info=std::filesystem::symlink_status(std::filesystem::path(absolute.toStdU16String()),error);
+    if (error && error!=std::errc::no_such_file_or_directory) fail(FileCode::IoError,QString::fromStdString(error.message()));
+    if (std::filesystem::is_symlink(info) || (std::filesystem::exists(info) && !std::filesystem::is_regular_file(info)))
         fail(FileCode::InvalidPath, "destination must be a regular file, not a link or directory");
     return absolute;
 }
@@ -82,7 +71,7 @@ void writeUnlocked(const QString &path, const std::function<void(QIODevice &)> &
 #ifdef _WIN32
     detail::cancelPresentation(std::filesystem::path(path.toStdU16String()));
 #endif
-    QSaveFile file(path);
+    SaveFile file(path);
     file.setDirectWriteFallback(false);
     if (!file.open(QIODevice::WriteOnly)) fail(FileCode::IoError, file.errorString());
     encode(file);
@@ -117,7 +106,7 @@ QString File::absolutePath(const QString &path) {
         || path.startsWith(":") || path.contains("://"))
         fail(FileCode::InvalidPath, "a local filesystem path is required");
     if (QString::fromUtf8(path.toUtf8()) != path) fail(FileCode::InvalidPath, "invalid Unicode path");
-    return QFileInfo(path).absoluteFilePath();
+    return pathString(std::filesystem::absolute(std::filesystem::path(path.toStdU16String())).lexically_normal());
 }
 std::unique_ptr<QIODevice> File::openRead(const QString &path) {
     return openSource(path);
@@ -126,7 +115,8 @@ QByteArray File::read(const QString &path, qint64 maximumBytes) {
     if (maximumBytes < 0 || maximumBytes >= std::numeric_limits<qsizetype>::max())
         fail(FileCode::LimitExceeded, "invalid file read limit");
     auto file = openSource(path);
-    std::lock_guard access(file->sourceAccess());
+    native::SourceAccess sourceAccess(std::filesystem::path(file->fileName().toStdU16String()));
+    std::lock_guard access(sourceAccess);
     if (file->size() > maximumBytes) fail(FileCode::LimitExceeded, "file exceeds read limit");
     QByteArray bytes;
     while (!file->atEnd()) {
@@ -140,7 +130,8 @@ QByteArray File::read(const QString &path, qint64 maximumBytes) {
 QByteArray File::readPrefix(const QString &path, qint64 count) {
     if (count < 0) fail(FileCode::LimitExceeded, "negative prefix size");
     auto file = openSource(path);
-    std::lock_guard access(file->sourceAccess());
+    native::SourceAccess sourceAccess(std::filesystem::path(file->fileName().toStdU16String()));
+    std::lock_guard access(sourceAccess);
     const auto bytes = file->read(count);
     if (bytes.size() < count && !file->atEnd()) fail(FileCode::IoError, file->errorString());
     return bytes;
@@ -148,11 +139,12 @@ QByteArray File::readPrefix(const QString &path, qint64 count) {
 bool File::prepareDatabase(const QString &path) {
     try {
         const auto target = destination(path);
-        if (!QFileInfo::exists(target)) {
+        if (!FileDevice::exists(target)) {
             try { create(target, {}); }
             catch (const FileError &error) { if (error.code() != FileCode::AlreadyExists) throw; }
         }
-        return QFileInfo(target).isFile() && !QFileInfo(target).isSymLink();
+        const auto info=std::filesystem::symlink_status(std::filesystem::path(target.toStdU16String()));
+        return std::filesystem::is_regular_file(info);
     } catch (const FileError &) { return false; }
 }
 void File::writeWith(const QString &path, const std::function<void(QIODevice &)> &encode) {
@@ -169,12 +161,12 @@ void File::write(const QString &path, const QByteArray &bytes) {
 void File::create(const QString &path, const QByteArray &bytes) {
     const auto target = destination(path);
     StagedFile staged(target);
-    QFile temporary(staged.path());
+    UnpublishedDevice temporary(staged.path());
     if (!temporary.open(QIODevice::WriteOnly) || temporary.write(bytes) != bytes.size() || !temporary.flush())
         fail(FileCode::IoError, temporary.errorString());
     temporary.close();
     const auto result = staged.publish(false);
-    if (!result.succeeded) throw FileError(QFileInfo::exists(target) ? FileCode::AlreadyExists : FileCode::IoError, result.message);
+    if (!result.succeeded) throw FileError(FileDevice::exists(target) ? FileCode::AlreadyExists : FileCode::IoError, result.message);
 }
 void File::update(const QString &path, const QByteArray &expected, const QByteArray &replacement) {
     const auto target = destination(path);
@@ -196,9 +188,9 @@ bool File::remove(const QString &path) {
     const auto target = destination(path);
     QLockFile guard(target + ".iisacc-lock"); lock(guard);
     (void)destination(target);
-    if (!QFileInfo::exists(target)) return false;
+    if (!FileDevice::exists(target)) return false;
     detail::cancelPresentation(std::filesystem::path(target.toStdU16String()));
-    QFile file(target);
+    FileDevice file(target);
     if (!file.remove()) fail(FileCode::IoError, file.errorString());
     detail::removePresentation(std::filesystem::path(target.toStdU16String()));
     return true;
@@ -211,16 +203,17 @@ void File::copy(const QString &source, const QString &target, bool overwrite) {
     }
     const auto absolute = destination(target);
     StagedFile staged(absolute);
-    QFile temporary(staged.path());
+    UnpublishedDevice temporary(staged.path());
     if (!temporary.open(QIODevice::WriteOnly)) fail(FileCode::IoError, temporary.errorString());
     transfer(*input, temporary);
     if (!temporary.flush()) fail(FileCode::IoError, temporary.errorString());
     temporary.close();
     const auto result = staged.publish(false);
-    if (!result.succeeded) throw FileError(QFileInfo::exists(absolute) ? FileCode::AlreadyExists : FileCode::IoError, result.message);
+    if (!result.succeeded) throw FileError(FileDevice::exists(absolute) ? FileCode::AlreadyExists : FileCode::IoError, result.message);
 }
 void File::createDirectories(const QString &path) {
-    if (!QDir().mkpath(absolutePath(path))) fail(FileCode::IoError, "cannot create directory");
+    std::error_code error;std::filesystem::create_directories(std::filesystem::path(absolutePath(path).toStdU16String()),error);
+    if (error) fail(FileCode::IoError, QString::fromStdString(error.message()));
 }
 
 void File::copyToUrl(QIODevice &source, const QUrl &target) {
@@ -231,7 +224,7 @@ void File::copyToUrl(QIODevice &source, const QUrl &target) {
     }
 #ifdef Q_OS_ANDROID
     if (target.scheme() == "content" && !target.authority().isEmpty()) {
-        QSaveFile output(target.toString());
+        SaveFile output(target.toString());
         // A granted DocumentsProvider URI cannot publish by sibling rename.
         output.setDirectWriteFallback(true);
         if (!output.open(QIODevice::WriteOnly)) fail(FileCode::IoError, output.errorString());
@@ -244,13 +237,14 @@ void File::copyToUrl(QIODevice &source, const QUrl &target) {
 }
 void File::publishDirectory(const QString &temporary, const QString &path) {
     const auto source = absolutePath(temporary), target = absolutePath(path);
-    if (QFileInfo(source).isSymLink() || !QFileInfo(source).isDir())
+    const auto statusInfo=std::filesystem::symlink_status(std::filesystem::path(source.toStdU16String()));
+    if (std::filesystem::is_symlink(statusInfo) || !std::filesystem::is_directory(statusInfo))
         fail(FileCode::InvalidPath, "source must be a real directory");
 #if defined(__APPLE__)
-    const auto status = renamex_np(QFile::encodeName(source).constData(), QFile::encodeName(target).constData(), RENAME_EXCL);
+    const auto status = renamex_np(FileDevice::encodeName(source).constData(), FileDevice::encodeName(target).constData(), RENAME_EXCL);
 #elif defined(__linux__) && defined(SYS_renameat2)
-    const auto status = syscall(SYS_renameat2, AT_FDCWD, QFile::encodeName(source).constData(),
-                                AT_FDCWD, QFile::encodeName(target).constData(), 1);
+    const auto status = syscall(SYS_renameat2, AT_FDCWD, FileDevice::encodeName(source).constData(),
+                                AT_FDCWD, FileDevice::encodeName(target).constData(), 1);
 #elif defined(_WIN32)
     if (MoveFileExW(reinterpret_cast<LPCWSTR>(source.utf16()), reinterpret_cast<LPCWSTR>(target.utf16()), 0)) return;
     const auto error = GetLastError();

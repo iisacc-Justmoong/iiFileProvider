@@ -39,3 +39,10 @@ FileProvider가 소유하며 문서 스키마의 의미는 소비하는 문서 S
 ## 기존 쓰기 잠금 호환 패키지
 
 `Compatibility/`는 `iiFileProviderCompatibility` 설치 패키지와 `iiFileProvider::Compatibility` 타깃을 제공한다. 기존 `.iisacc-lock` 프로토콜과 원자적 교체는 네이티브 파일 제공자에 유지한다. 설치 타깃에는 소스 경로를 포함하지 않는다. `iiFileProvider.Compatibility.Contracts`는 연속 교체와 잠금 정리를 검사한다.
+
+## 바이트 범위와 스트리밍 해시 · Native 0.11.0
+
+전체 값의 비교 버퍼를 요구하는 기존 patch_blob과 별도로 범위 읽기·배치 before/after
+비교·교체·고정 버퍼 SHA-256을 제공한다. 공개 의미와 실패·예산·검증 범위는
+[Native BLOB 범위 계약](../Native/docs/BLOB_RANGES.md)에 명시한다. 문서 스키마와
+전체 해시를 타일별 저장 형식으로 교체하는 일은 상위 문서 모듈의 후속 범위이다.

@@ -104,11 +104,37 @@ int digits(std::string_view value) {
     require(parsed.ec == std::errc{} && parsed.ptr == value.data() + value.size());
     return result;
 }
+bool timestampShape(std::string_view raw) noexcept {
+    // Fixed ISO-8601 grammar; validation itself has no allocating initializer.
+    if (raw.size() < 20 || raw.size() > 29)
+        return false;
+    const auto digit = [](char c) { return c >= '0' && c <= '9'; };
+    for (std::size_t i = 0; i < 19; ++i) {
+        const char separator = i == 4 || i == 7     ? '-'
+                               : i == 10            ? 'T'
+                               : i == 13 || i == 16 ? ':'
+                                                    : 0;
+        if (separator ? raw[i] != separator : !digit(raw[i]))
+            return false;
+    }
+    std::size_t offset = 19;
+    if (raw[offset] == '.') {
+        const auto first = ++offset;
+        while (offset < raw.size() && digit(raw[offset]))
+            ++offset;
+        if (offset == first || offset - first > 3)
+            return false;
+    }
+    if (offset == raw.size())
+        return false;
+    if (raw[offset] == 'Z')
+        return offset + 1 == raw.size();
+    return (raw[offset] == '+' || raw[offset] == '-') && offset + 6 == raw.size() &&
+           raw[offset + 3] == ':' && digit(raw[offset + 1]) && digit(raw[offset + 2]) &&
+           digit(raw[offset + 4]) && digit(raw[offset + 5]);
+}
 Timestamp timestamp(std::string_view raw) {
-    static const std::regex pattern("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,3})?(Z|[+-][0-9]{2}:[0-9]{2})");
-    require(
-        std::regex_match(raw.begin(), raw.end(),
-                         pattern));
+    require(timestampShape(raw));
     using namespace std::chrono;
     year_month_day day{year{digits(raw.substr(0, 4))},
                        month{static_cast<unsigned>(digits(raw.substr(5, 2)))},
@@ -119,10 +145,12 @@ Timestamp timestamp(std::string_view raw) {
     int ms{};
     if (raw[offset] == '.') {
         auto end = raw.find_first_of("Z+-", ++offset);
-        auto fraction = std::string(raw.substr(offset, end - offset));
-        while (fraction.size() < 3)
-            fraction += '0';
-        ms = digits(fraction);
+        const auto count = end - offset;
+        ms = digits(raw.substr(offset, count));
+        if (count == 1)
+            ms *= 100;
+        else if (count == 2)
+            ms *= 10;
         offset = end;
     }
     int timezone{};
@@ -513,29 +541,95 @@ std::vector<FileAuthor> Authorship::participants() const {
 }
 std::vector<FileLink> Authorship::links() const { return links_; }
 void Authorship::rebuildDump() {
-    Json authors = Json::array(), participants = Json::array(), links = Json::array();
+    // Fixed schema, with already validated canonical profile JSON. Building a
+    // temporary JSON DOM also allocates during cleanup on exceptional paths.
+    // Keep the old cache until the complete replacement is within its limit.
+    std::string next = "{\"authors\":[";
+    const auto quote = [&](std::string_view value) {
+        constexpr char hex[] = "0123456789abcdef";
+        next += '"';
+        for (unsigned char c : value) {
+            switch (c) {
+            case '"':
+                next += "\\\"";
+                break;
+            case '\\':
+                next += "\\\\";
+                break;
+            case '\b':
+                next += "\\b";
+                break;
+            case '\f':
+                next += "\\f";
+                break;
+            case '\n':
+                next += "\\n";
+                break;
+            case '\r':
+                next += "\\r";
+                break;
+            case '\t':
+                next += "\\t";
+                break;
+            default:
+                if (c < 0x20) {
+                    next += "\\u00";
+                    next += hex[c >> 4];
+                    next += hex[c & 15];
+                } else
+                    next += static_cast<char>(c);
+            }
+        }
+        next += '"';
+    };
+    const auto nullable = [&](std::string_view value) {
+        if (value.empty())
+            next += "null";
+        else
+            quote(value);
+    };
     for (std::size_t i = 0; i < authors_.size(); ++i) {
         const auto &r = authors_[i];
-        authors.push_back({{"key", r.key},
-                           {"author", Json::parse(r.profile)},
-                           {"firstChangedAt", r.firstChangedAt},
-                           {"lastChangedAt", r.lastChangedAt}});
         if (i)
-            participants.push_back(r.key);
+            next += ',';
+        next += "{\"author\":";
+        next += r.profile;
+        next += ",\"firstChangedAt\":";
+        quote(r.firstChangedAt);
+        next += ",\"key\":";
+        quote(r.key);
+        next += ",\"lastChangedAt\":";
+        quote(r.lastChangedAt);
+        next += '}';
     }
-    for (const auto &l : links_)
-        links.push_back({{"name", l.name}, {"url", l.url}});
-    dump_ = Json{{"schemaVersion", 3},
-                 {"revision", std::to_string(revision_)},
-                 {"modifiedAt", dateValue(modifiedAt_)},
-                 {"authors", authors},
-                 {"firstEditor", authors_.empty() ? Json(nullptr) : Json(authors_.front().key)},
-                 {"participants", participants},
-                 {"links", links},
-                 {"lastAuthor", dateValue(lastAuthor_)}}
-                .dump();
-    if (dump_.size() > MaximumBytes)
+    next += "],\"firstEditor\":";
+    nullable(authors_.empty() ? std::string_view{} : authors_.front().key);
+    next += ",\"lastAuthor\":";
+    nullable(lastAuthor_);
+    next += ",\"links\":[";
+    for (std::size_t i = 0; i < links_.size(); ++i) {
+        if (i)
+            next += ',';
+        next += "{\"name\":";
+        quote(links_[i].name);
+        next += ",\"url\":";
+        quote(links_[i].url);
+        next += '}';
+    }
+    next += "],\"modifiedAt\":";
+    nullable(modifiedAt_);
+    next += ",\"participants\":[";
+    for (std::size_t i = 1; i < authors_.size(); ++i) {
+        if (i > 1)
+            next += ',';
+        quote(authors_[i].key);
+    }
+    next += "],\"revision\":";
+    quote(std::to_string(revision_));
+    next += ",\"schemaVersion\":3}";
+    if (next.size() > MaximumBytes)
         throw std::length_error("Authorship metadata exceeds its size limit");
+    dump_.swap(next);
 }
 void Authorship::recordChange(Timestamp at) {
     at = timestamp(at);

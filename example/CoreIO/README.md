@@ -3,9 +3,10 @@
 Version 0.1.1 is the maintenance release accompanying iiFileProvider 0.7.2
 and Native 0.8.1. Its existing I/O and dependency contracts are unchanged.
 
-This optional C++23 component depends on iiSDKCore 0.13 and iiFileProvider Native
-0.7. The Core runtime and the base Native provider remain independently usable.
-Neither imports this adapter or each other. Qt is not used.
+This optional C++23 consumer project composes iiSDKCore 0.13 and iiFileProvider
+Native 0.7. The application builds and links it separately; neither SDK imports
+the adapter or the other SDK. It is no longer a subdirectory of the provider's
+build. Qt is not used.
 
 `iiFileProvider::core::open_file` owns file creation, exclusive creation,
 truncation and regular-file validation. It transfers the native descriptor/handle
@@ -49,3 +50,12 @@ adapter above both lower libraries. Other target-platform execution is separate.
 `NativeFile.h` is a platform integration extension, not a portable file-opening
 API. Its intptr_t ownership transfer is reserved for native adapters. Common
 application code receives a Channel and does not access a native handle.
+
+<!-- workspace-docs:readme:start -->
+## Documentation entry points
+
+- Human overview: this English `README.md`.
+- Agent instructions: [AGENT.md](AGENT.md).
+- Human documentation: [documentation index](docs/README.md).
+- Structured agent documentation: [agent index](docs/agent-index.json).
+<!-- workspace-docs:readme:end -->

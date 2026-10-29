@@ -1,0 +1,107 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:0894f9f514fe5ba5a280c4ee13a1f78674c7b3744ac58153ab711ee9dad544ac",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/NATIVE_STATIC.md",
+    "sha256": "bb5cab55ca2b17b643fb2e345aaeb45fcd6a98c9d6841301b9fad8928cc20dd3",
+    "bytes": 1030,
+    "line_count": 7,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "임베디드 네이티브 제공자의 정적 연결",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 임베디드 네이티브 제공자의 정적 연결\n",
+      "level": 1,
+      "title": "임베디드 네이티브 제공자의 정적 연결"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "`IIFILEPROVIDER_NATIVE_STATIC=ON`은 Linux 초기화 프로세스와 같은 독립 네이티브 실행 파일에 실제 Native 제공자를 정적으로 연결한다. 기본 데스크톱 공유 라이브러리 구성은 유지한다. 공개 타깃은 `IIFILEPROVIDERNATIVE_STATIC_DEFINE`을 소비자에 전달하여 Windows에서도 DLL 가져오기 선언을 사용하지 않도록 한다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "교차 빌드는 C와 C++ 대상 컴파일러·sysroot를 모두 지정하며, 시스템 SQLite가 없는 대상은 `IIFILEPROVIDER_USE_BUNDLED_SQLITE=ON`으로 기존 고정 버전 소스를 빌드한다. 파일 시스템, 프리뷰, 메타데이터 구현을 다른 모듈에 복제하지 않는다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "정적 구성의 `iiFileProvider.Native.StaticContract`는 공개 타깃의 컴파일 정의 전달과 한국어 경로 생성·쓰기·읽기·정리를 검사한다. 기존 Native 테스트도 동일한 타깃으로 연결하므로 정적 구성에서 그대로 실행한다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "임베디드 네이티브 제공자의 정적 연결",
+      "anchor": "임베디드-네이티브-제공자의-정적-연결",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000005",
+        "line": 5,
+        "text": "교차 빌드는 C와 C++ 대상 컴파일러·sysroot를 모두 지정하며, 시스템 SQLite가 없는 대상은 `IIFILEPROVIDER_USE_BUNDLED_SQLITE=ON`으로 기존 고정 버전 소스를 빌드한다. 파일 시스템, 프리뷰, 메타데이터 구현을 다른 모듈에 복제하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

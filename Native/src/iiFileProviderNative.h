@@ -146,6 +146,8 @@ class IIFILEPROVIDER_NATIVE_EXPORT TemporaryDirectory final {
     ~TemporaryDirectory();
     [[nodiscard]] const std::filesystem::path &path() const noexcept { return path_; }
     [[nodiscard]] bool isValid() const noexcept { return !path_.empty(); }
+    // Relinquish cleanup after the directory has been published or transferred.
+    void release() noexcept { path_.clear(); }
 
   private:
     std::filesystem::path path_;

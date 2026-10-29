@@ -18,3 +18,12 @@ oracle for compatibility in both directions. Windows MSVC x64 also builds and
 runs `iiFileProvider.Compatibility.Contracts`, including repeated atomic
 replacement and lock cleanup. This Windows check is distinct from Congregation's
 macOS bidirectional Qt oracle. See [Windows verification](../docs/WindowsCompatibility.md).
+
+<!-- workspace-docs:readme:start -->
+## Documentation entry points
+
+- Human overview: this English `README.md`.
+- Agent instructions: [AGENT.md](AGENT.md).
+- Human documentation: [documentation index](docs/README.md).
+- Structured agent documentation: [agent index](docs/agent-index.json).
+<!-- workspace-docs:readme:end -->

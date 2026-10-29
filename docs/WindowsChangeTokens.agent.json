@@ -1,0 +1,121 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:abd3735efa1d29a5c094f74d875dc4a34d7223293b3cd95072dcddfd070f4701",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/WindowsChangeTokens.md",
+    "sha256": "062afb2a26c5e985f8d095b8b579f0472f388086c5ac3aa3fda96a614bb1d4fa",
+    "bytes": 1363,
+    "line_count": 17,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "Windows 모델 변경 토큰",
+    "role": "history",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Windows 모델 변경 토큰\n",
+      "level": 1,
+      "title": "Windows 모델 변경 토큰"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 4,
+      "raw": "NTFS에서 연속으로 닫힌 같은 크기의 쓰기에도 파일의 수정·변경 시각이 같게 반환되는\n실행을 확인하였다. 시각만으로 모델 캐시를 식별하면 해당 쓰기를 놓칠 수 있다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 6,
+      "end_line": 10,
+      "raw": "Windows Native 제공자는 파일을 식별할 때 `FSCTL_READ_FILE_USN_DATA`의 최근 변경\n순번도 읽는다. V2·V3 레코드를 지원하며 파일 본문을 다시 읽지 않는다. 제공자 자신의\n미리보기 메타데이터 게시 전후에는 시각과 순번을 함께 정규화한다. 외부 쓰기는 같은\n크기·복원한 mtime이어도 새 순번으로 구별하고, SQLite WAL의 순번도 포함한다.\n공개 API는 여전히 불투명 문자열 토큰을 반환한다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 11,
+      "end_line": 11,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 12,
+      "end_line": 15,
+      "raw": "Python 어댑터 회귀 검사는 미리보기 전후 토큰 보존과 64회의 실제 외부 덮어쓰기·mtime\n복원마다 토큰 변경을 확인한다. 모델 파이프라인 캐시·모델 해시 재사용 검사는 이\n설치된 제공자를 사용하여 다시 실행한다. 변경 저널을 제공하지 않는 파일 시스템은\n기존 시각 기반 경로를 사용하며 이번 실행 증거는 이 머신의 NTFS에 한정한다.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 17,
+      "end_line": 17,
+      "raw": "[Microsoft의 파일별 변경 순번 계약](https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ni-winioctl-fsctl_read_file_usn_data)을 따른다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Windows 모델 변경 토큰",
+      "anchor": "windows-모델-변경-토큰",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000009",
+        "label": "Microsoft의 파일별 변경 순번 계약",
+        "target": "https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ni-winioctl-fsctl_read_file_usn_data",
+        "kind": "external",
+        "line": 17
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

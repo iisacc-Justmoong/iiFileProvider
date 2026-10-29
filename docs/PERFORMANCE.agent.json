@@ -1,0 +1,211 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:4c0c0dfe9b63b191651a74b5f21f1aef5c6d5d9b56f7e63729d83ba87fa7bccf",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/PERFORMANCE.md",
+    "sha256": "b1413d11255920ec9b059efb0c25b33a6f4d5172e9ba8d97789db64fc4301679",
+    "bytes": 2667,
+    "line_count": 45,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "Repeated author metadata validation",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Repeated author metadata validation\n",
+      "level": 1,
+      "title": "Repeated author metadata validation"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 8,
+      "raw": "Native author/profile, timestamp and revision validation reuses immutable,\nfunction-local regular expressions. Previously each save or metadata import\ncompiled the same expressions again. The patterns and validation order remain\nunchanged; no accepted syntax, limits, account checks or filesystem confinement\nchecks are relaxed. Locale, normalization and time-zone checks retain their\nexisting implementations.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 10,
+      "end_line": 15,
+      "raw": "The expressions have thread-safe static initialization and are subsequently\nused only by const matches. Concurrent profile-import tests verify independent\nresults, and malformed profile fixtures exercise each reused expression.\nPresentation intake already uses a bounded queue, duplicate suppression,\nserialized decoding, source-change stamps and bounded directory slices; those\ncontracts are preserved rather than replaced with a second scheduler.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "heading",
+      "start_line": 17,
+      "end_line": 17,
+      "raw": "## Stable object snapshots\n",
+      "level": 2,
+      "title": "Stable object snapshots"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 19,
+      "end_line": 25,
+      "raw": "Object packaging captures POSIX snapshot bytes through an already pinned read\ndescriptor, with a buffer capped at 1 MiB. APFS extent cloning was observed to\nchange source ctime after snapshot use/retirement, invalidating unchanged source\nstamps and causing false revisions and audit failures. The copy path preserves\nthe existing identity/size/mtime/ctime checks, no-follow ancestor checks,\ncancellation and source-change rejection. It trades clone-based storage sharing\nfor stable source identity and bounded extra memory.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 26,
+      "end_line": 26,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 27,
+      "end_line": 31,
+      "raw": "Disposable snapshots do not call fsync before being read into the object store.\nThey are never durable user output and are deleted after use. Published payloads\nremain protected by the store's existing durable transaction and synchronization\nsettings. This removes a redundant disk barrier per copied file without changing\nthe final commit contract. Windows retains its existing share-locked copy path.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 32,
+      "end_line": 32,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 33,
+      "end_line": 34,
+      "raw": "The batch/large-file audit, resume, cancellation and changed-source tests cover\nthe complete packaging flow; source identity must survive snapshot retirement.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 35,
+      "end_line": 35,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "heading",
+      "start_line": 36,
+      "end_line": 36,
+      "raw": "## Workspace creation audit\n",
+      "level": 2,
+      "title": "Workspace creation audit"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 37,
+      "end_line": 37,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 38,
+      "end_line": 45,
+      "raw": "The development audit reads candidate source files in bounded native-scanner\nbatches instead of starting a scanner process for each file. UTF-8, exact line\nboundaries, empty files and unreadable-source rejection are preserved. This\nreduces process startup overhead across SDK/Product checks without changing the\ncreation-policy patterns, exclusions or runtime/tool/fixture classifications.\nThe full SDK/Product boundary gate has a 600-second execution budget on external\nstorage. It is an exhaustive correctness audit, not a 120-second performance\nthreshold; unreadable files and policy violations still fail the check.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Repeated author metadata validation",
+      "anchor": "repeated-author-metadata-validation",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000007",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Stable object snapshots",
+      "anchor": "stable-object-snapshots",
+      "start_line": 17
+    },
+    {
+      "block_id": "b000015",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Workspace creation audit",
+      "anchor": "workspace-creation-audit",
+      "start_line": 36
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000011",
+        "line": 27,
+        "text": "Disposable snapshots do not call fsync before being read into the object store.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000011",
+        "line": 28,
+        "text": "They are never durable user output and are deleted after use. Published payloads",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000013",
+        "line": 34,
+        "text": "the complete packaging flow; source identity must survive snapshot retirement.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

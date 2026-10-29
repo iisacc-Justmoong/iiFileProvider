@@ -1,0 +1,79 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:cc3d0ae34ee1c236454b8dd6d1aadfc289d6394c7a92ede9344254adf418cfae",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/NATIVE_TIMESTAMP_SAFETY.md",
+    "sha256": "a2976f2a0c865c402a9abd5fc4c54a7caa7638749fc578c48cc30a8bfcc487fb",
+    "bytes": 250,
+    "line_count": 4,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "네이티브 저작 시각의 할당 실패 경계",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 네이티브 저작 시각의 할당 실패 경계\n",
+      "level": 1,
+      "title": "네이티브 저작 시각의 할당 실패 경계"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 4,
+      "raw": "정규 계약은 [Native 시각과 캐시의 할당 실패 안전성](../Native/docs/TIMESTAMP_SAFETY.md)에 있다.\n네이티브 하위 프로젝트의 문서·agent JSON과 함께 유지한다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "네이티브 저작 시각의 할당 실패 경계",
+      "anchor": "네이티브-저작-시각의-할당-실패-경계",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000003",
+        "label": "Native 시각과 캐시의 할당 실패 안전성",
+        "target": "../Native/docs/TIMESTAMP_SAFETY.md",
+        "kind": "relative",
+        "line": 3
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}
