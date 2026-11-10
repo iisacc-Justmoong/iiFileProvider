@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include "OntologyFileSystem.h"
 #include <chrono>
 #include <filesystem>
@@ -10,7 +11,7 @@ namespace fs=std::filesystem;
 void require(bool ok,const char *message){if(!ok)throw std::runtime_error(message);}
 template<class F>void rejects(F f){bool rejected=false;try{f();}catch(const std::exception &){rejected=true;}require(rejected,"invalid ontology input must reject");}
 int main()try{
-    const auto root=fs::path(OBJECT_TEST_DIRECTORY)/("ontology-bounds-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto root=provider_test::root(OBJECT_TEST_DIRECTORY)/("ontology-bounds-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::create_directory(root);{std::ofstream out(root/"source");out<<"bytes";}
     {
     ObjectStore store(root/"package","bounds",true);const auto s=store.beginSession({"local:test","editor","Editor"},"device","bounds");

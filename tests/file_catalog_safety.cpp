@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include <FileCatalog.h>
 #include <sqlite3.h>
 #include <barrier>
@@ -19,7 +20,7 @@ template<class F> void rejects(F action, const char *message) {
 std::span<const std::byte> bytes(const std::string &text) { return {reinterpret_cast<const std::byte *>(text.data()), text.size()}; }
 std::string contents(const fs::path &path) { std::ifstream input(path, std::ios::binary); return {std::istreambuf_iterator<char>(input), {}}; }
 int main() {
-    const auto root = fs::path(CATALOG_TEST_DIRECTORY) / ("catalog-safety-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto root = provider_test::root(CATALOG_TEST_DIRECTORY) / ("catalog-safety-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::create_directory(root);
     try {
         // Process-independent initialization and revisions use the same SQLite

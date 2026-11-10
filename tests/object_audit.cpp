@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include "ObjectPackager.h"
 #include "staging_clean.h"
 #include <sqlite3.h>
@@ -16,7 +17,7 @@ void sql(const fs::path &path,const std::string &statement){
     const auto status=sqlite3_exec(db,statement.c_str(),nullptr,nullptr,nullptr);sqlite3_close(db);check(status==SQLITE_OK,"fixture SQLite mutation");
 }
 int main(){try{
-    const auto root=fs::path(OBJECT_TEST_DIRECTORY)/("object-audit-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto root=provider_test::root(OBJECT_TEST_DIRECTORY)/("object-audit-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::create_directory(root);fs::create_directory(root/"tree");
     for(unsigned i=0;i<12;++i)write(root/"tree"/std::to_string(i),i?"payload-"+std::to_string(i):"");
     std::string large(17*1024*1024+17,'z');large[1024*1024-1]='X';large[1024*1024]='Y';large.back()='Z';

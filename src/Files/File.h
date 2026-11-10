@@ -38,7 +38,7 @@ public:
     static QString pathString(const std::filesystem::path &path);
     static std::unique_ptr<QIODevice> openRead(const QString &path);
     static QByteArray read(const QString &path,
-        qint64 maximumBytes = std::numeric_limits<qsizetype>::max() - 1);
+        qint64 maximumBytes = (std::numeric_limits<qsizetype>::max)() - 1);
     static QByteArray readPrefix(const QString &path, qint64 bytes);
     static void create(const QString &path, const QByteArray &bytes);
     // Reserve an empty database before a caller-owned Qt SQL schema/driver opens

@@ -1,3 +1,8 @@
 @PACKAGE_INIT@
+if(EMSCRIPTEN)
+    # Emscripten supports side modules although its CMake toolchain defaults
+    # the shared-library capability to false.
+    set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
+endif()
 include("${CMAKE_CURRENT_LIST_DIR}/iiFileProviderTemporaryTargets.cmake")
 check_required_components(iiFileProviderTemporary)

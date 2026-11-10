@@ -1,4 +1,9 @@
 @PACKAGE_INIT@
+if(EMSCRIPTEN)
+    # Emscripten supports side modules although its CMake toolchain defaults
+    # the shared-library capability to false.
+    set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
+endif()
 include(CMakeFindDependencyMacro)
 if(@IIFILEPROVIDER_BUILD_NATIVE_API@)
     find_dependency(iiFileProviderNative @PROJECT_VERSION@ CONFIG HINTS "${CMAKE_CURRENT_LIST_DIR}/../iiFileProviderNative")
@@ -15,4 +20,6 @@ if(NOT TARGET SQLite3::SQLite3)
 endif()
 include("${CMAKE_CURRENT_LIST_DIR}/iiFileProviderCatalogTargets.cmake")
 set(iiFileProviderCatalog_HAS_FILE_SEARCH_INDEX TRUE)
+set(iiFileProviderCatalog_HAS_FILE_SEARCH_PAGE TRUE)
+set(iiFileProviderCatalog_HAS_PACKAGES TRUE)
 check_required_components(iiFileProviderCatalog)

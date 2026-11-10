@@ -1,0 +1,114 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:c2c44172168c07a00d79d70d6770ff038dd5beb28a10ba3a831955944d2f709c",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/DynamicLinking.md",
+    "sha256": "42370fc7186ce2eacd98fb64cc3d9328dd4d740e2194cc776ef763f7d4639f9b",
+    "bytes": 1047,
+    "line_count": 13,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "동적 라이브러리 빌드",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 동적 라이브러리 빌드\n",
+      "level": 1,
+      "title": "동적 라이브러리 빌드"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 8,
+      "raw": "파일 공급자의 Native, Temporary, Catalog, Objects, Compatibility와 선택적 Qt 어댑터는\n기본적으로 공유 라이브러리로 빌드한다. `BUILD_SHARED_LIBS=OFF` 또는 Native의\n`IIFILEPROVIDER_NATIVE_STATIC=ON`은 명시적인 정적 빌드다. 공개 CMake 타깃은\n유지하며 Windows DLL, iOS 프레임워크와 WebAssembly 사이드 모듈을 지원한다.\n앱은 사용하는 모듈 및 그 런타임 의존성을 자체 패키지에 포함한다.\n별도로 구성하는 Core I/O 소비자 어댑터도 기본 공유 라이브러리로 제공한다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 10,
+      "end_line": 11,
+      "raw": "테스트는 구성 요소의 종류와 실제 바이너리 연결, 저장 기능을 확인한다.\n테스트 프로그램과 패키지 구조 검사는 앱 실행이나 기기 배포를 뜻하지 않는다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 12,
+      "end_line": 12,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 13,
+      "end_line": 13,
+      "raw": "Emscripten 소비자 설정은 공유 사이드 모듈을 가져오기 전에 CMake의 공유 라이브러리 지원을 활성화한다. 앱의 메인 모듈 컴파일·링크 옵션은 빌더 또는 앱이 지정해야 한다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "동적 라이브러리 빌드",
+      "anchor": "동적-라이브러리-빌드",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000005",
+        "line": 11,
+        "text": "테스트 프로그램과 패키지 구조 검사는 앱 실행이나 기기 배포를 뜻하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000007",
+        "line": 13,
+        "text": "Emscripten 소비자 설정은 공유 사이드 모듈을 가져오기 전에 CMake의 공유 라이브러리 지원을 활성화한다. 앱의 메인 모듈 컴파일·링크 옵션은 빌더 또는 앱이 지정해야 한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

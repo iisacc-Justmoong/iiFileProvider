@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include <FileCatalog.h>
 #include <ObjectPackager.h>
 #include <TemporaryLease.h>
@@ -13,7 +14,7 @@ using namespace iiFileProvider;
 constexpr std::size_t expectedEntries = IIFILEPROVIDER_TEST_PRESENTATION ? 4 : 3;
 void require(bool value, const char *message) { if (!value) throw std::runtime_error(message); }
 int main() {
-    const auto root = fs::path(CATALOG_TEST_DIRECTORY) / ("catalog-objects-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto root = provider_test::root(CATALOG_TEST_DIRECTORY) / ("catalog-objects-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     try {
         {
             FileCatalog catalog(root / "library");

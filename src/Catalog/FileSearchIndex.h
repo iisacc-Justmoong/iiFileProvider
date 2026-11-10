@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -28,7 +29,13 @@ public:
     FileSearchIndex& operator=(const FileSearchIndex&) = delete;
     [[nodiscard]] bool upsert(const FileSearchEntry& entry);
     [[nodiscard]] bool contains(std::string_view path) const;
+    [[nodiscard]] std::optional<FileSearchEntry> find(std::string_view path) const;
     [[nodiscard]] std::vector<FileSearchEntry> search(std::string_view query = {}, std::size_t limit = 100) const;
+    // Keyset pagination ordered by path. An empty cursor starts at the first
+    // entry; use the previous page's final path for the next page. Callers that
+    // require a consistent traversal must keep the indexed snapshot unchanged.
+    [[nodiscard]] std::vector<FileSearchEntry> searchPage(std::string_view query,
+        std::string_view afterPath = {}, std::size_t limit = 256) const;
 private:
     class Impl;
     std::unique_ptr<Impl> d;

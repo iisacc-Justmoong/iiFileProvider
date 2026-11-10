@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include "OntologyFileSystem.h"
 #include <sqlite3.h>
 #include <chrono>
@@ -19,7 +20,7 @@ struct Database {
     std::int64_t scalar(const char *sql){sqlite3_stmt *s=nullptr;require(sqlite3_prepare_v2(db,sql,-1,&s,nullptr)==SQLITE_OK,"fixture prepare");const auto code=sqlite3_step(s);const auto value=sqlite3_column_int64(s,0);sqlite3_finalize(s);require(code==SQLITE_ROW,"fixture value");return value;}
 };
 int main() try {
-    const auto root=fs::path(OBJECT_TEST_DIRECTORY)/("ontology-storage-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto root=provider_test::root(OBJECT_TEST_DIRECTORY)/("ontology-storage-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::create_directory(root);{std::ofstream out(root/"source");out<<"immutable source";}
     ObjectRecord raw;std::string session;
     {

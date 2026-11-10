@@ -15,6 +15,7 @@
 namespace iiFileProvider {
 
 enum class ColorLabel { None, Red, Orange, Yellow, Green, Blue, Purple, Gray };
+enum class CatalogEntryKind { File, Package };
 
 struct FileMetadata {
     std::string title;
@@ -136,6 +137,10 @@ public:
 
     [[nodiscard]] MetadataWrite registerFile(const std::string &relativePath,
         const std::optional<FileMetadata> &metadata = {});
+    // An .iiproject directory is one catalog entry. Its manifest must be a
+    // regular file; registration never enumerates or reads asset payloads.
+    [[nodiscard]] MetadataWrite registerPackage(const std::string &relativePath,
+        const std::optional<FileMetadata> &metadata = {});
     // One transaction, bounded memory, no payload reads. Companion publication
     // is explicit through publishMetadata(), so large inventories stay bounded.
     [[nodiscard]] std::vector<CatalogFile> registerFiles(const std::vector<FileRegistration> &files);
@@ -149,8 +154,14 @@ public:
         std::uint64_t expectedRevision, const FileMetadata &metadata);
     [[nodiscard]] std::optional<CatalogFile> lookup(const std::string &key) const;
     [[nodiscard]] std::optional<CatalogFile> lookupPath(const std::string &relativePath) const;
+    [[nodiscard]] CatalogEntryKind itemKind(const std::string &key) const;
     [[nodiscard]] FileChunk read(const std::string &key, std::uint64_t offset = 0,
         std::size_t maximumBytes = 256 * 1024, const std::string &expectedContentVersion = {}) const;
+    // Resolve a registered package directory only if its identity and current
+    // manifest version still match the catalog entry. The caller must open it
+    // through its package provider; this is not a pinned filesystem handle.
+    [[nodiscard]] std::filesystem::path resolvePackage(const std::string &key,
+        const std::string &expectedContentVersion = {}) const;
     [[nodiscard]] FilePage search(const FileFilter &filter = {},
         const std::optional<FileCursor> &cursor = {}, std::size_t limit = 256) const;
     [[nodiscard]] std::uint64_t count() const;
@@ -173,7 +184,8 @@ public:
     // Verified native details + embedded preview. Empty means absent/stale or
     // a build with the native presentation component explicitly disabled.
     [[nodiscard]] std::string presentationDocument(const std::string &key) const;
-    // Read-only portable classification for one existing native asset. No index
+    // Read-only portable classification for one existing native asset or
+    // registered-format package. No index
     // is opened or created and no payload is read. Empty means unclassified;
     // malformed, oversized, redirected or concurrently changed data throws.
     // Returns validated fields only, without the catalog-local path.

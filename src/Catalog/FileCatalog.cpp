@@ -250,6 +250,23 @@ Physical inspect(const fs::path &path, bool directory = false) {
         + ":" + std::to_string(changed.tv_sec) + ":" + std::to_string(changed.tv_nsec), std::uint64_t(s.st_size), modified.tv_sec * 1000000000ll + modified.tv_nsec};
 #endif
 }
+Physical inspectPackage(const fs::path &path) {
+    auto extension=pathText(path.extension());
+    for(auto &c:extension) if(c>='A'&&c<='Z') c=char(c-'A'+'a');
+    if(extension!=".iiproject") fail("package directory must use the .iiproject extension");
+    const auto directory=inspect(path,true);
+    const auto manifest=inspect(path/"manifest.json");
+    const auto manifestVersion=[](const Physical &m) {
+        // File presentation may update extended attributes after atomic save,
+        // changing ctime without changing the project manifest's contents.
+        return m.identity+":"+std::to_string(m.size)+":"+std::to_string(m.modified);
+    };
+    if(inspect(path,true).identity!=directory.identity || manifestVersion(inspect(path/"manifest.json"))!=manifestVersion(manifest))
+        fail("package changed while inspecting its manifest");
+    // Size deliberately remains unknown: inspecting an item must not scan or
+    // load its potentially huge payload. The manifest is the metadata head.
+    return {directory.identity,"package:"+directory.identity+":"+manifestVersion(manifest),0,manifest.modified};
+}
 std::string smallRead(const fs::path &path) {
     const auto state = inspect(path); if (state.size > FileCatalog::maximumMetadataBytes) fail("companion exceeds metadata limit");
     std::ifstream input(path, std::ios::binary); std::string bytes(static_cast<std::size_t>(state.size), '\0');
@@ -397,6 +414,9 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
 )SQL");
                 Statement insert(db, "INSERT INTO catalog VALUES(?,0)"); insert.bind(1, newKey(db, "catalog-")); insert.done();
                 }
+                // Additive schema-1 extension: older catalogs need no rewrite,
+                // and old read-only catalogs without the table remain readable.
+                exec(db,"CREATE TABLE IF NOT EXISTS package_items(file_id INTEGER PRIMARY KEY REFERENCES files(id) ON DELETE CASCADE)");
                 transaction.commit();
                 exec(db, "PRAGMA journal_mode=WAL;");
             }
@@ -432,11 +452,28 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
             at /= *it; std::error_code error; const auto status = fs::symlink_status(at, error);
             if (error && error != std::errc::no_such_file_or_directory) fail(error.message());
             if (!fs::exists(status)) return false;
-            auto next = it; ++next; (void)inspect(at, next != rel.end());
+            auto next = it; ++next; (void)inspect(at, next != rel.end() || fs::is_directory(status));
         }
         return true;
     }
     void bump() { exec(db, "UPDATE catalog SET revision=revision+1"); }
+    bool hasPackageTable() const {
+        Statement q(db,"SELECT 1 FROM sqlite_master WHERE type='table' AND name='package_items'");
+        return q.row();
+    }
+    bool isPackage(std::int64_t id) const {
+        if(!hasPackageTable())return false;
+        Statement q(db,"SELECT 1 FROM package_items WHERE file_id=?");q.bind(1,id);return q.row();
+    }
+    void requireOutsidePackage(const std::string &relative) const {
+        if(!hasPackageTable())return;
+        Statement q(db,"SELECT 1 FROM files e JOIN package_items p ON p.file_id=e.id WHERE ?>=e.path||'/' AND ?<e.path||'0' LIMIT 1");
+        q.bind(1,relative);q.bind(2,relative);if(q.row())fail("package contents are not separate catalog entries");
+    }
+    Physical inspectEntry(const CatalogFile &item) const {
+        const auto itemPath=path(item.path);
+        return isPackage(item.index)?inspectPackage(itemPath):inspect(itemPath);
+    }
     CatalogFile entry(Statement &q) const {
         CatalogFile f; f.index = q.number(0); f.key = q.text(1); f.path = q.text(2); f.size = std::uint64_t(q.number(3));
         f.modifiedAtNs = q.number(4); f.contentVersion = q.text(5); f.revision = std::uint64_t(q.number(6));
@@ -471,7 +508,7 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
     }
     bool publish(const std::string &key) {
         writable(); Transaction transaction(db); const auto f = require(key); if (!f.metadataPending) { transaction.commit(); return false; }
-        const auto file = path(f.path); const auto physical = inspect(file);
+        const auto file = path(f.path); const auto physical = inspectEntry(f);
         if (physical.version != f.contentVersion) fail("file changed before companion publication; register it again");
         const auto target = nativePath(pathText(file) + companionSuffix); const auto status = fs::symlink_status(target);
         if (fs::exists(status)) {
@@ -512,8 +549,9 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
         for (auto &c : metadata.collections) { if (!remap.contains(c)) fail("companion has unknown collection membership"); c = remap.at(c); }
         metadata = normalizeMetadata(std::move(metadata));
     }
-    CatalogFile registration(const FileRegistration &registration, bool *mutated = nullptr) {
-        const auto relative = relativePath(registration.path); const auto physical = inspect(path(relative));
+    CatalogFile registration(const FileRegistration &registration, bool *mutated = nullptr, bool package = false) {
+        const auto relative = relativePath(registration.path);requireOutsidePackage(relative);
+        const auto physical = package?inspectPackage(path(relative)):inspect(path(relative));
         auto existing = find(relative, true); FileMetadata metadata;
         if (!existing) {
             Statement same(db, "SELECT key,path FROM files WHERE identity=?"); same.bind(1, physical.identity);
@@ -522,6 +560,12 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
                 if (present(previous)) fail("managed hard-link aliases require separate files");
                 existing = require(same.text(0));
             }
+        }
+        if(existing&&isPackage(existing->index)!=package)fail("catalog item kind does not match registration");
+        if(package) {
+            Statement descendants(db,"SELECT 1 FROM files WHERE path>=? AND path<? LIMIT 1");
+            descendants.bind(1,relative+"/");descendants.bind(2,relative+"0");
+            if(descendants.row())fail("package contains separately registered catalog entries");
         }
         std::string key = existing ? existing->key : newKey(db, "file-"); std::uint64_t revision = existing ? existing->revision + 1 : 1;
         if (registration.metadata) metadata = normalizeMetadata(*registration.metadata);
@@ -550,7 +594,9 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
             : "INSERT INTO files(identity,size,modified,stamp,revision,key,path,rating,color,title,metadata) VALUES(?,?,?,?,?,?,?,0,0,'','{}')");
         write.bind(1, physical.identity); write.bind(2, integer(physical.size)); write.bind(3, physical.modified); write.bind(4, physical.version); write.bind(5, integer(revision));
         if (existing) { write.bind(6, relative); write.bind(7, existing->index); } else { write.bind(6, key); write.bind(7, relative); } write.done();
-        const auto id = existing ? existing->index : sqlite3_last_insert_rowid(db); annotations(id, relative, metadata);
+        const auto id = existing ? existing->index : sqlite3_last_insert_rowid(db);
+        if(package&&!existing){Statement mark(db,"INSERT INTO package_items(file_id) VALUES(?)");mark.bind(1,id);mark.done();}
+        annotations(id, relative, metadata);
         const auto result = require(key); if (document(result).size() > FileCatalog::maximumMetadataBytes) fail("encoded companion exceeds byte limit");
         if (mutated) *mutated = true; return result;
     }
@@ -574,10 +620,21 @@ MetadataWrite FileCatalog::registerFile(const std::string &path, const std::opti
 #ifdef IIFILEPROVIDER_HAS_PRESENTATION
     // Native attribute publication changes ctime. Enrich before registering the
     // physical version, so the catalog's strict conflict checks remain valid.
-    { std::lock_guard lock(d->mutex); try { (void)native::Presentation::prepare(d->path(path)); } catch (...) {} }
+    { std::lock_guard lock(d->mutex);d->requireOutsidePackage(relativePath(path));try { (void)native::Presentation::prepare(d->path(path)); } catch (...) {} }
 #endif
     const auto registered = registerFiles({{path, metadata}}).front(); std::lock_guard lock(d->mutex);
     return d->publishResult(registered.key);
+}
+MetadataWrite FileCatalog::registerPackage(const std::string &path, const std::optional<FileMetadata> &metadata) {
+    if(metadata)(void)normalizeMetadata(*metadata);
+    std::lock_guard lock(d->mutex);d->writable();
+    CatalogFile result;
+    {
+        Transaction transaction(d->db);bool mutated=false;
+        result=d->registration({path,metadata},&mutated,true);
+        if(mutated)d->bump();transaction.commit();
+    }
+    return d->publishResult(result.key);
 }
 MetadataWrite FileCatalog::createFile(const std::string &relative, std::span<const std::byte> bytes, const FileMetadata &input) {
     return createFileWith(relative, [&](std::ostream &output) {
@@ -591,6 +648,7 @@ MetadataWrite FileCatalog::createFile(const std::string &relative, std::span<con
 MetadataWrite FileCatalog::createFileWith(const std::string &relative, const std::function<void(std::ostream &)> &encode, const FileMetadata &input) {
     if (!encode) fail("a file encoder is required");
     const auto metadata = normalizeMetadata(input); std::lock_guard lock(d->mutex); d->writable();
+    d->requireOutsidePackage(relativePath(relative));
     const auto destination = d->path(relative, true); requireVacant(destination);
     Stage stage(destination.parent_path(), newKey(d->db, ""));
     { std::ofstream output(stage.path, std::ios::binary | std::ios::trunc); if (!output) fail("cannot open staged encoder output"); encode(output); output.flush(); if (!output) fail("cannot finish staged encoder output"); }
@@ -609,7 +667,7 @@ MetadataWrite FileCatalog::importFile(const fs::path &source, const std::string 
     std::optional<Json> sourceMetadata;
     const auto sourceCompanion = nativePath(pathText(source) + companionSuffix);
     if (!input && fs::exists(fs::symlink_status(sourceCompanion))) { sourceMetadata = companion(sourceCompanion); metadata = parseMetadata(sourceMetadata->at("metadata")); }
-    std::lock_guard lock(d->mutex); d->writable(); const auto destination = d->path(relative, true);
+    std::lock_guard lock(d->mutex); d->writable();d->requireOutsidePackage(relativePath(relative)); const auto destination = d->path(relative, true);
     requireVacant(destination);
     Stage stage(destination.parent_path(), newKey(d->db, ""));
     { std::ifstream in(source, std::ios::binary); std::ofstream out(stage.path, std::ios::binary | std::ios::trunc); if (!in || !out) fail("cannot open file import streams");
@@ -631,7 +689,7 @@ MetadataWrite FileCatalog::updateMetadata(const std::string &key, std::uint64_t 
     const auto metadata = normalizeMetadata(input); std::lock_guard lock(d->mutex); d->writable();
     { Transaction transaction(d->db); const auto file = d->require(key);
       if (file.revision != expected) fail("classification revision conflict");
-      if (inspect(d->path(file.path)).version != file.contentVersion) fail("file changed; register its current version before editing metadata");
+      if (d->inspectEntry(file).version != file.contentVersion) fail("file changed; register its current version before editing metadata");
       Statement update(d->db, "UPDATE files SET revision=revision+1 WHERE id=?"); update.bind(1, file.index); update.done();
       d->annotations(file.index, file.path, metadata);
       if (d->document(d->require(key)).size() > maximumMetadataBytes) fail("encoded companion exceeds byte limit");
@@ -644,9 +702,16 @@ std::optional<CatalogFile> FileCatalog::lookup(const std::string &key) const {
 std::optional<CatalogFile> FileCatalog::lookupPath(const std::string &path) const {
     const auto relative = relativePath(path); std::lock_guard lock(d->mutex); d->intact(); Transaction transaction(d->db, false); auto result = d->find(relative, true); transaction.commit(); return result;
 }
+CatalogEntryKind FileCatalog::itemKind(const std::string &key) const {
+    std::lock_guard lock(d->mutex);d->intact();Transaction transaction(d->db,false);
+    const auto item=d->require(key);const auto kind=d->isPackage(item.index)?CatalogEntryKind::Package:CatalogEntryKind::File;
+    transaction.commit();return kind;
+}
 FileChunk FileCatalog::read(const std::string &key, std::uint64_t offset, std::size_t maximumBytes, const std::string &expected) const {
     if (!maximumBytes || maximumBytes > maximumChunk) fail("file provision exceeds chunk limit");
-    std::lock_guard lock(d->mutex); d->intact(); const auto record = d->require(key); const auto path = d->path(record.path); const auto before = inspect(path);
+    std::lock_guard lock(d->mutex); d->intact(); const auto record = d->require(key);
+    if(d->isPackage(record.index))fail("directory packages cannot be read as file byte ranges");
+    const auto path = d->path(record.path); const auto before = inspect(path);
     Statement identity(d->db, "SELECT identity FROM files WHERE id=?"); identity.bind(1, record.index);
     if (!identity.row() || identity.text(0) != before.identity) fail("file identity changed; register it again");
     if ((!expected.empty() && expected != before.version) || offset > before.size || offset > std::uint64_t(INT64_MAX)) fail("file content version or range conflict");
@@ -655,6 +720,15 @@ FileChunk FileCatalog::read(const std::string &key, std::uint64_t offset, std::s
     std::ifstream stream(path, std::ios::binary); stream.seekg(static_cast<std::streamoff>(offset));
     if (!stream || !stream.read(reinterpret_cast<char *>(result.bytes.data()), static_cast<std::streamsize>(result.bytes.size()))) fail("cannot provide stable file range");
     if (inspect(path).version != before.version) fail("file changed during provision"); result.eof = offset + result.bytes.size() == before.size; return result;
+}
+fs::path FileCatalog::resolvePackage(const std::string &key, const std::string &expected) const {
+    std::lock_guard lock(d->mutex);d->intact();const auto record=d->require(key);
+    if(!d->isPackage(record.index))fail("catalog item is not a package");
+    const auto itemPath=d->path(record.path);const auto physical=inspectPackage(itemPath);
+    Statement identity(d->db,"SELECT identity FROM files WHERE id=?");identity.bind(1,record.index);
+    if(!identity.row()||identity.text(0)!=physical.identity||physical.version!=record.contentVersion||(!expected.empty()&&expected!=physical.version))
+        fail("package changed; register its current version before resolving");
+    return itemPath;
 }
 FilePage FileCatalog::search(const FileFilter &input, const std::optional<FileCursor> &cursor, std::size_t limit) const {
     if (!limit || limit > maximumPage) fail("search page exceeds limit"); const auto filter = normalizeFilter(input); const auto signature = filterJson(filter).dump();
@@ -679,7 +753,7 @@ FilePage FileCatalog::search(const FileFilter &input, const std::optional<FileCu
         CatalogFileSummary item; item.index = query.number(0); item.key = query.text(1); item.path = query.text(2);
         item.size = std::uint64_t(query.number(3)); item.modifiedAtNs = query.number(4); item.contentVersion = query.text(5);
         item.revision = std::uint64_t(query.number(6)); item.title = query.text(7); item.rating = static_cast<unsigned>(query.number(8));
-        item.color = ColorLabel(query.number(9)); item.metadataPending = query.number(10) != 0; page.files.push_back(std::move(item));
+        item.color = ColorLabel(query.number(9)); item.metadataPending = query.number(10) != 0;page.files.push_back(std::move(item));
     }
     if (page.files.size() > limit) { page.files.resize(limit); page.next = FileCursor{d->catalogId, revision, page.files.back().index, signature}; }
     transaction.commit(); return page;
@@ -741,6 +815,7 @@ std::string FileCatalog::metadataDocument(const std::string &key) const {
 }
 std::string FileCatalog::presentationDocument(const std::string &key) const {
     std::lock_guard lock(d->mutex); d->intact(); const auto file = d->require(key);
+    if(d->isPackage(file.index))return {};
 #ifdef IIFILEPROVIDER_HAS_PRESENTATION
     if (const auto record = native::Presentation::load(d->path(file.path))) return record->document;
 #endif
@@ -756,11 +831,13 @@ std::string FileCatalog::classificationDocument(const fs::path &asset) {
         auto at = asset.root_path();
         for (const auto &part : asset.relative_path()) {
             at /= part;
-            (void)inspect(at, at != asset);
+            if(at==asset && fs::is_directory(fs::symlink_status(at)))(void)inspectPackage(at);
+            else (void)inspect(at, at != asset);
         }
     };
     validate();
-    const auto before = inspect(asset);
+    const auto package=fs::is_directory(fs::symlink_status(asset));
+    const auto before = package?inspectPackage(asset):inspect(asset);
     const auto path = nativePath(pathText(asset) + companionSuffix);
     if (!fs::exists(fs::symlink_status(path))) return {};
     const auto stored = companion(path);
@@ -769,7 +846,7 @@ std::string FileCatalog::classificationDocument(const fs::path &asset) {
         collections.push_back({{"key", normalized(item.at("key").get<std::string>(), 128, false, true)},
             {"name", normalized(item.at("name").get<std::string>(), 512, false, true)}});
     validate();
-    if (inspect(asset).version != before.version) fail("asset changed during classification inspection");
+    if ((package?inspectPackage(asset):inspect(asset)).version != before.version) fail("asset changed during classification inspection");
     return Json{{"format", "iiFileProvider.Metadata"}, {"schema", 1}, {"fileKey", stored.at("fileKey")},
         {"revision", stored.at("revision")}, {"metadata", metadataJson(parseMetadata(stored.at("metadata")))},
         {"collections", collections}}.dump();

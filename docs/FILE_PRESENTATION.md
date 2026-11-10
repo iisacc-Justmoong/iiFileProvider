@@ -46,6 +46,13 @@ changes and normalizes only the provider's recorded attribute publication.
 Replication hashing and chunk reads therefore retain content-version checks
 without restarting when this process merely embeds a preview.
 
+Change-token publication and lookup coordinate by native identity, including
+hard links. The bounded lock set may serialize unrelated identities that share a
+lock, but an extended-attribute write no longer holds the shared token-map lock
+while the filesystem is working. Readers of the same identity still wait until
+publication and token bookkeeping finish; source replacement and later external
+changes remain subject to the existing identity, timestamp and version checks.
+
 Derived companions are published with owner-only read/write permission so their
 embedded content does not broaden filesystem access. The original source bytes
 and permission bits are retained. Native metadata

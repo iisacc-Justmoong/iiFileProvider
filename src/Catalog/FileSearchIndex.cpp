@@ -35,6 +35,16 @@ private:
     sqlite3* db_;
     sqlite3_stmt* stmt_=nullptr;
 };
+FileSearchEntry entry(Statement& statement) {
+    FileSearchEntry e;
+    e.path=statement.string(0); e.title=statement.string(1); e.fileKey=statement.string(2);
+    e.mimeType=statement.string(3); e.classification=statement.string(4); e.size=static_cast<std::uint64_t>(statement.number(5));
+    e.hasClassification=bool(statement.number(6)); e.hasPresentation=bool(statement.number(7)); e.metadataPending=bool(statement.number(8));
+    return e;
+}
+void validatePath(std::string_view path) {
+    if (path.find('\0') != std::string_view::npos) throw std::invalid_argument("Search path contains NUL");
+}
 std::string matchExpression(std::string_view input) {
     if (input.size()>4096 || input.find('\0')!=std::string_view::npos)
         throw std::invalid_argument("Search text exceeds its limit or contains NUL");
@@ -121,6 +131,14 @@ bool FileSearchIndex::contains(std::string_view path) const {
     std::lock_guard lock(d->mutex);
     return d->indexed.contains(std::string(path));
 }
+std::optional<FileSearchEntry> FileSearchIndex::find(std::string_view path) const {
+    validatePath(path);
+    std::lock_guard lock(d->mutex);
+    Statement statement(d->db,"SELECT path,title,file_key,mime,classification,size,classified,presented,pending FROM entries WHERE path=?");
+    statement.bind(1,std::string(path));
+    if (!statement.row()) return std::nullopt;
+    return entry(statement);
+}
 std::vector<FileSearchEntry> FileSearchIndex::search(std::string_view query,std::size_t limit) const {
     if(!limit || limit>1024) throw std::invalid_argument("Search limit must be between 1 and 1024");
     const auto match=matchExpression(query);
@@ -131,13 +149,22 @@ std::vector<FileSearchEntry> FileSearchIndex::search(std::string_view query,std:
     int parameter=1; if(!match.empty()) statement.bind(parameter++,match);
     statement.bind(parameter,static_cast<std::int64_t>(limit));
     std::vector<FileSearchEntry> result;
-    while(statement.row()) {
-        FileSearchEntry e;
-        e.path=statement.string(0); e.title=statement.string(1); e.fileKey=statement.string(2);
-        e.mimeType=statement.string(3); e.classification=statement.string(4); e.size=static_cast<std::uint64_t>(statement.number(5));
-        e.hasClassification=bool(statement.number(6)); e.hasPresentation=bool(statement.number(7)); e.metadataPending=bool(statement.number(8));
-        result.push_back(std::move(e));
-    }
+    while(statement.row()) result.push_back(entry(statement));
+    return result;
+}
+std::vector<FileSearchEntry> FileSearchIndex::searchPage(std::string_view query,std::string_view afterPath,std::size_t limit) const {
+    if (!limit || limit > 1024) throw std::invalid_argument("Search limit must be between 1 and 1024");
+    validatePath(afterPath);
+    const auto match=matchExpression(query);
+    std::lock_guard lock(d->mutex);
+    const char* all="SELECT path,title,file_key,mime,classification,size,classified,presented,pending FROM entries WHERE path>? ORDER BY path LIMIT ?";
+    const char* filtered="SELECT e.path,e.title,e.file_key,e.mime,e.classification,e.size,e.classified,e.presented,e.pending FROM search_index JOIN entries e ON e.id=search_index.rowid WHERE search_index MATCH ? AND e.path>? ORDER BY e.path LIMIT ?";
+    Statement statement(d->db,match.empty()?all:filtered);
+    int parameter=1; if (!match.empty()) statement.bind(parameter++,match);
+    statement.bind(parameter++,std::string(afterPath));
+    statement.bind(parameter,static_cast<std::int64_t>(limit));
+    std::vector<FileSearchEntry> result;
+    while(statement.row()) result.push_back(entry(statement));
     return result;
 }
 } // namespace iiFileProvider

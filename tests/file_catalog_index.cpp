@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include <FileCatalog.h>
 #include <chrono>
 #include <filesystem>
@@ -14,7 +15,7 @@ template<class F> void rejects(F action, const char *message) {
     throw std::runtime_error(message);
 }
 int main() {
-    const auto root = fs::path(CATALOG_TEST_DIRECTORY) / ("catalog-index-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto root = provider_test::root(CATALOG_TEST_DIRECTORY) / ("catalog-index-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     try {
         FileCatalog files(root);
         const auto campaign = files.createCollection("Campaign");

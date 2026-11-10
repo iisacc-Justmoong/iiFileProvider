@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include "ObjectStore.h"
 #include <chrono>
 #include <filesystem>
@@ -9,7 +10,7 @@ namespace fs=std::filesystem;
 void require(bool value,const char *message){if(!value)throw std::runtime_error(message);}
 template<class F> void rejects(F f){bool no=false;try{f();}catch(const std::exception&){no=true;}require(no,"expected rejection");}
 int main()try{
-    const auto root=fs::path(OBJECT_TEST_DIRECTORY)/("document-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto root=provider_test::root(OBJECT_TEST_DIRECTORY)/("document-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::create_directory(root);{std::ofstream out(root/"input.raw");out<<"original bytes";}
     std::string key;
     {

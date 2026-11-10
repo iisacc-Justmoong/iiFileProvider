@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include "native_symlink.h"
 #include "ObjectSnapshotBatch.h"
 #include "staging_clean.h"
@@ -13,7 +14,7 @@ void write(const fs::path &p,const std::string &text){std::ofstream f(p,std::ios
 std::string read(const fs::path &p){std::ifstream f(p,std::ios::binary);return {std::istreambuf_iterator<char>(f),{}};}
 template<class F>void rejects(F f){bool failed=false;try{f();}catch(const std::exception &){failed=true;}check(failed,"snapshot batch must reject");}
 int main(){try{
-    const auto root=fs::path(OBJECT_TEST_DIRECTORY)/("snapshot-batch-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto root=provider_test::root(OBJECT_TEST_DIRECTORY)/("snapshot-batch-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::create_directory(root);fs::create_directory(root/"stage");
     std::vector<detail::ObjectSnapshotRequest> requests;
     for(unsigned i=0;i<16;++i){

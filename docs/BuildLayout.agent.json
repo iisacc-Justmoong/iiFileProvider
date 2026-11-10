@@ -1,0 +1,99 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:17d32e523d21d42f602808ab77737b3d0543150fd9abfca132c6ccc13ae35e3d",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiFileProvider",
+    "name": "iiFileProvider",
+    "root": "SDK/iiFileProvider",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/BuildLayout.md",
+    "sha256": "52e1522cb605103759fa3bc008817707b97c87c888fb8df666a17a40238c335b",
+    "bytes": 1583,
+    "line_count": 23,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "Build and resource layout",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Build and resource layout\n",
+      "level": 1,
+      "title": "Build and resource layout"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 6,
+      "raw": "Windows SDK의 `min`·`max` 매크로가 활성화된 소비자에서 파일 읽기의 기본\n최대 크기가 매크로로 치환되지 않도록 표준 극한값 호출을 보호한다. Windows\n테스트 빌드에 이 포함 순서의 컴파일 전용 검사를 두며, 이 변경의 실제 Windows\n빌드나 설치는 아직 수행하지 않았다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 8,
+      "end_line": 16,
+      "raw": "The project's `build/` directory contains the provider libraries, explicitly\nconfigured tools and test binaries. Temporary file, database, catalog and\nobject-store fixtures belong under the project `resources/` directory. Host\ntests reserve an isolated, visible `resources/test-workspaces/` directory through iiFileProvider,\npoint temporary-directory environment variables and fixture roots to it, and\nremove it after the test. Visible path components allow the provider's normal\npreview and metadata policies to run during the tests. When the shared native API is being built, the test\nrunner uses that library and this checkout's Python adapter. Static-only or\nnative-disabled host builds use an already installed iiFileProvider adapter.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 17,
+      "end_line": 17,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 18,
+      "end_line": 23,
+      "raw": "Some older install, cross-platform and integration checks still stage files\nunder build paths or execute external applications. They retain their existing\nbehavior and are not included in the clean-layout, build-only verification until\nthey are migrated. Recovered object stores and other user data are retained in\nignored `resources/.recovery/`; other projects' package references can require\ntemporary compatibility links while those projects remain active.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Build and resource layout",
+      "anchor": "build-and-resource-layout",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

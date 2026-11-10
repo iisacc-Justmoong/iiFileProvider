@@ -1,4 +1,9 @@
 @PACKAGE_INIT@
+if(EMSCRIPTEN)
+    # Emscripten supports side modules although its CMake toolchain defaults
+    # the shared-library capability to false.
+    set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
+endif()
 set(iiFileProvider_ANDROID_SOURCE_DIRECTORY "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATADIR@/iiFileProvider/android/src")
 include("${CMAKE_CURRENT_LIST_DIR}/iiFileProviderAndroid.cmake")
 include(CMakeFindDependencyMacro)

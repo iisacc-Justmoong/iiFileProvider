@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include <FileCatalog.h>
 #include <chrono>
 #include <filesystem>
@@ -14,7 +15,7 @@ template<class F> void rejects(F fn, const char *message) {
 }
 std::span<const std::byte> bytes(const std::string &s) { return {reinterpret_cast<const std::byte *>(s.data()), s.size()}; }
 int main() {
-    const auto root = fs::path(CATALOG_TEST_DIRECTORY) / ("classification-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto root = provider_test::root(CATALOG_TEST_DIRECTORY) / ("classification-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::create_directory(root);
     try {
         std::string key, collection, saved;

@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include "ObjectStore.h"
 #include <sqlite3.h>
 #include <chrono>
@@ -30,7 +31,7 @@ struct Database {
     }
 };
 int main() try {
-    const auto root = fs::path(OBJECT_TEST_DIRECTORY) / ("journal-storage-" +
+    const auto root = provider_test::root(OBJECT_TEST_DIRECTORY) / ("journal-storage-" +
         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::create_directory(root);
     const auto source = root/"input";

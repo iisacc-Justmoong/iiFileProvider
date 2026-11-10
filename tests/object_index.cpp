@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include "ObjectStore.h"
 #include <sqlite3.h>
 #include <chrono>
@@ -32,7 +33,7 @@ void matches(ObjectStore &store){
     require(live==store.count(),"live pagination complete");
 }
 int main(){try{
-    const auto root=fs::path(OBJECT_TEST_DIRECTORY)/("object-index-test-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto root=provider_test::root(OBJECT_TEST_DIRECTORY)/("object-index-test-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::create_directory(root);const auto source=root/"source";
     {std::ofstream out(source);out<<"compact projection payload";}
     const auto package=root/"package";const auto database=package/"objects.sqlite3";

@@ -1,5 +1,8 @@
 # iiFileProvider
 
+[Build layout and test isolation](docs/BuildLayout.md) explains where generated
+outputs, temporary test data and recovered files belong.
+
 `iiFileProvider::Catalog` also owns `FileSearchIndex`, a thread-safe,
 process-local FTS snapshot for caller-supplied file metadata. It performs no
 filesystem access and does not modify the persistent catalog. See
@@ -80,6 +83,8 @@ details and bounded content previews. The native presentation component embeds
 the document in file attributes/streams and a portable hidden companion while
 preserving the source data fork. See [file presentation](docs/FILE_PRESENTATION.md)
 for supported formats, lifecycle hooks, native platform adapters and verification.
+
+Catalog can register an `.iiproject` directory as one package item without enumerating its assets. See [project packages](docs/PROJECT_PACKAGES.md).
 
 ## C++23 Society object store
 

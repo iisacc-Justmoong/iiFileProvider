@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include "FileCatalog.h"
 #include <chrono>
 #include <filesystem>
@@ -8,7 +9,7 @@ using namespace iiFileProvider;
 namespace fs=std::filesystem;
 void check(bool value,const char *message){if(!value)throw std::runtime_error(message);}
 int main()try{
-    const auto root=fs::path(CATALOG_TEST_DIRECTORY)/("catalog-reconcile-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));fs::create_directory(root);
+    const auto root=provider_test::root(CATALOG_TEST_DIRECTORY)/("catalog-reconcile-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));fs::create_directory(root);
     {FileCatalog catalog(root);FileMetadata metadata;metadata.title="Launch";metadata.keywords={"approved"};
     const std::string bytes="payload";auto first=catalog.createFile("first.txt",{reinterpret_cast<const std::byte*>(bytes.data()),bytes.size()},metadata);
     auto other=catalog.createFile("other.txt",{reinterpret_cast<const std::byte*>(bytes.data()),bytes.size()});

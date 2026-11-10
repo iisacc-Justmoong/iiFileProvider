@@ -15,6 +15,7 @@
 #include <fstream>
 #include <limits>
 #include <mutex>
+#include "ChangeTokenCoordinator.h"
 #include <optional>
 #include <set>
 #include <thread>
@@ -52,6 +53,7 @@ std::map<std::string, Presentation::Renderer> renderers;
 std::atomic_uint64_t rendererRevision{};
 std::atomic_bool presentationStopped = false;
 std::mutex cacheTokenMutex;
+detail::ChangeTokenCoordinator cacheTokenCoordinator;
 struct CacheToken final {
     std::string observed, normalized;
     std::optional<std::int64_t> observedSequence, normalizedSequence;
@@ -484,18 +486,24 @@ PresentationRecord persist(const fs::path &path, const Source &before, const std
     auto portable = Json::parse(r.document);
     std::string resultingToken;
     {
-        std::lock_guard lock(cacheTokenMutex);
-        const auto previous = cacheTokens.find(before.identity);
+        // Keep readers of this identity behind its attribute publication, but
+        // do not hold the map mutex across disk or extended-attribute I/O.
+        auto publication = cacheTokenCoordinator.lock(before.identity);
         auto originalToken = before.changed;
         auto originalSequence = before.sequence;
-        if (previous != cacheTokens.end() && previous->second.observed == originalToken
-            && previous->second.observedSequence == before.sequence) {
-            originalToken = previous->second.normalized;
-            originalSequence = previous->second.normalizedSequence;
+        {
+            std::lock_guard lock(cacheTokenMutex);
+            const auto previous = cacheTokens.find(before.identity);
+            if (previous != cacheTokens.end() && previous->second.observed == originalToken
+                && previous->second.observedSequence == before.sequence) {
+                originalToken = previous->second.normalized;
+                originalSequence = previous->second.normalizedSequence;
+            }
         }
         r.embedded = embed(path, r.document);
         const auto after = inspect(path);
         resultingToken = changeToken(path, after);
+        std::lock_guard lock(cacheTokenMutex);
         if (cacheTokens.size() >= 65536 && !cacheTokens.contains(before.identity)) cacheTokens.erase(cacheTokens.begin());
         cacheTokens[before.identity] = {after.changed, std::move(originalToken), after.sequence, originalSequence};
     }
@@ -684,12 +692,21 @@ fs::path Presentation::companionPath(const fs::path &p) { auto name = fs::path("
 bool Presentation::isControlFile(const fs::path &p) noexcept { try { return providerControl(p); } catch (...) { return true; } }
 std::string Presentation::cacheChangeToken(const fs::path &input) {
     const auto path = fs::absolute(input).lexically_normal();
-    std::lock_guard lock(cacheTokenMutex); const auto state = inspect(path);
-    const auto found = cacheTokens.find(state.identity);
-    const auto normalized = found != cacheTokens.end() && found->second.observed == state.changed
-        && found->second.observedSequence == state.sequence;
-    auto result = normalized ? found->second.normalized : state.changed;
-    const auto sequence = normalized ? found->second.normalizedSequence : state.sequence;
+    const auto initial = inspect(path);
+    auto reading = cacheTokenCoordinator.lock(initial.identity);
+    const auto state = inspect(path);
+    if (state.identity != initial.identity) fail("Source changed during presentation token lookup");
+    auto result = state.changed;
+    auto sequence = state.sequence;
+    {
+        std::lock_guard lock(cacheTokenMutex);
+        const auto found = cacheTokens.find(state.identity);
+        if (found != cacheTokens.end() && found->second.observed == state.changed
+            && found->second.observedSequence == state.sequence) {
+            result = found->second.normalized;
+            sequence = found->second.normalizedSequence;
+        }
+    }
     if (sequence) result += ":usn:" + std::to_string(*sequence);
     if (lower(text(path.extension())) == ".iisc") {
         auto wal = path; wal += "-wal";
@@ -712,6 +729,7 @@ std::string Presentation::normalizeChangeTime(std::uint64_t device, std::uint64_
     const auto identity = std::to_string(device) + ":" + std::to_string(fileIndex);
     const auto token = identity + ":" + std::to_string(seconds) + ":" + std::to_string(nanoseconds);
 #endif
+    auto reading = cacheTokenCoordinator.lock(identity);
     std::lock_guard lock(cacheTokenMutex);
     const auto found = cacheTokens.find(identity);
     return found != cacheTokens.end() && found->second.observed == token ? found->second.normalized : token;

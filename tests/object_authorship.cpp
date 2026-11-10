@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include "ObjectStore.h"
 #include "Authorship.h"
 #include <QJsonDocument>
@@ -9,7 +10,7 @@ using namespace iiFileProvider;
 void check(bool ok,const char *message){if(!ok)throw std::runtime_error(message);}
 template<class F> void rejects(F f){bool rejected=false;try{f();}catch(const std::exception &){rejected=true;}check(rejected,"invalid metadata must be rejected");}
 int main(){try{
-    QTemporaryDir temporary(QStringLiteral(OBJECT_TEST_DIRECTORY "/author-package-XXXXXX"));check(temporary.isValid(),"fixture");
+    QTemporaryDir temporary(provider_test::qtRoot(QStringLiteral(OBJECT_TEST_DIRECTORY)) + QStringLiteral("/author-package-XXXXXX"));check(temporary.isValid(),"fixture");
     const auto root=std::filesystem::path(temporary.path().toStdString());
     {std::ofstream out(root/"source");out<<"authored file";}
     const auto at=QDateTime::fromString("2026-09-28T01:00:00Z",Qt::ISODate);

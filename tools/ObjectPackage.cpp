@@ -1,4 +1,7 @@
 #include "ObjectPackageOptions.h"
+#ifdef IIFILEPROVIDER_PACKAGE_POSIX_SIGNALS
+#include "PackageSignals.h"
+#endif
 #include <algorithm>
 #include <chrono>
 #include <csignal>
@@ -10,7 +13,9 @@ using namespace iiFileProvider;
 using iiFileProvider::cli::PackageMode;
 namespace {
 volatile std::sig_atomic_t interrupted=0;
+#ifndef IIFILEPROVIDER_PACKAGE_POSIX_SIGNALS
 void interrupt(int){interrupted=1;}
+#endif
 std::string json(const std::string &s){
     constexpr char hex[]="0123456789abcdef";std::string out="\"";
     for(const unsigned char c:s){
@@ -25,9 +30,13 @@ void issue(const ObjectPackagingIssue &value){std::cout<<"{\"event\":\"error\",\
 int main(int argc,char **argv){try{
     const std::vector<std::string_view> arguments(argv+1,argv+argc);
     const auto options=cli::parseObjectPackageOptions(arguments);
-    std::signal(SIGINT,interrupt);std::signal(SIGTERM,interrupt);
     std::stop_source cancellation;
+#ifdef IIFILEPROVIDER_PACKAGE_POSIX_SIGNALS
+    cli::PackageSignals observer(cancellation,interrupted);
+#else
+    std::signal(SIGINT,interrupt);std::signal(SIGTERM,interrupt);
     std::jthread observer([&](std::stop_token stop){while(!stop.stop_requested()){if(interrupted){cancellation.request_stop();return;}std::this_thread::sleep_for(std::chrono::milliseconds(50));}});
+#endif
     if(options.mode==PackageMode::Index){
         ObjectStore store(options.package,options.container,ObjectStore::Access::ReadOnly);
         for(int run=0;run<3;++run){

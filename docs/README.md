@@ -9,6 +9,8 @@ Markdown is the maintained human source. Agent JSON is a structured, source-trac
 | --- | --- |
 | [`AGENT.md`](../AGENT.md) | [JSON](entrypoints/AGENT.agent.json) |
 | [`README.md`](../README.md) | [JSON](entrypoints/README.agent.json) |
+| [`docs/BuildLayout.md`](BuildLayout.md) | [JSON](BuildLayout.agent.json) |
+| [`docs/DynamicLinking.md`](DynamicLinking.md) | [JSON](DynamicLinking.agent.json) |
 | [`docs/FILE_AUTHOR_CONTRACT.md`](FILE_AUTHOR_CONTRACT.md) | [JSON](FILE_AUTHOR_CONTRACT.agent.json) |
 | [`docs/FILE_CATALOG.md`](FILE_CATALOG.md) | [JSON](FILE_CATALOG.agent.json) |
 | [`docs/FILE_CATALOG_VALIDATION.md`](FILE_CATALOG_VALIDATION.md) | [JSON](FILE_CATALOG_VALIDATION.agent.json) |
@@ -31,6 +33,7 @@ Markdown is the maintained human source. Agent JSON is a structured, source-trac
 | [`docs/ONTOLOGY_VALIDATION.md`](ONTOLOGY_VALIDATION.md) | [JSON](ONTOLOGY_VALIDATION.agent.json) |
 | [`docs/OWNED_FILE_IO.md`](OWNED_FILE_IO.md) | [JSON](OWNED_FILE_IO.agent.json) |
 | [`docs/PERFORMANCE.md`](PERFORMANCE.md) | [JSON](PERFORMANCE.agent.json) |
+| [`docs/PROJECT_PACKAGES.md`](PROJECT_PACKAGES.md) | [JSON](PROJECT_PACKAGES.agent.json) |
 | [`docs/SourceLayout.md`](SourceLayout.md) | [JSON](SourceLayout.agent.json) |
 | [`docs/Windows.md`](Windows.md) | [JSON](Windows.agent.json) |
 | [`docs/WindowsBuildAndRun.md`](WindowsBuildAndRun.md) | [JSON](WindowsBuildAndRun.agent.json) |

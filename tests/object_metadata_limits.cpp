@@ -1,3 +1,4 @@
+#include "TestWorkspace.h"
 #include "ObjectStore.h"
 #include <sqlite3.h>
 #include <chrono>
@@ -25,7 +26,7 @@ std::size_t entries(const fs::path &path) {
     return static_cast<std::size_t>(std::distance(fs::recursive_directory_iterator(path), fs::recursive_directory_iterator{}));
 }
 int main() try {
-    const auto root = fs::path(OBJECT_TEST_DIRECTORY) / ("metadata-limits-" +
+    const auto root = provider_test::root(OBJECT_TEST_DIRECTORY) / ("metadata-limits-" +
         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::create_directory(root);
     const auto source = root/"empty.raw"; { std::ofstream out(source, std::ios::binary); }

@@ -1,0 +1,5 @@
+foreach(_type IN ITEMS TEMP_TYPE CATALOG_TYPE OBJECTS_TYPE)
+    if(NOT ${_type} STREQUAL "SHARED_LIBRARY")
+        message(FATAL_ERROR "A shared build was requested but ${_type} is ${${_type}}")
+    endif()
+endforeach()
