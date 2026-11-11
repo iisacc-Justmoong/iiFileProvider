@@ -259,3 +259,20 @@ Native temporary admission retries a transient concurrent-first-create ENOENT
 at most eight times, only while the pinned parent still matches the live path.
 Invalid, redirected, replaced or removed parents retain their failure behavior.
 The regression exercises eight simultaneous writers in 32 fresh directories.
+
+
+# 격리된 분류 문서 저장 계약
+
+iiFileProvider 카탈로그는 기본적으로 기존의 파일 옆 이동식 분류 문서를 유지한다.
+호스트가 별도의 절대 경로를 명시한 경우에는 그 경로 아래에 자원 주소별 분류 문서를
+보관한다. 문서의 `fileKey`는 논리 식별자이고 주소나 내용 해시와 같지 않다.
+기존 파일이나 문서를 덮어쓰지 않고 형식·식별자·판본을 검증하며, 기록은 임시 파일과
+원자적 게시를 이용한다. 기존 인접 문서는 새 문서가 안전하게 게시된 후 전용 보존
+영역으로 옮긴다. 원본을 식별할 수 없거나 충돌하는 문서는 임의로 병합하지 않는다.
+
+카탈로그의 주소 조회와 분류 문서 조회는 모두 선택한 저장 경로를 따른다. 동일 파일의
+이름 변경·이동, 다른 자원으로서의 복제, 삭제·복원은 호스트가 파일과 해당 분류
+문서의 주소 갱신을 함께 조정한다. 일반 JSON 자원은 분류 문서가 아니다.
+`classificationOwnerAt()`은 검증된 문서의 소유 키를 반환하고,
+`matchesIdentity(key, relativePath)`는 카탈로그의 파일시스템 식별자와 후보 경로의
+실제 식별자를 비교한다. 이 비교는 파일 내용이나 콘텐츠 해시를 읽지 않는다.

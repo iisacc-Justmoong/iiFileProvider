@@ -93,6 +93,64 @@ int main() {
             const auto adopted = restored.registerFile("image.png");
             require(adopted.file.key == key && adopted.file.metadata.title == "durably queued", "companion restoration");
         }
+        // A host can place classification documents outside the browsable
+        // asset tree while retaining the same stable file key and metadata.
+        {
+            const auto section = root / "isolated-section";
+            const auto vault = root / "private-classification";
+            fs::create_directories(section / "folder");
+            { std::ofstream out(section / "folder" / "legacy.txt"); out << "payload"; }
+            std::string legacyKey;
+            {
+                FileCatalog old(section);
+                FileMetadata m; m.title = "preserved classification";
+                const auto item = old.registerFile("folder/legacy.txt", m);
+                require(item.metadataWritten, "legacy fixture was not published");
+                legacyKey = item.file.key;
+            }
+            const auto legacy = section / "folder" / "legacy.txt.iisacc.json";
+            require(fs::is_regular_file(legacy), "legacy fixture absent");
+            std::ifstream originalStream(legacy, std::ios::binary);
+            const std::string legacyBytes((std::istreambuf_iterator<char>(originalStream)), {});
+            originalStream.close();
+            FileCatalog files(section, FileCatalog::Access::ReadWrite, vault);
+            const auto migrated = files.registerFile("folder/legacy.txt");
+            require(migrated.metadataWritten && migrated.file.key == legacyKey,
+                    "private migration lost the file identity");
+            const auto privatePath = files.metadataPath("folder/legacy.txt");
+            require(fs::is_regular_file(privatePath) && !fs::exists(legacy),
+                    "classification remains in the visible asset directory");
+            bool originalPreserved = false;
+            for (const auto &entry : fs::directory_iterator(vault / ".legacy")) {
+                std::ifstream archived(entry.path(), std::ios::binary);
+                if (std::string((std::istreambuf_iterator<char>(archived)), {}) == legacyBytes) originalPreserved = true;
+            }
+            require(originalPreserved, "legacy bytes were not retained");
+            require(!FileCatalog::classificationDocumentAt(section / "folder" / "legacy.txt", privatePath).empty(),
+                    "private classification cannot be read");
+            require(FileCatalog::classificationOwnerAt(section / "folder" / "legacy.txt", privatePath) == legacyKey,
+                    "private classification lost its owner");
+            require(files.lookup(legacyKey)->metadata.title == "preserved classification",
+                    "private migration lost annotations");
+            const auto generated = files.createFile("new.txt", bytes("new"));
+            require(generated.metadataWritten && fs::is_regular_file(files.metadataPath("new.txt")),
+                    "new classification was not isolated");
+            require(!fs::exists(section / "new.txt.iisacc.json"), "new adjacent metadata leaked");
+            { std::ofstream conflict(section / "new.txt.iisacc.json"); conflict << "not provider metadata"; }
+            const auto conflicting = files.registerFile("new.txt");
+            require(!conflicting.metadataWritten && fs::exists(section / "new.txt.iisacc.json"),
+                    "invalid legacy document was deleted or accepted");
+            require(fs::is_regular_file(files.metadataPath("new.txt")), "existing private classification was lost");
+            fs::rename(section / "folder" / "legacy.txt", section / "folder" / "moved.txt");
+            { std::ofstream replacement(section / "folder" / "legacy.txt"); replacement << "different object"; }
+            require(files.matchesIdentity(legacyKey, "folder/moved.txt"), "moved native identity was lost");
+            require(!files.matchesIdentity(legacyKey, "folder/legacy.txt"), "replacement shared the original identity");
+            rejects([&] { (void)files.registerFile("folder/legacy.txt"); },
+                    "replacement inherited another object's private classification");
+            require(files.lookup(legacyKey)->metadata.title == "preserved classification",
+                    "replacement altered the original classification");
+            rejects([&] { (void)files.metadataPath("../outside"); }, "private metadata path traversal accepted");
+        }
         fs::remove_all(root); std::cout << "Native metadata, collections, filters, persistence and bounded provision verified\n"; return 0;
     } catch (const std::exception &error) {
         std::cerr << error.what() << "\nFixture preserved: " << root << '\n'; return 1;

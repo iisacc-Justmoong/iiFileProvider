@@ -130,10 +130,15 @@ public:
     static constexpr std::size_t maximumMetadataBytes = 256 * 1024;
 
     explicit FileCatalog(const std::filesystem::path &root, Access access = Access::Create);
+    // A host may keep its classification documents outside the browsable root.
+    // An empty metadataRoot retains the portable adjacent-document behaviour.
+    FileCatalog(const std::filesystem::path &root, Access access,
+                const std::filesystem::path &metadataRoot);
     ~FileCatalog();
     FileCatalog(const FileCatalog &) = delete;
     FileCatalog &operator=(const FileCatalog &) = delete;
     [[nodiscard]] const std::filesystem::path &root() const noexcept;
+    [[nodiscard]] std::filesystem::path metadataPath(const std::string &relativePath) const;
 
     [[nodiscard]] MetadataWrite registerFile(const std::string &relativePath,
         const std::optional<FileMetadata> &metadata = {});
@@ -154,6 +159,9 @@ public:
         std::uint64_t expectedRevision, const FileMetadata &metadata);
     [[nodiscard]] std::optional<CatalogFile> lookup(const std::string &key) const;
     [[nodiscard]] std::optional<CatalogFile> lookupPath(const std::string &relativePath) const;
+    // Compare the registered filesystem identity with a candidate path; this
+    // does not use the name, file contents or content hash as identity.
+    [[nodiscard]] bool matchesIdentity(const std::string &key, const std::string &relativePath) const;
     [[nodiscard]] CatalogEntryKind itemKind(const std::string &key) const;
     [[nodiscard]] FileChunk read(const std::string &key, std::uint64_t offset = 0,
         std::size_t maximumBytes = 256 * 1024, const std::string &expectedContentVersion = {}) const;
@@ -190,6 +198,10 @@ public:
     // malformed, oversized, redirected or concurrently changed data throws.
     // Returns validated fields only, without the catalog-local path.
     [[nodiscard]] static std::string classificationDocument(const std::filesystem::path &asset);
+    [[nodiscard]] static std::string classificationDocumentAt(const std::filesystem::path &asset,
+                                                                const std::filesystem::path &document);
+    [[nodiscard]] static std::string classificationOwnerAt(const std::filesystem::path &asset,
+                                                             const std::filesystem::path &document);
 
 private:
     class Impl;

@@ -10,11 +10,11 @@
   },
   "source": {
     "path": "docs/FILE_CATALOG.md",
-    "sha256": "9b418d34286643604d312f7abd1849795ff2a5eb23763bfff96446048695c034",
-    "bytes": 14213,
-    "line_count": 261,
+    "sha256": "4554b77149d54ca1e9abff57f746bb8611ae68c3ddde6bed14901e78d5e5abd8",
+    "bytes": 15548,
+    "line_count": 278,
     "encoding": "utf-8",
-    "language": "en"
+    "language": "ko"
   },
   "document": {
     "title": "Native file catalog and classification",
@@ -597,6 +597,50 @@
       "start_line": 248,
       "end_line": 261,
       "raw": "On macOS, packaging fixtures prime their first native snapshot, then establish\none second of stable native metadata before capturing their asserted inventory.\nNew-file provenance attributes can\notherwise arrive asynchronously and change ctime during an unrelated test phase.\nProduction source identity/conflict checks remain unchanged and include ctime.\nThe quiet-fixture helper is confined to the new catalog/object integration test;\nexisting packaging regression fixtures retain their original behavior. Their\nmetadata-change failures are recorded separately from classification validation.\nPackaging and audit hold a shared staging lease across the complete operation,\nincluding intervals between individual snapshots, so cleanup cannot enter a gap.\nNative temporary admission retries a transient concurrent-first-create ENOENT\nat most eight times, only while the pinned parent still matches the live path.\nInvalid, redirected, replaced or removed parents retain their failure behavior.\nThe regression exercises eight simultaneous writers in 32 fresh directories.\n"
+    },
+    {
+      "id": "b000076",
+      "kind": "blank",
+      "start_line": 262,
+      "end_line": 263,
+      "raw": "\n\n"
+    },
+    {
+      "id": "b000077",
+      "kind": "heading",
+      "start_line": 264,
+      "end_line": 264,
+      "raw": "# 격리된 분류 문서 저장 계약\n",
+      "level": 1,
+      "title": "격리된 분류 문서 저장 계약"
+    },
+    {
+      "id": "b000078",
+      "kind": "blank",
+      "start_line": 265,
+      "end_line": 265,
+      "raw": "\n"
+    },
+    {
+      "id": "b000079",
+      "kind": "paragraph",
+      "start_line": 266,
+      "end_line": 271,
+      "raw": "iiFileProvider 카탈로그는 기본적으로 기존의 파일 옆 이동식 분류 문서를 유지한다.\n호스트가 별도의 절대 경로를 명시한 경우에는 그 경로 아래에 자원 주소별 분류 문서를\n보관한다. 문서의 `fileKey`는 논리 식별자이고 주소나 내용 해시와 같지 않다.\n기존 파일이나 문서를 덮어쓰지 않고 형식·식별자·판본을 검증하며, 기록은 임시 파일과\n원자적 게시를 이용한다. 기존 인접 문서는 새 문서가 안전하게 게시된 후 전용 보존\n영역으로 옮긴다. 원본을 식별할 수 없거나 충돌하는 문서는 임의로 병합하지 않는다.\n"
+    },
+    {
+      "id": "b000080",
+      "kind": "blank",
+      "start_line": 272,
+      "end_line": 272,
+      "raw": "\n"
+    },
+    {
+      "id": "b000081",
+      "kind": "paragraph",
+      "start_line": 273,
+      "end_line": 278,
+      "raw": "카탈로그의 주소 조회와 분류 문서 조회는 모두 선택한 저장 경로를 따른다. 동일 파일의\n이름 변경·이동, 다른 자원으로서의 복제, 삭제·복원은 호스트가 파일과 해당 분류\n문서의 주소 갱신을 함께 조정한다. 일반 JSON 자원은 분류 문서가 아니다.\n`classificationOwnerAt()`은 검증된 문서의 소유 키를 반환하고,\n`matchesIdentity(key, relativePath)`는 카탈로그의 파일시스템 식별자와 후보 경로의\n실제 식별자를 비교한다. 이 비교는 파일 내용이나 콘텐츠 해시를 읽지 않는다.\n"
     }
   ],
   "outline": [
@@ -655,6 +699,14 @@
       "title": "Native CLI",
       "anchor": "native-cli",
       "start_line": 212
+    },
+    {
+      "block_id": "b000077",
+      "parent_id": null,
+      "level": 1,
+      "title": "격리된 분류 문서 저장 계약",
+      "anchor": "격리된-분류-문서-저장-계약",
+      "start_line": 264
     }
   ],
   "indexes": {
@@ -726,6 +778,13 @@
         "block_id": "b000059",
         "line": 200,
         "text": "against a hostile process racing path replacement. Remote access must retain its",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000079",
+        "line": 271,
+        "text": "영역으로 옮긴다. 원본을 식별할 수 없거나 충돌하는 문서는 임의로 병합하지 않는다.",
         "basis": "lexical_match",
         "context": "paragraph"
       }

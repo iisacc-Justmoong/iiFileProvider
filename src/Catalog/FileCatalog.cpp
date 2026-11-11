@@ -348,6 +348,19 @@ void writeBytes(const fs::path &path, std::span<const std::byte> bytes) {
     output.flush(); if (!output) fail("cannot flush staged output");
 }
 std::span<const std::byte> asBytes(const std::string &text) { return {reinterpret_cast<const std::byte *>(text.data()), text.size()}; }
+bool moveExclusive(const fs::path &source, const fs::path &destination) {
+#ifdef _WIN32
+    return MoveFileExW(source.c_str(), destination.c_str(), MOVEFILE_WRITE_THROUGH) != 0;
+#elif defined(__APPLE__)
+    return ::renamex_np(source.c_str(), destination.c_str(), RENAME_EXCL) == 0;
+#elif defined(__linux__) && defined(SYS_renameat2)
+    return ::syscall(SYS_renameat2, AT_FDCWD, source.c_str(), AT_FDCWD, destination.c_str(), 1) == 0;
+#else
+    if (::link(source.c_str(), destination.c_str()) != 0) return false;
+    if (::unlink(source.c_str()) == 0) return true;
+    ::unlink(destination.c_str()); return false;
+#endif
+}
 void requireVacant(const fs::path &path) {
     const auto presentation = path.parent_path() / nativePath("." + pathText(path.filename()) + ".iisacc-preview");
     if (fs::exists(fs::symlink_status(path)) || fs::exists(fs::symlink_status(nativePath(pathText(path) + companionSuffix)))
@@ -358,15 +371,23 @@ void requireVacant(const fs::path &path) {
 
 class FileCatalog::Impl {
 public:
-    fs::path root, state;
+    fs::path root, state, metadataRoot;
     std::string rootIdentity, stateIdentity, databaseIdentity, catalogId;
     sqlite3 *db = nullptr;
     bool readOnly;
     mutable std::mutex mutex;
-    Impl(const fs::path &input, Access access) : readOnly(access == Access::ReadOnly) {
+    Impl(const fs::path &input, Access access, const fs::path &privateMetadata = {}) : readOnly(access == Access::ReadOnly) {
         if (input.empty() || !input.is_absolute()) fail("catalog root must be an absolute local directory");
         if (access == Access::Create && !fs::exists(fs::symlink_status(input))) fs::create_directories(input);
         (void)inspect(input, true); root = fs::canonical(input); rootIdentity = inspect(root, true).identity;
+        if (!privateMetadata.empty()) {
+            if (!privateMetadata.is_absolute() || privateMetadata.lexically_normal() != privateMetadata)
+                fail("private metadata directory must be an absolute canonical path");
+            const auto inside = privateMetadata.lexically_relative(root);
+            if (inside.empty() || (*inside.begin() != ".." && !inside.is_absolute()))
+                fail("private metadata directory must be outside the browsable root");
+            metadataRoot = privateMetadata;
+        }
         state = root / privateDirectory;
         if (access == Access::Create && !fs::exists(fs::symlink_status(state))) { fs::create_directory(state); fs::permissions(state, fs::perms::owner_all); }
         stateIdentity = inspect(state, true).identity;
@@ -432,6 +453,32 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
             || inspect(state / "catalog.sqlite3").identity != databaseIdentity) fail("catalog root or database was replaced");
     }
     void writable() const { intact(); if (readOnly) fail("classification catalog is read-only"); }
+    // Validate every directory component without following symlinks. Writers
+    // create only missing directories within the configured private location.
+    void metadataParents(const fs::path &parent, bool create) const {
+        if (metadataRoot.empty()) return;
+        const auto rel = parent.lexically_relative(metadataRoot);
+        if (rel.is_absolute() || (!rel.empty() && *rel.begin() == "..")) fail("metadata path escapes its owner");
+        auto at = metadataRoot.root_path();
+        for (const auto &part : metadataRoot.relative_path()) {
+            at /= part; const auto status = fs::symlink_status(at);
+            if (!fs::exists(status)) { if (!create) return; fs::create_directory(at); }
+            (void)inspect(at, true);
+        }
+        for (const auto &part : rel) {
+            if (part == ".") continue;
+            at /= part; const auto status = fs::symlink_status(at);
+            if (!fs::exists(status)) { if (!create) return; fs::create_directory(at); }
+            (void)inspect(at, true);
+        }
+    }
+    fs::path classificationPath(const std::string &relative, bool create = false) const {
+        const auto valid = relativePath(relative);
+        if (metadataRoot.empty()) return nativePath(pathText(path(valid)) + companionSuffix);
+        const auto result = nativePath(pathText(metadataRoot / nativePath(valid)) + companionSuffix);
+        metadataParents(result.parent_path(), create);
+        return result;
+    }
     fs::path path(const std::string &relative, bool parents = false) const {
         intact(); const auto value = relativePath(relative); fs::path at = root;
         const auto rel = nativePath(value);
@@ -510,7 +557,7 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
         writable(); Transaction transaction(db); const auto f = require(key); if (!f.metadataPending) { transaction.commit(); return false; }
         const auto file = path(f.path); const auto physical = inspectEntry(f);
         if (physical.version != f.contentVersion) fail("file changed before companion publication; register it again");
-        const auto target = nativePath(pathText(file) + companionSuffix); const auto status = fs::symlink_status(target);
+        const auto target = classificationPath(f.path, true); const auto status = fs::symlink_status(target);
         if (fs::exists(status)) {
             const auto previous = companion(target);
             const auto previousKey = previous.at("fileKey").get<std::string>();
@@ -526,12 +573,58 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
                 fail("metadata companion belongs to a newer file revision");
         }
         const auto json = document(f); if (json.size() > FileCatalog::maximumMetadataBytes) fail("companion exceeds byte limit");
-        Stage staged(file.parent_path(), newKey(db, "")); writeBytes(staged.path, asBytes(json)); staged.publish(target, fs::exists(status));
+        const auto legacy = nativePath(pathText(file) + companionSuffix);
+        std::optional<std::string> oldBytes;
+        if (!metadataRoot.empty() && fs::exists(fs::symlink_status(legacy))) {
+            const auto old = companion(legacy);
+            const auto previousKey = old.at("fileKey").get<std::string>();
+            if (previousKey != key) {
+                Statement source(db, "SELECT path,metadata,revision FROM files WHERE key=?"); source.bind(1, previousKey);
+                if (!source.row() || source.text(0) == f.path || parseMetadata(old.at("metadata")) != f.metadata
+                    || old.at("revision").get<std::uint64_t>() > std::uint64_t(source.number(2)))
+                    fail("legacy classification belongs to a different file");
+            } else if (old.at("revision").get<std::uint64_t>() > f.revision)
+                fail("legacy classification belongs to a newer revision");
+            oldBytes = smallRead(legacy);
+        }
+        Stage staged(target.parent_path(), newKey(db, "")); writeBytes(staged.path, asBytes(json)); staged.publish(target, fs::exists(status));
+        if (oldBytes) {
+            // First claim the directory entry without replacing anything. A
+            // concurrent writer using the old spelling cannot be unlinked by
+            // this operation. Failed claims leave the original untouched.
+            const auto held = legacy.parent_path() / nativePath(".iifile-metadata-" + newKey(db, ""));
+            if (!moveExclusive(legacy, held)) fail("cannot claim legacy classification for migration");
+            const auto archive = metadataRoot / ".legacy";
+            try {
+                if (smallRead(held) != *oldBytes) fail("legacy classification changed during migration");
+                metadataParents(archive, true);
+                Stage saved(archive, newKey(db, "")); writeBytes(saved.path, asBytes(*oldBytes));
+                const auto destination = archive / nativePath(newKey(db, "legacy-") + ".json");
+                saved.publish(destination, false);
+                if (smallRead(held) != *oldBytes) fail("legacy classification changed during migration");
+                if (!fs::remove(held)) fail("cannot remove migrated legacy classification");
+                syncDirectory(legacy.parent_path());
+            } catch (...) {
+                // If a new entry appeared at the old name, never overwrite it;
+                // preserve the claimed bytes at their private temporary name.
+                if (fs::exists(fs::symlink_status(held))) (void)moveExclusive(held, legacy);
+                throw;
+            }
+        }
         Statement done(db, "DELETE FROM pending WHERE file_id=?"); done.bind(1, f.index); done.done(); transaction.commit(); return true;
     }
     MetadataWrite publishResult(const std::string &key) {
         std::string error; try { (void)publish(key); } catch (const std::exception &e) { error = e.what(); }
         auto f = require(key); return {f, !f.metadataPending, std::move(error)};
+    }
+    void queuePrivatePublication(const CatalogFile &item) {
+        if (metadataRoot.empty()) return;
+        const auto legacy = nativePath(pathText(path(item.path)) + companionSuffix);
+        if (fs::exists(fs::symlink_status(legacy)) || !fs::exists(fs::symlink_status(classificationPath(item.path)))) {
+            Transaction transaction(db);
+            Statement pending(db, "INSERT OR IGNORE INTO pending VALUES(?)"); pending.bind(1, item.index); pending.done();
+            transaction.commit();
+        }
     }
     void restoreCollections(const Json &j, FileMetadata &metadata) {
         std::map<std::string, std::string> remap;
@@ -553,6 +646,12 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
         const auto relative = relativePath(registration.path);requireOutsidePackage(relative);
         const auto physical = package?inspectPackage(path(relative)):inspect(path(relative));
         auto existing = find(relative, true); FileMetadata metadata;
+        if (existing && existing->path == relative && !metadataRoot.empty()) {
+            Statement identity(db, "SELECT identity FROM files WHERE id=?");
+            identity.bind(1, existing->index);
+            if (!identity.row() || identity.text(0) != physical.identity)
+                fail("classification identity conflict; the registered file was replaced");
+        }
         if (!existing) {
             Statement same(db, "SELECT key,path FROM files WHERE identity=?"); same.bind(1, physical.identity);
             if (same.row()) {
@@ -571,7 +670,9 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
         if (registration.metadata) metadata = normalizeMetadata(*registration.metadata);
         else if (existing) {
             metadata = existing->metadata;
-            const auto sidecar = nativePath(pathText(path(relative)) + companionSuffix);
+            auto sidecar = classificationPath(relative);
+            if (!metadataRoot.empty() && !fs::exists(fs::symlink_status(sidecar)))
+                sidecar = nativePath(pathText(path(relative)) + companionSuffix);
             if (fs::exists(fs::symlink_status(sidecar))) {
                 const auto j = companion(sidecar);
                 if (j.at("fileKey").get<std::string>() == key && j.at("revision").get<std::uint64_t>() >= existing->revision) {
@@ -580,7 +681,9 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
             }
         }
         else {
-            const auto sidecar = nativePath(pathText(path(relative)) + companionSuffix);
+            auto sidecar = classificationPath(relative);
+            if (!metadataRoot.empty() && !fs::exists(fs::symlink_status(sidecar)))
+                sidecar = nativePath(pathText(path(relative)) + companionSuffix);
             if (fs::exists(fs::symlink_status(sidecar))) {
                 const auto j = companion(sidecar); key = j.at("fileKey").get<std::string>(); metadata = parseMetadata(j.at("metadata"));
                 revision = std::max(std::uint64_t(1), j.at("revision").get<std::uint64_t>());
@@ -603,8 +706,13 @@ PRAGMA application_id=0x49494643; PRAGMA user_version=1;
 };
 
 FileCatalog::FileCatalog(const fs::path &root, Access access) : d(std::make_unique<Impl>(root, access)) {}
+FileCatalog::FileCatalog(const fs::path &root, Access access, const fs::path &metadataRoot)
+    : d(std::make_unique<Impl>(root, access, metadataRoot)) {}
 FileCatalog::~FileCatalog() = default;
 const fs::path &FileCatalog::root() const noexcept { return d->root; }
+fs::path FileCatalog::metadataPath(const std::string &relative) const {
+    std::lock_guard lock(d->mutex); d->intact(); return d->classificationPath(relative);
+}
 std::vector<CatalogFile> FileCatalog::registerFiles(const std::vector<FileRegistration> &input) {
     if (input.empty() || input.size() > maximumBatch) fail("registration batch exceeds file count limit");
     std::size_t bytes = 0; std::set<std::string> paths;
@@ -623,6 +731,7 @@ MetadataWrite FileCatalog::registerFile(const std::string &path, const std::opti
     { std::lock_guard lock(d->mutex);d->requireOutsidePackage(relativePath(path));try { (void)native::Presentation::prepare(d->path(path)); } catch (...) {} }
 #endif
     const auto registered = registerFiles({{path, metadata}}).front(); std::lock_guard lock(d->mutex);
+    d->queuePrivatePublication(registered);
     return d->publishResult(registered.key);
 }
 MetadataWrite FileCatalog::registerPackage(const std::string &path, const std::optional<FileMetadata> &metadata) {
@@ -634,6 +743,7 @@ MetadataWrite FileCatalog::registerPackage(const std::string &path, const std::o
         result=d->registration({path,metadata},&mutated,true);
         if(mutated)d->bump();transaction.commit();
     }
+    d->queuePrivatePublication(result);
     return d->publishResult(result.key);
 }
 MetadataWrite FileCatalog::createFile(const std::string &relative, std::span<const std::byte> bytes, const FileMetadata &input) {
@@ -701,6 +811,14 @@ std::optional<CatalogFile> FileCatalog::lookup(const std::string &key) const {
 }
 std::optional<CatalogFile> FileCatalog::lookupPath(const std::string &path) const {
     const auto relative = relativePath(path); std::lock_guard lock(d->mutex); d->intact(); Transaction transaction(d->db, false); auto result = d->find(relative, true); transaction.commit(); return result;
+}
+bool FileCatalog::matchesIdentity(const std::string &key, const std::string &path) const {
+    const auto relative = relativePath(path);
+    std::lock_guard lock(d->mutex); d->intact(); const auto record = d->require(key);
+    const auto candidate = d->path(relative);
+    const auto current = d->isPackage(record.index) ? inspectPackage(candidate) : inspect(candidate);
+    Statement identity(d->db, "SELECT identity FROM files WHERE id=?"); identity.bind(1, record.index);
+    return identity.row() && identity.text(0) == current.identity;
 }
 CatalogEntryKind FileCatalog::itemKind(const std::string &key) const {
     std::lock_guard lock(d->mutex);d->intact();Transaction transaction(d->db,false);
@@ -822,6 +940,9 @@ std::string FileCatalog::presentationDocument(const std::string &key) const {
     return {};
 }
 std::string FileCatalog::classificationDocument(const fs::path &asset) {
+    return classificationDocumentAt(asset, nativePath(pathText(asset) + companionSuffix));
+}
+std::string FileCatalog::classificationDocumentAt(const fs::path &asset, const fs::path &path) {
     if (asset.empty() || !asset.is_absolute() || asset.lexically_normal() != asset
         || asset.native().find(fs::path::value_type{}) != asset.native().npos)
         fail("classification requires an absolute native asset path");
@@ -838,7 +959,15 @@ std::string FileCatalog::classificationDocument(const fs::path &asset) {
     validate();
     const auto package=fs::is_directory(fs::symlink_status(asset));
     const auto before = package?inspectPackage(asset):inspect(asset);
-    const auto path = nativePath(pathText(asset) + companionSuffix);
+    if (path.empty() || !path.is_absolute() || path.lexically_normal() != path
+        || path.native().find(fs::path::value_type{}) != path.native().npos)
+        fail("classification document requires an absolute path");
+    auto directory = path.root_path();
+    for (const auto &part : path.parent_path().relative_path()) {
+        directory /= part;
+        if (!fs::exists(fs::symlink_status(directory))) return {};
+        (void)inspect(directory, true);
+    }
     if (!fs::exists(fs::symlink_status(path))) return {};
     const auto stored = companion(path);
     Json collections = Json::array();
@@ -850,5 +979,9 @@ std::string FileCatalog::classificationDocument(const fs::path &asset) {
     return Json{{"format", "iiFileProvider.Metadata"}, {"schema", 1}, {"fileKey", stored.at("fileKey")},
         {"revision", stored.at("revision")}, {"metadata", metadataJson(parseMetadata(stored.at("metadata")))},
         {"collections", collections}}.dump();
+}
+std::string FileCatalog::classificationOwnerAt(const fs::path &asset, const fs::path &path) {
+    const auto document = classificationDocumentAt(asset, path);
+    return document.empty() ? std::string{} : Json::parse(document).at("fileKey").get<std::string>();
 }
 } // namespace iiFileProvider
