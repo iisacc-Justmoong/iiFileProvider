@@ -10,9 +10,9 @@
   },
   "source": {
     "path": "docs/README.md",
-    "sha256": "a5cb6a84167b853bd89f21326acc7b5d5573bdf563cfcf1bcae4b3b9c8583edf",
-    "bytes": 3418,
-    "line_count": 44,
+    "sha256": "3f78f362fe6a228fd437e97b742029cc8de6fd7142192209fa464ba68b71be7e",
+    "bytes": 3483,
+    "line_count": 45,
     "encoding": "utf-8",
     "language": "en"
   },
@@ -79,8 +79,8 @@
       "id": "b000008",
       "kind": "table",
       "start_line": 8,
-      "end_line": 43,
-      "raw": "| Document | Agent JSON |\n| --- | --- |\n| [`AGENT.md`](../AGENT.md) | [JSON](entrypoints/AGENT.agent.json) |\n| [`README.md`](../README.md) | [JSON](entrypoints/README.agent.json) |\n| [`docs/BuildLayout.md`](BuildLayout.md) | [JSON](BuildLayout.agent.json) |\n| [`docs/DynamicLinking.md`](DynamicLinking.md) | [JSON](DynamicLinking.agent.json) |\n| [`docs/FILE_AUTHOR_CONTRACT.md`](FILE_AUTHOR_CONTRACT.md) | [JSON](FILE_AUTHOR_CONTRACT.agent.json) |\n| [`docs/FILE_CATALOG.md`](FILE_CATALOG.md) | [JSON](FILE_CATALOG.agent.json) |\n| [`docs/FILE_CATALOG_VALIDATION.md`](FILE_CATALOG_VALIDATION.md) | [JSON](FILE_CATALOG_VALIDATION.agent.json) |\n| [`docs/FILE_CREATION_VALIDATION.md`](FILE_CREATION_VALIDATION.md) | [JSON](FILE_CREATION_VALIDATION.agent.json) |\n| [`docs/FILE_CRUD.md`](FILE_CRUD.md) | [JSON](FILE_CRUD.agent.json) |\n| [`docs/FILE_JOURNAL.md`](FILE_JOURNAL.md) | [JSON](FILE_JOURNAL.agent.json) |\n| [`docs/FILE_JOURNAL_VALIDATION.md`](FILE_JOURNAL_VALIDATION.md) | [JSON](FILE_JOURNAL_VALIDATION.agent.json) |\n| [`docs/FILE_LINKS.md`](FILE_LINKS.md) | [JSON](FILE_LINKS.agent.json) |\n| [`docs/FILE_OWNERSHIP.md`](FILE_OWNERSHIP.md) | [JSON](FILE_OWNERSHIP.agent.json) |\n| [`docs/FILE_PRESENTATION.md`](FILE_PRESENTATION.md) | [JSON](FILE_PRESENTATION.agent.json) |\n| [`docs/FILE_PRESENTATION_VALIDATION.md`](FILE_PRESENTATION_VALIDATION.md) | [JSON](FILE_PRESENTATION_VALIDATION.agent.json) |\n| [`docs/FILE_SEARCH_INDEX.md`](FILE_SEARCH_INDEX.md) | [JSON](FILE_SEARCH_INDEX.agent.json) |\n| [`docs/IPADOS_TEMPORARY.md`](IPADOS_TEMPORARY.md) | [JSON](IPADOS_TEMPORARY.agent.json) |\n| [`docs/NATIVE_DATABASE.md`](NATIVE_DATABASE.md) | [JSON](NATIVE_DATABASE.agent.json) |\n| [`docs/NATIVE_STATIC.md`](NATIVE_STATIC.md) | [JSON](NATIVE_STATIC.agent.json) |\n| [`docs/NATIVE_TIMESTAMP_SAFETY.md`](NATIVE_TIMESTAMP_SAFETY.md) | [JSON](NATIVE_TIMESTAMP_SAFETY.agent.json) |\n| [`docs/OBJECT_STORE.md`](OBJECT_STORE.md) | [JSON](OBJECT_STORE.agent.json) |\n| [`docs/OBJECT_STORE_PROGRESS.md`](OBJECT_STORE_PROGRESS.md) | [JSON](OBJECT_STORE_PROGRESS.agent.json) |\n| [`docs/ONTOLOGY_FILESYSTEM.md`](ONTOLOGY_FILESYSTEM.md) | [JSON](ONTOLOGY_FILESYSTEM.agent.json) |\n| [`docs/ONTOLOGY_VALIDATION.md`](ONTOLOGY_VALIDATION.md) | [JSON](ONTOLOGY_VALIDATION.agent.json) |\n| [`docs/OWNED_FILE_IO.md`](OWNED_FILE_IO.md) | [JSON](OWNED_FILE_IO.agent.json) |\n| [`docs/PERFORMANCE.md`](PERFORMANCE.md) | [JSON](PERFORMANCE.agent.json) |\n| [`docs/PROJECT_PACKAGES.md`](PROJECT_PACKAGES.md) | [JSON](PROJECT_PACKAGES.agent.json) |\n| [`docs/SourceLayout.md`](SourceLayout.md) | [JSON](SourceLayout.agent.json) |\n| [`docs/Windows.md`](Windows.md) | [JSON](Windows.agent.json) |\n| [`docs/WindowsBuildAndRun.md`](WindowsBuildAndRun.md) | [JSON](WindowsBuildAndRun.agent.json) |\n| [`docs/WindowsChangeTokens.md`](WindowsChangeTokens.md) | [JSON](WindowsChangeTokens.agent.json) |\n| [`docs/WindowsCompatibility.md`](WindowsCompatibility.md) | [JSON](WindowsCompatibility.agent.json) |\n| [`docs/documentation-structure.md`](documentation-structure.md) | [JSON](documentation-structure.agent.json) |\n| [`example/README.md`](../example/README.md) | [JSON](mirrors/example/README.agent.json) |\n",
+      "end_line": 44,
+      "raw": "| Document | Agent JSON |\n| --- | --- |\n| [`AGENT.md`](../AGENT.md) | [JSON](entrypoints/AGENT.agent.json) |\n| [`README.md`](../README.md) | [JSON](entrypoints/README.agent.json) |\n| [`docs/BuildLayout.md`](BuildLayout.md) | [JSON](BuildLayout.agent.json) |\n| [`docs/DynamicLinking.md`](DynamicLinking.md) | [JSON](DynamicLinking.agent.json) |\n| [`docs/FILE_AUTHOR_CONTRACT.md`](FILE_AUTHOR_CONTRACT.md) | [JSON](FILE_AUTHOR_CONTRACT.agent.json) |\n| [`docs/FILE_CATALOG.md`](FILE_CATALOG.md) | [JSON](FILE_CATALOG.agent.json) |\n| [`docs/FILE_CATALOG_VALIDATION.md`](FILE_CATALOG_VALIDATION.md) | [JSON](FILE_CATALOG_VALIDATION.agent.json) |\n| [`docs/FILE_CREATION_VALIDATION.md`](FILE_CREATION_VALIDATION.md) | [JSON](FILE_CREATION_VALIDATION.agent.json) |\n| [`docs/FILE_CRUD.md`](FILE_CRUD.md) | [JSON](FILE_CRUD.agent.json) |\n| [`docs/FILE_JOURNAL.md`](FILE_JOURNAL.md) | [JSON](FILE_JOURNAL.agent.json) |\n| [`docs/FILE_JOURNAL_VALIDATION.md`](FILE_JOURNAL_VALIDATION.md) | [JSON](FILE_JOURNAL_VALIDATION.agent.json) |\n| [`docs/FILE_LINKS.md`](FILE_LINKS.md) | [JSON](FILE_LINKS.agent.json) |\n| [`docs/FILE_OWNERSHIP.md`](FILE_OWNERSHIP.md) | [JSON](FILE_OWNERSHIP.agent.json) |\n| [`docs/FILE_PRESENTATION.md`](FILE_PRESENTATION.md) | [JSON](FILE_PRESENTATION.agent.json) |\n| [`docs/FILE_PRESENTATION_VALIDATION.md`](FILE_PRESENTATION_VALIDATION.md) | [JSON](FILE_PRESENTATION_VALIDATION.agent.json) |\n| [`docs/FILE_SEARCH_INDEX.md`](FILE_SEARCH_INDEX.md) | [JSON](FILE_SEARCH_INDEX.agent.json) |\n| [`docs/IPADOS_TEMPORARY.md`](IPADOS_TEMPORARY.md) | [JSON](IPADOS_TEMPORARY.agent.json) |\n| [`docs/License.md`](License.md) | [JSON](License.agent.json) |\n| [`docs/NATIVE_DATABASE.md`](NATIVE_DATABASE.md) | [JSON](NATIVE_DATABASE.agent.json) |\n| [`docs/NATIVE_STATIC.md`](NATIVE_STATIC.md) | [JSON](NATIVE_STATIC.agent.json) |\n| [`docs/NATIVE_TIMESTAMP_SAFETY.md`](NATIVE_TIMESTAMP_SAFETY.md) | [JSON](NATIVE_TIMESTAMP_SAFETY.agent.json) |\n| [`docs/OBJECT_STORE.md`](OBJECT_STORE.md) | [JSON](OBJECT_STORE.agent.json) |\n| [`docs/OBJECT_STORE_PROGRESS.md`](OBJECT_STORE_PROGRESS.md) | [JSON](OBJECT_STORE_PROGRESS.agent.json) |\n| [`docs/ONTOLOGY_FILESYSTEM.md`](ONTOLOGY_FILESYSTEM.md) | [JSON](ONTOLOGY_FILESYSTEM.agent.json) |\n| [`docs/ONTOLOGY_VALIDATION.md`](ONTOLOGY_VALIDATION.md) | [JSON](ONTOLOGY_VALIDATION.agent.json) |\n| [`docs/OWNED_FILE_IO.md`](OWNED_FILE_IO.md) | [JSON](OWNED_FILE_IO.agent.json) |\n| [`docs/PERFORMANCE.md`](PERFORMANCE.md) | [JSON](PERFORMANCE.agent.json) |\n| [`docs/PROJECT_PACKAGES.md`](PROJECT_PACKAGES.md) | [JSON](PROJECT_PACKAGES.agent.json) |\n| [`docs/SourceLayout.md`](SourceLayout.md) | [JSON](SourceLayout.agent.json) |\n| [`docs/Windows.md`](Windows.md) | [JSON](Windows.agent.json) |\n| [`docs/WindowsBuildAndRun.md`](WindowsBuildAndRun.md) | [JSON](WindowsBuildAndRun.agent.json) |\n| [`docs/WindowsChangeTokens.md`](WindowsChangeTokens.md) | [JSON](WindowsChangeTokens.agent.json) |\n| [`docs/WindowsCompatibility.md`](WindowsCompatibility.md) | [JSON](WindowsCompatibility.agent.json) |\n| [`docs/documentation-structure.md`](documentation-structure.md) | [JSON](documentation-structure.agent.json) |\n| [`example/README.md`](../example/README.md) | [JSON](mirrors/example/README.agent.json) |\n",
       "columns": [
         "Document",
         "Agent JSON"
@@ -155,6 +155,10 @@
           "[JSON](IPADOS_TEMPORARY.agent.json)"
         ],
         [
+          "[`docs/License.md`](License.md)",
+          "[JSON](License.agent.json)"
+        ],
+        [
           "[`docs/NATIVE_DATABASE.md`](NATIVE_DATABASE.md)",
           "[JSON](NATIVE_DATABASE.agent.json)"
         ],
@@ -227,8 +231,8 @@
     {
       "id": "b000009",
       "kind": "html",
-      "start_line": 44,
-      "end_line": 44,
+      "start_line": 45,
+      "end_line": 45,
       "raw": "<!-- workspace-docs:document-map:end -->\n"
     }
   ],
@@ -494,241 +498,255 @@
       },
       {
         "block_id": "b000008",
+        "label": "`docs/License.md`",
+        "target": "License.md",
+        "kind": "relative",
+        "line": 27
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "License.agent.json",
+        "kind": "relative",
+        "line": 27
+      },
+      {
+        "block_id": "b000008",
         "label": "`docs/NATIVE_DATABASE.md`",
         "target": "NATIVE_DATABASE.md",
         "kind": "relative",
-        "line": 27
+        "line": 28
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "NATIVE_DATABASE.agent.json",
         "kind": "relative",
-        "line": 27
+        "line": 28
       },
       {
         "block_id": "b000008",
         "label": "`docs/NATIVE_STATIC.md`",
         "target": "NATIVE_STATIC.md",
         "kind": "relative",
-        "line": 28
+        "line": 29
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "NATIVE_STATIC.agent.json",
         "kind": "relative",
-        "line": 28
+        "line": 29
       },
       {
         "block_id": "b000008",
         "label": "`docs/NATIVE_TIMESTAMP_SAFETY.md`",
         "target": "NATIVE_TIMESTAMP_SAFETY.md",
         "kind": "relative",
-        "line": 29
+        "line": 30
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "NATIVE_TIMESTAMP_SAFETY.agent.json",
         "kind": "relative",
-        "line": 29
+        "line": 30
       },
       {
         "block_id": "b000008",
         "label": "`docs/OBJECT_STORE.md`",
         "target": "OBJECT_STORE.md",
         "kind": "relative",
-        "line": 30
+        "line": 31
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "OBJECT_STORE.agent.json",
         "kind": "relative",
-        "line": 30
+        "line": 31
       },
       {
         "block_id": "b000008",
         "label": "`docs/OBJECT_STORE_PROGRESS.md`",
         "target": "OBJECT_STORE_PROGRESS.md",
         "kind": "relative",
-        "line": 31
+        "line": 32
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "OBJECT_STORE_PROGRESS.agent.json",
         "kind": "relative",
-        "line": 31
+        "line": 32
       },
       {
         "block_id": "b000008",
         "label": "`docs/ONTOLOGY_FILESYSTEM.md`",
         "target": "ONTOLOGY_FILESYSTEM.md",
         "kind": "relative",
-        "line": 32
+        "line": 33
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "ONTOLOGY_FILESYSTEM.agent.json",
         "kind": "relative",
-        "line": 32
+        "line": 33
       },
       {
         "block_id": "b000008",
         "label": "`docs/ONTOLOGY_VALIDATION.md`",
         "target": "ONTOLOGY_VALIDATION.md",
         "kind": "relative",
-        "line": 33
+        "line": 34
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "ONTOLOGY_VALIDATION.agent.json",
         "kind": "relative",
-        "line": 33
+        "line": 34
       },
       {
         "block_id": "b000008",
         "label": "`docs/OWNED_FILE_IO.md`",
         "target": "OWNED_FILE_IO.md",
         "kind": "relative",
-        "line": 34
+        "line": 35
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "OWNED_FILE_IO.agent.json",
         "kind": "relative",
-        "line": 34
+        "line": 35
       },
       {
         "block_id": "b000008",
         "label": "`docs/PERFORMANCE.md`",
         "target": "PERFORMANCE.md",
         "kind": "relative",
-        "line": 35
+        "line": 36
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "PERFORMANCE.agent.json",
         "kind": "relative",
-        "line": 35
+        "line": 36
       },
       {
         "block_id": "b000008",
         "label": "`docs/PROJECT_PACKAGES.md`",
         "target": "PROJECT_PACKAGES.md",
         "kind": "relative",
-        "line": 36
+        "line": 37
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "PROJECT_PACKAGES.agent.json",
         "kind": "relative",
-        "line": 36
+        "line": 37
       },
       {
         "block_id": "b000008",
         "label": "`docs/SourceLayout.md`",
         "target": "SourceLayout.md",
         "kind": "relative",
-        "line": 37
+        "line": 38
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "SourceLayout.agent.json",
         "kind": "relative",
-        "line": 37
+        "line": 38
       },
       {
         "block_id": "b000008",
         "label": "`docs/Windows.md`",
         "target": "Windows.md",
         "kind": "relative",
-        "line": 38
+        "line": 39
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "Windows.agent.json",
         "kind": "relative",
-        "line": 38
+        "line": 39
       },
       {
         "block_id": "b000008",
         "label": "`docs/WindowsBuildAndRun.md`",
         "target": "WindowsBuildAndRun.md",
         "kind": "relative",
-        "line": 39
+        "line": 40
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "WindowsBuildAndRun.agent.json",
         "kind": "relative",
-        "line": 39
+        "line": 40
       },
       {
         "block_id": "b000008",
         "label": "`docs/WindowsChangeTokens.md`",
         "target": "WindowsChangeTokens.md",
         "kind": "relative",
-        "line": 40
+        "line": 41
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "WindowsChangeTokens.agent.json",
         "kind": "relative",
-        "line": 40
+        "line": 41
       },
       {
         "block_id": "b000008",
         "label": "`docs/WindowsCompatibility.md`",
         "target": "WindowsCompatibility.md",
         "kind": "relative",
-        "line": 41
+        "line": 42
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "WindowsCompatibility.agent.json",
         "kind": "relative",
-        "line": 41
+        "line": 42
       },
       {
         "block_id": "b000008",
         "label": "`docs/documentation-structure.md`",
         "target": "documentation-structure.md",
         "kind": "relative",
-        "line": 42
+        "line": 43
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "documentation-structure.agent.json",
         "kind": "relative",
-        "line": 42
+        "line": 43
       },
       {
         "block_id": "b000008",
         "label": "`example/README.md`",
         "target": "../example/README.md",
         "kind": "relative",
-        "line": 43
+        "line": 44
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "mirrors/example/README.agent.json",
         "kind": "relative",
-        "line": 43
+        "line": 44
       }
     ],
     "tables": [
@@ -806,6 +824,10 @@
           [
             "[`docs/IPADOS_TEMPORARY.md`](IPADOS_TEMPORARY.md)",
             "[JSON](IPADOS_TEMPORARY.agent.json)"
+          ],
+          [
+            "[`docs/License.md`](License.md)",
+            "[JSON](License.agent.json)"
           ],
           [
             "[`docs/NATIVE_DATABASE.md`](NATIVE_DATABASE.md)",

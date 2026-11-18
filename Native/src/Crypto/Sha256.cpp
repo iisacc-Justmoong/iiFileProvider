@@ -1,4 +1,5 @@
-// Adapted from iisacc MIT engineering counterpart; full notice preserved.
+// Adapted from the iisacc engineering counterpart. The preserved notice is Apache-2.0.
+// SPDX-License-Identifier: Apache-2.0
 #include "Sha256_p.h"
 #include <algorithm>
 #include <bit>

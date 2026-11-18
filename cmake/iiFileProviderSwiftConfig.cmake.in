@@ -1,3 +1,4 @@
 @PACKAGE_INIT@
+set(iiFileProviderSwift_SPDX_LICENSE "Apache-2.0")
 set(iiFileProviderSwift_SOURCE "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATADIR@/iiFileProvider/swift/IisaccFileProvider.swift")
 check_required_components(iiFileProviderSwift)

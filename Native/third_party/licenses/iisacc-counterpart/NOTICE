@@ -1,0 +1,9 @@
+Copyright (c) 2026 iisacc
+
+The authored C++ adapted from the iisacc engineering counterpart is licensed
+under the Apache License, Version 2.0. See LICENSE in this directory.
+
+This grant covers the authored C++ code, tests, build files and project
+documentation. Original Adobe artifacts, decompiler output, screenshots,
+resource declarations and analysis evidence are excluded. Pinned open-source
+dependencies retain their licenses in third_party/licenses and provenance.
