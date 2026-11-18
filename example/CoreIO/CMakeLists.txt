@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.31)
 # iisdk:consumer-application
 project(iiFileProviderCoreIO VERSION 0.1.1 LANGUAGES CXX)
+set(iiFileProviderCoreIO_SPDX_LICENSE "Apache-2.0")
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CTest)
@@ -47,6 +48,7 @@ write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderCore
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderCoreIOConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/iiFileProviderCoreIOConfigVersion.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiFileProviderCoreIO)
 install(FILES README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProviderCoreIO)
+install(FILES ../../LICENSE ../../NOTICE DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/iiFileProviderCoreIO)
 add_executable(iiFileProviderCoreIOExample examples/loop_io.cpp)
 target_link_libraries(iiFileProviderCoreIOExample PRIVATE iiFileProvider::CoreIO)
 if(BUILD_TESTING)

@@ -10,9 +10,9 @@
   },
   "source": {
     "path": "README.md",
-    "sha256": "746fe9224b4261347a9b254de4356d337a5ad6c55ee0a3b52767291f2115f534",
-    "bytes": 25198,
-    "line_count": 363,
+    "sha256": "303844d5e126cf82d59cc552b7ca3dbd9dcb0997c9706ebf1b1995d1368d921d",
+    "bytes": 25496,
+    "line_count": 372,
     "encoding": "utf-8",
     "language": "ko"
   },
@@ -879,7 +879,7 @@
       "kind": "paragraph",
       "start_line": 273,
       "end_line": 273,
-      "raw": "SPDX-License-Identifier: MIT\n"
+      "raw": "SPDX-License-Identifier: Apache-2.0\n"
     },
     {
       "id": "b000118",
@@ -892,362 +892,376 @@
       "id": "b000119",
       "kind": "paragraph",
       "start_line": 275,
-      "end_line": 275,
-      "raw": "Self-written code and documents of iiFileProvider are distributed under the MIT License. The full terms follow [LICENSE](LICENSE).\n"
+      "end_line": 279,
+      "raw": "iiFileProvider is an iiSDK module licensed under the\n[Apache License, Version 2.0](LICENSE) (SPDX `Apache-2.0`).\nThe copyright notice is `Copyright (c) 2026 iisacc`. Attribution for this\ndistribution is in [NOTICE](NOTICE). The Korean statement of the same policy\nis [docs/License.md](docs/License.md).\n"
     },
     {
       "id": "b000120",
-      "kind": "blank",
-      "start_line": 276,
-      "end_line": 276,
-      "raw": "\n"
-    },
-    {
-      "id": "b000121",
-      "kind": "paragraph",
-      "start_line": 277,
-      "end_line": 277,
-      "raw": "External libraries including Qt and third-party code with separate notices maintain their own licenses. This project's license declaration does not replace the corresponding third-party license.\n"
-    },
-    {
-      "id": "b000122",
-      "kind": "blank",
-      "start_line": 278,
-      "end_line": 278,
-      "raw": "\n"
-    },
-    {
-      "id": "b000123",
-      "kind": "html",
-      "start_line": 279,
-      "end_line": 279,
-      "raw": "<a id=\"계정-프로필-동기화\"></a>\n"
-    },
-    {
-      "id": "b000124",
       "kind": "blank",
       "start_line": 280,
       "end_line": 280,
       "raw": "\n"
     },
     {
-      "id": "b000125",
-      "kind": "heading",
+      "id": "b000121",
+      "kind": "paragraph",
       "start_line": 281,
-      "end_line": 281,
-      "raw": "## Account profile synchronization\n",
-      "level": 2,
-      "title": "Account profile synchronization"
+      "end_line": 282,
+      "raw": "iisacc products under Product are licensed under the GNU Affero General\nPublic License, version 3 or later (AGPL-3.0-or-later).\n"
+    },
+    {
+      "id": "b000122",
+      "kind": "blank",
+      "start_line": 283,
+      "end_line": 283,
+      "raw": "\n"
+    },
+    {
+      "id": "b000123",
+      "kind": "paragraph",
+      "start_line": 284,
+      "end_line": 286,
+      "raw": "Third-party and vendored code keeps its original license. That includes Qt,\nutf8proc, nlohmann-json, stb, and SQLite. This project's license declaration\ndoes not replace those notices.\n"
+    },
+    {
+      "id": "b000124",
+      "kind": "blank",
+      "start_line": 287,
+      "end_line": 287,
+      "raw": "\n"
+    },
+    {
+      "id": "b000125",
+      "kind": "html",
+      "start_line": 288,
+      "end_line": 288,
+      "raw": "<a id=\"계정-프로필-동기화\"></a>\n"
     },
     {
       "id": "b000126",
-      "kind": "blank",
-      "start_line": 282,
-      "end_line": 282,
-      "raw": "\n"
-    },
-    {
-      "id": "b000127",
-      "kind": "paragraph",
-      "start_line": 283,
-      "end_line": 283,
-      "raw": "`fromIisaccAccount()` and `fromIisaccAppSession()` reflect iisacc.com's `account.authorDetails` to the file author's `metadata().details`. `toIisaccProfileUpdate()` explicitly exports only the display name allowed by the web service and the author profile. Authentication tokens and per-file ownership information are not included in the account update.\n"
-    },
-    {
-      "id": "b000128",
-      "kind": "blank",
-      "start_line": 284,
-      "end_line": 284,
-      "raw": "\n"
-    },
-    {
-      "id": "b000129",
-      "kind": "fenced_code",
-      "start_line": 285,
-      "end_line": 288,
-      "raw": "```cpp\nconst auto update = author->toIisaccProfileUpdate();\n// The host authenticates and sends update as variables.input of the updateAccountAuthor GraphQL mutation.\n```\n",
-      "language": "cpp",
-      "code": "const auto update = author->toIisaccProfileUpdate();\n// The host authenticates and sends update as variables.input of the updateAccountAuthor GraphQL mutation.\n",
-      "closed": true
-    },
-    {
-      "id": "b000130",
       "kind": "blank",
       "start_line": 289,
       "end_line": 289,
       "raw": "\n"
     },
     {
-      "id": "b000131",
-      "kind": "paragraph",
+      "id": "b000127",
+      "kind": "heading",
       "start_line": 290,
+      "end_line": 290,
+      "raw": "## Account profile synchronization\n",
+      "level": 2,
+      "title": "Account profile synchronization"
+    },
+    {
+      "id": "b000128",
+      "kind": "blank",
+      "start_line": 291,
       "end_line": 291,
-      "raw": "The account-side model and API are the service's `docs/ACCOUNT_AUTHORS.md`, and the file model is\nDefined in [FILE_AUTHOR_CONTRACT.md](docs/FILE_AUTHOR_CONTRACT.md).\n"
+      "raw": "\n"
+    },
+    {
+      "id": "b000129",
+      "kind": "paragraph",
+      "start_line": 292,
+      "end_line": 292,
+      "raw": "`fromIisaccAccount()` and `fromIisaccAppSession()` reflect iisacc.com's `account.authorDetails` to the file author's `metadata().details`. `toIisaccProfileUpdate()` explicitly exports only the display name allowed by the web service and the author profile. Authentication tokens and per-file ownership information are not included in the account update.\n"
+    },
+    {
+      "id": "b000130",
+      "kind": "blank",
+      "start_line": 293,
+      "end_line": 293,
+      "raw": "\n"
+    },
+    {
+      "id": "b000131",
+      "kind": "fenced_code",
+      "start_line": 294,
+      "end_line": 297,
+      "raw": "```cpp\nconst auto update = author->toIisaccProfileUpdate();\n// The host authenticates and sends update as variables.input of the updateAccountAuthor GraphQL mutation.\n```\n",
+      "language": "cpp",
+      "code": "const auto update = author->toIisaccProfileUpdate();\n// The host authenticates and sends update as variables.input of the updateAccountAuthor GraphQL mutation.\n",
+      "closed": true
     },
     {
       "id": "b000132",
-      "kind": "blank",
-      "start_line": 292,
-      "end_line": 292,
-      "raw": "\n"
-    },
-    {
-      "id": "b000133",
-      "kind": "html",
-      "start_line": 293,
-      "end_line": 293,
-      "raw": "<a id=\"파일-crud\"></a>\n"
-    },
-    {
-      "id": "b000134",
-      "kind": "blank",
-      "start_line": 294,
-      "end_line": 294,
-      "raw": "\n"
-    },
-    {
-      "id": "b000135",
-      "kind": "heading",
-      "start_line": 295,
-      "end_line": 295,
-      "raw": "## File CRUD\n",
-      "level": 2,
-      "title": "File CRUD"
-    },
-    {
-      "id": "b000136",
-      "kind": "blank",
-      "start_line": 296,
-      "end_line": 296,
-      "raw": "\n"
-    },
-    {
-      "id": "b000137",
-      "kind": "paragraph",
-      "start_line": 297,
-      "end_line": 297,
-      "raw": "Since 0.5, this SDK owns file creation, reading, updating, deletion, and SQLite storage transactions. It does not reference other iisacc SDKs and takes bytes, streams, and schemas as input. It follows the [complete contract](docs/FILE_CRUD.md). The ABI of the existing 0.4 value types is retained.\n"
-    },
-    {
-      "id": "b000138",
       "kind": "blank",
       "start_line": 298,
       "end_line": 298,
       "raw": "\n"
     },
     {
-      "id": "b000139",
-      "kind": "heading",
+      "id": "b000133",
+      "kind": "paragraph",
       "start_line": 299,
-      "end_line": 299,
-      "raw": "## Source layout\n",
-      "level": 2,
-      "title": "Source layout"
+      "end_line": 300,
+      "raw": "The account-side model and API are the service's `docs/ACCOUNT_AUTHORS.md`, and the file model is\nDefined in [FILE_AUTHOR_CONTRACT.md](docs/FILE_AUTHOR_CONTRACT.md).\n"
     },
     {
-      "id": "b000140",
+      "id": "b000134",
       "kind": "blank",
-      "start_line": 300,
-      "end_line": 300,
+      "start_line": 301,
+      "end_line": 301,
       "raw": "\n"
     },
     {
-      "id": "b000141",
-      "kind": "paragraph",
-      "start_line": 301,
-      "end_line": 301,
-      "raw": "Implementation files and their headers live together under `src/`. Existing feature and platform subdirectories retain their responsibilities. Build configuration, tests, documentation, resources, and maintenance scripts remain at the project root. Configure and build using the repository-local `build/` directory.\n"
-    },
-    {
-      "id": "b000142",
-      "kind": "blank",
+      "id": "b000135",
+      "kind": "html",
       "start_line": 302,
-      "end_line": 303,
-      "raw": "\n\n"
+      "end_line": 302,
+      "raw": "<a id=\"파일-crud\"></a>\n"
     },
     {
-      "id": "b000143",
+      "id": "b000136",
+      "kind": "blank",
+      "start_line": 303,
+      "end_line": 303,
+      "raw": "\n"
+    },
+    {
+      "id": "b000137",
       "kind": "heading",
       "start_line": 304,
       "end_line": 304,
-      "raw": "## Standard C++23 native component\n",
+      "raw": "## File CRUD\n",
       "level": 2,
-      "title": "Standard C++23 native component"
+      "title": "File CRUD"
     },
     {
-      "id": "b000144",
+      "id": "b000138",
       "kind": "blank",
       "start_line": 305,
       "end_line": 305,
       "raw": "\n"
     },
     {
-      "id": "b000145",
+      "id": "b000139",
       "kind": "paragraph",
       "start_line": 306,
+      "end_line": 306,
+      "raw": "Since 0.5, this SDK owns file creation, reading, updating, deletion, and SQLite storage transactions. It does not reference other iisacc SDKs and takes bytes, streams, and schemas as input. It follows the [complete contract](docs/FILE_CRUD.md). The ABI of the existing 0.4 value types is retained.\n"
+    },
+    {
+      "id": "b000140",
+      "kind": "blank",
+      "start_line": 307,
+      "end_line": 307,
+      "raw": "\n"
+    },
+    {
+      "id": "b000141",
+      "kind": "heading",
+      "start_line": 308,
+      "end_line": 308,
+      "raw": "## Source layout\n",
+      "level": 2,
+      "title": "Source layout"
+    },
+    {
+      "id": "b000142",
+      "kind": "blank",
+      "start_line": 309,
+      "end_line": 309,
+      "raw": "\n"
+    },
+    {
+      "id": "b000143",
+      "kind": "paragraph",
+      "start_line": 310,
       "end_line": 310,
-      "raw": "`Native/` provides the independent `iiFileProviderNative` package and\n`iiFileProvider::Native` target for standard strings/maps, file access, staged\npublication, scoped temporary directories and compatible author metadata.\nIt can be configured directly into `build/native` without loading Qt or the\nlegacy provider package. See [the Native component](Native/README.md).\n"
+      "raw": "Implementation files and their headers live together under `src/`. Existing feature and platform subdirectories retain their responsibilities. Build configuration, tests, documentation, resources, and maintenance scripts remain at the project root. Configure and build using the repository-local `build/` directory.\n"
+    },
+    {
+      "id": "b000144",
+      "kind": "blank",
+      "start_line": 311,
+      "end_line": 312,
+      "raw": "\n\n"
+    },
+    {
+      "id": "b000145",
+      "kind": "heading",
+      "start_line": 313,
+      "end_line": 313,
+      "raw": "## Standard C++23 native component\n",
+      "level": 2,
+      "title": "Standard C++23 native component"
     },
     {
       "id": "b000146",
       "kind": "blank",
-      "start_line": 311,
-      "end_line": 311,
+      "start_line": 314,
+      "end_line": 314,
       "raw": "\n"
     },
     {
       "id": "b000147",
+      "kind": "paragraph",
+      "start_line": 315,
+      "end_line": 319,
+      "raw": "`Native/` provides the independent `iiFileProviderNative` package and\n`iiFileProvider::Native` target for standard strings/maps, file access, staged\npublication, scoped temporary directories and compatible author metadata.\nIt can be configured directly into `build/native` without loading Qt or the\nlegacy provider package. See [the Native component](Native/README.md).\n"
+    },
+    {
+      "id": "b000148",
+      "kind": "blank",
+      "start_line": 320,
+      "end_line": 320,
+      "raw": "\n"
+    },
+    {
+      "id": "b000149",
       "kind": "heading",
-      "start_line": 312,
-      "end_line": 312,
+      "start_line": 321,
+      "end_line": 321,
       "raw": "## Workspace file creation ownership\n",
       "level": 2,
       "title": "Workspace file creation ownership"
     },
     {
-      "id": "b000148",
+      "id": "b000150",
       "kind": "blank",
-      "start_line": 313,
-      "end_line": 313,
+      "start_line": 322,
+      "end_line": 322,
       "raw": "\n"
     },
     {
-      "id": "b000149",
+      "id": "b000151",
       "kind": "paragraph",
-      "start_line": 314,
-      "end_line": 321,
+      "start_line": 323,
+      "end_line": 330,
       "raw": "Application and SDK file factories, including AI model workers, use the native,\nQt-device, Python C ABI, Swift and Android adapters described in\n[FILE_OWNERSHIP.md](docs/FILE_OWNERSHIP.md). Native consumers use\n`find_package(iiFileProviderNative 0.6 CONFIG REQUIRED)` and\n`iiFileProvider::Native`; they import no Qt runtime. The workspace audit is\n`python3 tools/audit_file_creation.py --check`.\nThe [migration validation](docs/FILE_CREATION_VALIDATION.md) records source,\ninstalled-package, AI worker and platform compilation evidence and its limits.\n"
     },
     {
-      "id": "b000150",
+      "id": "b000152",
       "kind": "heading",
-      "start_line": 322,
-      "end_line": 322,
+      "start_line": 331,
+      "end_line": 331,
       "raw": "## Coordinated GUI file reads\n",
       "level": 2,
       "title": "Coordinated GUI file reads"
     },
     {
-      "id": "b000151",
-      "kind": "blank",
-      "start_line": 323,
-      "end_line": 323,
-      "raw": "\n"
-    },
-    {
-      "id": "b000152",
-      "kind": "paragraph",
-      "start_line": 324,
-      "end_line": 330,
-      "raw": "The 0.8.0 Qt value/device adapter requires Native 0.10.0. `File::read` and\n`readPrefix` hold one native source access scope for each complete payload read.\n`openRead` retains the same `QIODevice` API and uses a provider-owned native device that\ncoordinates actual open/read/seek/close operations with native document writers.\nIdle open devices retain identity without retaining an access lock. Public file\nand device layouts are unchanged. Source access supplements the file format's\noperating-system locks; the native implementation has no Qt dependency.\n"
-    },
-    {
       "id": "b000153",
       "kind": "blank",
-      "start_line": 331,
-      "end_line": 331,
+      "start_line": 332,
+      "end_line": 332,
       "raw": "\n"
     },
     {
       "id": "b000154",
       "kind": "paragraph",
-      "start_line": 332,
-      "end_line": 334,
-      "raw": "`iiFileProvider.source_access` verifies blocked reads and descriptor closure while\nanother thread owns the source, retained prefix/content behavior, and presentation\ncompletion while an idle device remains open.\n"
+      "start_line": 333,
+      "end_line": 339,
+      "raw": "The 0.8.0 Qt value/device adapter requires Native 0.10.0. `File::read` and\n`readPrefix` hold one native source access scope for each complete payload read.\n`openRead` retains the same `QIODevice` API and uses a provider-owned native device that\ncoordinates actual open/read/seek/close operations with native document writers.\nIdle open devices retain identity without retaining an access lock. Public file\nand device layouts are unchanged. Source access supplements the file format's\noperating-system locks; the native implementation has no Qt dependency.\n"
     },
     {
       "id": "b000155",
       "kind": "blank",
-      "start_line": 335,
-      "end_line": 335,
+      "start_line": 340,
+      "end_line": 340,
       "raw": "\n"
     },
     {
       "id": "b000156",
+      "kind": "paragraph",
+      "start_line": 341,
+      "end_line": 343,
+      "raw": "`iiFileProvider.source_access` verifies blocked reads and descriptor closure while\nanother thread owns the source, retained prefix/content behavior, and presentation\ncompletion while an idle device remains open.\n"
+    },
+    {
+      "id": "b000157",
+      "kind": "blank",
+      "start_line": 344,
+      "end_line": 344,
+      "raw": "\n"
+    },
+    {
+      "id": "b000158",
       "kind": "heading",
-      "start_line": 336,
-      "end_line": 336,
+      "start_line": 345,
+      "end_line": 345,
       "raw": "## Source header layout\n",
       "level": 2,
       "title": "Source header layout"
     },
     {
-      "id": "b000157",
-      "kind": "blank",
-      "start_line": 337,
-      "end_line": 337,
-      "raw": "\n"
-    },
-    {
-      "id": "b000158",
-      "kind": "paragraph",
-      "start_line": 338,
-      "end_line": 342,
-      "raw": "The native file compatibility API headers live next to their implementation in `Compatibility/src/`.\nThere is no separate authored `include/` tree. Existing public `#include` names\nand exported CMake targets are unchanged; installation still places only public\nheaders in the package include directory. Generated export headers belong to\n`build/`, not to the authored source tree.\n"
-    },
-    {
       "id": "b000159",
       "kind": "blank",
-      "start_line": 343,
-      "end_line": 343,
+      "start_line": 346,
+      "end_line": 346,
       "raw": "\n"
     },
     {
       "id": "b000160",
       "kind": "paragraph",
-      "start_line": 344,
-      "end_line": 346,
-      "raw": "Validate this layout from the SDK workspace with\n`python3 -B tests/test_source_header_layout.py`. Reconfigure, build, run CTest,\nand verify a staged installed consumer after changing source/header paths.\n"
+      "start_line": 347,
+      "end_line": 351,
+      "raw": "The native file compatibility API headers live next to their implementation in `Compatibility/src/`.\nThere is no separate authored `include/` tree. Existing public `#include` names\nand exported CMake targets are unchanged; installation still places only public\nheaders in the package include directory. Generated export headers belong to\n`build/`, not to the authored source tree.\n"
     },
     {
       "id": "b000161",
-      "kind": "blank",
-      "start_line": 347,
-      "end_line": 347,
-      "raw": "\n"
-    },
-    {
-      "id": "b000162",
-      "kind": "paragraph",
-      "start_line": 348,
-      "end_line": 348,
-      "raw": "Source and adjacent headers are grouped by responsibility under `src/` and `Native/src/`; installed header names and targets remain stable. See [source layout](docs/SourceLayout.md).\n"
-    },
-    {
-      "id": "b000163",
-      "kind": "blank",
-      "start_line": 349,
-      "end_line": 349,
-      "raw": "\n"
-    },
-    {
-      "id": "b000164",
-      "kind": "html",
-      "start_line": 350,
-      "end_line": 350,
-      "raw": "<!-- workspace-docs:readme:start -->\n"
-    },
-    {
-      "id": "b000165",
-      "kind": "heading",
-      "start_line": 351,
-      "end_line": 351,
-      "raw": "## Documentation entry points\n",
-      "level": 2,
-      "title": "Documentation entry points"
-    },
-    {
-      "id": "b000166",
       "kind": "blank",
       "start_line": 352,
       "end_line": 352,
       "raw": "\n"
     },
     {
-      "id": "b000167",
-      "kind": "list",
+      "id": "b000162",
+      "kind": "paragraph",
       "start_line": 353,
+      "end_line": 355,
+      "raw": "Validate this layout from the SDK workspace with\n`python3 -B tests/test_source_header_layout.py`. Reconfigure, build, run CTest,\nand verify a staged installed consumer after changing source/header paths.\n"
+    },
+    {
+      "id": "b000163",
+      "kind": "blank",
+      "start_line": 356,
       "end_line": 356,
+      "raw": "\n"
+    },
+    {
+      "id": "b000164",
+      "kind": "paragraph",
+      "start_line": 357,
+      "end_line": 357,
+      "raw": "Source and adjacent headers are grouped by responsibility under `src/` and `Native/src/`; installed header names and targets remain stable. See [source layout](docs/SourceLayout.md).\n"
+    },
+    {
+      "id": "b000165",
+      "kind": "blank",
+      "start_line": 358,
+      "end_line": 358,
+      "raw": "\n"
+    },
+    {
+      "id": "b000166",
+      "kind": "html",
+      "start_line": 359,
+      "end_line": 359,
+      "raw": "<!-- workspace-docs:readme:start -->\n"
+    },
+    {
+      "id": "b000167",
+      "kind": "heading",
+      "start_line": 360,
+      "end_line": 360,
+      "raw": "## Documentation entry points\n",
+      "level": 2,
+      "title": "Documentation entry points"
+    },
+    {
+      "id": "b000168",
+      "kind": "blank",
+      "start_line": 361,
+      "end_line": 361,
+      "raw": "\n"
+    },
+    {
+      "id": "b000169",
+      "kind": "list",
+      "start_line": 362,
+      "end_line": 365,
       "raw": "- Human overview: this English `README.md`.\n- Agent instructions: [AGENT.md](AGENT.md).\n- Human documentation: [documentation index](docs/README.md).\n- Structured agent documentation: [agent index](docs/agent-index.json).\n",
       "items": [
         {
@@ -1273,33 +1287,33 @@
       ]
     },
     {
-      "id": "b000168",
+      "id": "b000170",
       "kind": "blank",
-      "start_line": 357,
-      "end_line": 357,
+      "start_line": 366,
+      "end_line": 366,
       "raw": "\n"
     },
     {
-      "id": "b000169",
+      "id": "b000171",
       "kind": "heading",
-      "start_line": 358,
-      "end_line": 358,
+      "start_line": 367,
+      "end_line": 367,
       "raw": "### Child projects\n",
       "level": 3,
       "title": "Child projects"
     },
     {
-      "id": "b000170",
+      "id": "b000172",
       "kind": "blank",
-      "start_line": 359,
-      "end_line": 359,
+      "start_line": 368,
+      "end_line": 368,
       "raw": "\n"
     },
     {
-      "id": "b000171",
+      "id": "b000173",
       "kind": "list",
-      "start_line": 360,
-      "end_line": 362,
+      "start_line": 369,
+      "end_line": 371,
       "raw": "- [`SDK/iiFileProvider/Compatibility`](Compatibility/README.md)\n- [`SDK/iiFileProvider/example/CoreIO`](example/CoreIO/README.md)\n- [`SDK/iiFileProvider/Native`](Native/README.md)\n",
       "items": [
         {
@@ -1320,10 +1334,10 @@
       ]
     },
     {
-      "id": "b000172",
+      "id": "b000174",
       "kind": "html",
-      "start_line": 363,
-      "end_line": 363,
+      "start_line": 372,
+      "end_line": 372,
       "raw": "<!-- workspace-docs:readme:end -->\n"
     }
   ],
@@ -1393,76 +1407,76 @@
       "start_line": 271
     },
     {
-      "block_id": "b000125",
+      "block_id": "b000127",
       "parent_id": "b000001",
       "level": 2,
       "title": "Account profile synchronization",
       "anchor": "account-profile-synchronization",
-      "start_line": 281
+      "start_line": 290
     },
     {
-      "block_id": "b000135",
+      "block_id": "b000137",
       "parent_id": "b000001",
       "level": 2,
       "title": "File CRUD",
       "anchor": "file-crud",
-      "start_line": 295
+      "start_line": 304
     },
     {
-      "block_id": "b000139",
+      "block_id": "b000141",
       "parent_id": "b000001",
       "level": 2,
       "title": "Source layout",
       "anchor": "source-layout",
-      "start_line": 299
+      "start_line": 308
     },
     {
-      "block_id": "b000143",
+      "block_id": "b000145",
       "parent_id": "b000001",
       "level": 2,
       "title": "Standard C++23 native component",
       "anchor": "standard-c23-native-component",
-      "start_line": 304
+      "start_line": 313
     },
     {
-      "block_id": "b000147",
+      "block_id": "b000149",
       "parent_id": "b000001",
       "level": 2,
       "title": "Workspace file creation ownership",
       "anchor": "workspace-file-creation-ownership",
-      "start_line": 312
+      "start_line": 321
     },
     {
-      "block_id": "b000150",
+      "block_id": "b000152",
       "parent_id": "b000001",
       "level": 2,
       "title": "Coordinated GUI file reads",
       "anchor": "coordinated-gui-file-reads",
-      "start_line": 322
+      "start_line": 331
     },
     {
-      "block_id": "b000156",
+      "block_id": "b000158",
       "parent_id": "b000001",
       "level": 2,
       "title": "Source header layout",
       "anchor": "source-header-layout",
-      "start_line": 336
+      "start_line": 345
     },
     {
-      "block_id": "b000165",
+      "block_id": "b000167",
       "parent_id": "b000001",
       "level": 2,
       "title": "Documentation entry points",
       "anchor": "documentation-entry-points",
-      "start_line": 351
+      "start_line": 360
     },
     {
-      "block_id": "b000169",
-      "parent_id": "b000165",
+      "block_id": "b000171",
+      "parent_id": "b000167",
       "level": 3,
       "title": "Child projects",
       "anchor": "child-projects",
-      "start_line": 358
+      "start_line": 367
     }
   ],
   "indexes": {
@@ -1587,8 +1601,8 @@
         "context": "paragraph"
       },
       {
-        "block_id": "b000149",
-        "line": 317,
+        "block_id": "b000151",
+        "line": 326,
         "text": "`find_package(iiFileProviderNative 0.6 CONFIG REQUIRED)` and",
         "basis": "lexical_match",
         "context": "paragraph"
@@ -1726,94 +1740,108 @@
       },
       {
         "block_id": "b000119",
-        "label": "LICENSE",
+        "label": "Apache License, Version 2.0",
         "target": "LICENSE",
         "kind": "relative",
-        "line": 275
+        "line": 276
       },
       {
-        "block_id": "b000131",
+        "block_id": "b000119",
+        "label": "NOTICE",
+        "target": "NOTICE",
+        "kind": "relative",
+        "line": 278
+      },
+      {
+        "block_id": "b000119",
+        "label": "docs/License.md",
+        "target": "docs/License.md",
+        "kind": "relative",
+        "line": 279
+      },
+      {
+        "block_id": "b000133",
         "label": "FILE_AUTHOR_CONTRACT.md",
         "target": "docs/FILE_AUTHOR_CONTRACT.md",
         "kind": "relative",
-        "line": 291
+        "line": 300
       },
       {
-        "block_id": "b000137",
+        "block_id": "b000139",
         "label": "complete contract",
         "target": "docs/FILE_CRUD.md",
         "kind": "relative",
-        "line": 297
+        "line": 306
       },
       {
-        "block_id": "b000145",
+        "block_id": "b000147",
         "label": "the Native component",
         "target": "Native/README.md",
         "kind": "relative",
-        "line": 310
+        "line": 319
       },
       {
-        "block_id": "b000149",
+        "block_id": "b000151",
         "label": "FILE_OWNERSHIP.md",
         "target": "docs/FILE_OWNERSHIP.md",
         "kind": "relative",
-        "line": 316
+        "line": 325
       },
       {
-        "block_id": "b000149",
+        "block_id": "b000151",
         "label": "migration validation",
         "target": "docs/FILE_CREATION_VALIDATION.md",
         "kind": "relative",
-        "line": 320
+        "line": 329
       },
       {
-        "block_id": "b000162",
+        "block_id": "b000164",
         "label": "source layout",
         "target": "docs/SourceLayout.md",
         "kind": "relative",
-        "line": 348
+        "line": 357
       },
       {
-        "block_id": "b000167",
+        "block_id": "b000169",
         "label": "AGENT.md",
         "target": "AGENT.md",
         "kind": "relative",
-        "line": 354
+        "line": 363
       },
       {
-        "block_id": "b000167",
+        "block_id": "b000169",
         "label": "documentation index",
         "target": "docs/README.md",
         "kind": "relative",
-        "line": 355
+        "line": 364
       },
       {
-        "block_id": "b000167",
+        "block_id": "b000169",
         "label": "agent index",
         "target": "docs/agent-index.json",
         "kind": "relative",
-        "line": 356
+        "line": 365
       },
       {
-        "block_id": "b000171",
+        "block_id": "b000173",
         "label": "`SDK/iiFileProvider/Compatibility`",
         "target": "Compatibility/README.md",
         "kind": "relative",
-        "line": 360
+        "line": 369
       },
       {
-        "block_id": "b000171",
+        "block_id": "b000173",
         "label": "`SDK/iiFileProvider/example/CoreIO`",
         "target": "example/CoreIO/README.md",
         "kind": "relative",
-        "line": 361
+        "line": 370
       },
       {
-        "block_id": "b000171",
+        "block_id": "b000173",
         "label": "`SDK/iiFileProvider/Native`",
         "target": "Native/README.md",
         "kind": "relative",
-        "line": 362
+        "line": 371
       }
     ],
     "tables": []

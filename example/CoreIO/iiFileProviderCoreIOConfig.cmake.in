@@ -1,4 +1,5 @@
 @PACKAGE_INIT@
+set(iiFileProviderCoreIO_SPDX_LICENSE "Apache-2.0")
 include(CMakeFindDependencyMacro)
 find_dependency(iiSDKCore 0.13 CONFIG COMPONENTS Runtime)
 find_dependency(iiFileProviderNative 0.7 CONFIG)

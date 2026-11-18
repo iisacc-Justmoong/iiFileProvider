@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.24)
 project(iiFileProvider VERSION 0.8.0 LANGUAGES C CXX)
+set(iiFileProvider_SPDX_LICENSE "Apache-2.0")
+set(iiFileProviderCatalog_SPDX_LICENSE "Apache-2.0")
+set(iiFileProviderObjects_SPDX_LICENSE "Apache-2.0")
+set(iiFileProviderTemporary_SPDX_LICENSE "Apache-2.0")
+set(iiFileProviderSwift_SPDX_LICENSE "Apache-2.0")
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF) # NDK kits omit clang-scan-deps; no named modules are used.
 if(MSVC)
     add_compile_options(/utf-8)
@@ -169,6 +174,7 @@ install(FILES docs/PROJECT_PACKAGES.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFi
 install(FILES docs/PROJECT_PACKAGES.agent.json DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs OPTIONAL)
 install(FILES docs/FILE_SEARCH_INDEX.agent.json DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs OPTIONAL)
 install(FILES README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider)
+install(FILES LICENSE NOTICE DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/iiFileProvider)
 install(FILES docs/OWNED_FILE_IO.md DESTINATION ${CMAKE_INSTALL_DATADIR}/iiFileProvider/docs)
 set(_iifp_tools_default ON)
 if(ANDROID OR EMSCRIPTEN OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
@@ -213,6 +219,10 @@ install(TARGETS iiFileProviderObjectPackage RUNTIME DESTINATION ${CMAKE_INSTALL_
 endif()
 if(BUILD_TESTING)
     add_test(NAME iiFileProvider.SourceLayout COMMAND ${CMAKE_COMMAND} -DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/source_layout.cmake)
+    add_test(NAME iiFileProvider.license_text COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}
+        -DBINARY_ROOT=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/license_text.cmake)
     add_executable(iiFileProvider_file_search_index tests/file_search_index.cpp)
     target_link_libraries(iiFileProvider_file_search_index PRIVATE iiFileProvider::Catalog Threads::Threads)
     iifp_fixture_test(iiFileProvider.file_search_index iiFileProvider_file_search_index)
