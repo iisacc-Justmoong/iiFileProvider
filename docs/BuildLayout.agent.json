@@ -10,9 +10,9 @@
   },
   "source": {
     "path": "docs/BuildLayout.md",
-    "sha256": "52e1522cb605103759fa3bc008817707b97c87c888fb8df666a17a40238c335b",
-    "bytes": 1583,
-    "line_count": 23,
+    "sha256": "8c0e8e74b14bc97102a308a42b656279aa2f38bd4179e159903510ee040cae87",
+    "bytes": 2204,
+    "line_count": 32,
     "encoding": "utf-8",
     "language": "ko"
   },
@@ -72,6 +72,36 @@
       "start_line": 18,
       "end_line": 23,
       "raw": "Some older install, cross-platform and integration checks still stage files\nunder build paths or execute external applications. They retain their existing\nbehavior and are not included in the clean-layout, build-only verification until\nthey are migrated. Recovered object stores and other user data are retained in\nignored `resources/.recovery/`; other projects' package references can require\ntemporary compatibility links while those projects remain active.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 24,
+      "end_line": 24,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "heading",
+      "start_line": 25,
+      "end_line": 25,
+      "raw": "## CTest 파일 계약 검사\n",
+      "level": 2,
+      "title": "CTest 파일 계약 검사"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 26,
+      "end_line": 26,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 27,
+      "end_line": 32,
+      "raw": "기존 저자·링크·저자 계약 검사는 CTest가 실행하는 C++ 테스트이며 Qt Test를\n찾거나 링크하지 않는다. 제품의 Qt Core API는 해당 검사의 대상으로 유지한다.\n각 검증 실패는 위치와 케이스를 출력하고 실행 파일의 실패 종료 상태에 반영한다.\n기존 데이터 행은 모두 독립적으로 실행하며 한 행의 실패가 다른 행을 생략하지 않는다.\n소스와 설치 소비자가 같은 C++ 계약을 실행하며 기존 리소스 작업 공간 생성·정리와\n계정 fixture의 경계도 유지한다.\n"
     }
   ],
   "outline": [
@@ -82,6 +112,14 @@
       "title": "Build and resource layout",
       "anchor": "build-and-resource-layout",
       "start_line": 1
+    },
+    {
+      "block_id": "b000009",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "CTest 파일 계약 검사",
+      "anchor": "ctest-파일-계약-검사",
+      "start_line": 25
     }
   ],
   "indexes": {

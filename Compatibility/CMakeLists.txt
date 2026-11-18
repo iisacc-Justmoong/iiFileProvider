@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.31)
 project(iiFileProviderCompatibility VERSION 0.9.0 LANGUAGES CXX)
+include(../cmake/ModuleImports.cmake)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 option(BUILD_SHARED_LIBS "Build file compatibility as a shared library" ON)

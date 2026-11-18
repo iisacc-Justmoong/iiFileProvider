@@ -21,14 +21,14 @@
       "document_id": "urn:iisacc:document:5797ead501c746517216ed8d6d5630cfdbb91260e8c50f5e0d6c85a3fba0d996",
       "source": "README.md",
       "agent_json": "docs/entrypoints/README.agent.json",
-      "source_sha256": "746fe9224b4261347a9b254de4356d337a5ad6c55ee0a3b52767291f2115f534",
+      "source_sha256": "267de1c12fc10ac6b42cdf6bf608397ce840f728971eba1143b8e1c1ae145a00",
       "role": "overview"
     },
     {
       "document_id": "urn:iisacc:document:17d32e523d21d42f602808ab77737b3d0543150fd9abfca132c6ccc13ae35e3d",
       "source": "docs/BuildLayout.md",
       "agent_json": "docs/BuildLayout.agent.json",
-      "source_sha256": "52e1522cb605103759fa3bc008817707b97c87c888fb8df666a17a40238c335b",
+      "source_sha256": "8c0e8e74b14bc97102a308a42b656279aa2f38bd4179e159903510ee040cae87",
       "role": "guide"
     },
     {

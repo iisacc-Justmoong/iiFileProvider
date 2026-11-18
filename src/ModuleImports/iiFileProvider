@@ -1,0 +1,52 @@
+#pragma once
+
+// C++ public entry for iiFileProvider; the linked components select the API.
+
+// The legacy Qt facade declares its own Catalog. Standalone Catalog consumers
+// select that component without the Qt facade to use the newer declarations.
+#if defined(IISDK_IMPORT_IIFILEPROVIDER_CATALOG) && !defined(IISDK_IMPORT_IIFILEPROVIDER_QT)
+#include <FileCatalog.h>
+#include <FileSearchIndex.h>
+#endif
+
+#if defined(IISDK_IMPORT_IIFILEPROVIDER_COMPATIBILITY)
+#include <iiFileProviderCompatibility.h>
+#endif
+
+#if defined(IISDK_IMPORT_IIFILEPROVIDER_COREIO)
+#include <iiFileProviderCoreIO.h>
+#endif
+
+#if defined(IISDK_IMPORT_IIFILEPROVIDER_NATIVE)
+#include <iiFileProviderPresentation.h>
+#include <iiFileProviderStorage.h>
+#include <FileProviderC.h>
+#include <iiFileProviderNative.h>
+#include <iiFileProviderNativeExport.h>
+#include <iiFileProviderDatabase.h>
+#include <iiFileProviderNativeDevice.h>
+#include <iiFileProviderNativeDirectory.h>
+#endif
+
+#if defined(IISDK_IMPORT_IIFILEPROVIDER_OBJECTS)
+#include <ObjectStore.h>
+#include <ObjectSource.h>
+#include <ObjectPackager.h>
+#include <OntologyFileSystem.h>
+#endif
+
+#if defined(IISDK_IMPORT_IIFILEPROVIDER_QT)
+#include <iiFileProvider.h>
+#include <AuthenticationToken.h>
+#include <FileAuthor.h>
+#include <Authorship.h>
+#include <FileLink.h>
+#include <File.h>
+#include <iiFileProviderDevice.h>
+#include <Database.h>
+#include <StagedFile.h>
+#endif
+
+#if defined(IISDK_IMPORT_IIFILEPROVIDER_TEMP)
+#include <TemporaryLease.h>
+#endif

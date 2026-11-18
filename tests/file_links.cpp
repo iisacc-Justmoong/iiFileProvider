@@ -3,7 +3,8 @@
 #include "iiFileProviderDevice.h"
 #include <QtCore/QJsonDocument>
 #include <QtCore/QTemporaryDir>
-#include <QtTest/QTest>
+#include <QtCore/QCoreApplication>
+#include "CTestSupport.h"
 #include <limits>
 #include <stdexcept>
 
@@ -19,126 +20,131 @@ FileAuthor author(const QString& subject)
 FileLink link(const QString& entry) { return FileLink::fromString(entry).value(); }
 }
 
-class FileLinksTest : public QObject {
-    Q_OBJECT
-private slots:
+class FileLinksTest final {
+public:
     void preserveCustomAndSignedUrlText()
     {
         for (const auto& raw : {"ipfs://QmAbCdEfGh/Asset%7e?signature=a%2fb%2Bc",
                  "society://ContainerABC/Files/AssetXYZ", "https://EXAMPLE.com/file%7e?signature=a%2fb%2bc#%63"}) {
             const auto input = QString("[원본|%1]").arg(raw);
             auto parsed = FileLink::fromString(input);
-            QVERIFY(parsed);
-            QCOMPARE(parsed->urlText(), QString(raw));
-            QCOMPARE(parsed->toString(), input);
-            QCOMPARE(parsed->toJson()["url"].toString(), QString(raw));
+            CTEST_CHECK(parsed);
+            CTEST_COMPARE(parsed->urlText(), QString(raw));
+            CTEST_COMPARE(parsed->toString(), input);
+            CTEST_COMPARE(parsed->toJson()["url"].toString(), QString(raw));
             auto pair = FileLink::create("원본", QString(raw));
-            QVERIFY(pair);
-            QCOMPARE(pair->toString(), input);
+            CTEST_CHECK(pair);
+            CTEST_COMPARE(pair->toString(), input);
             Authorship history;
             history.setAuthor(author("first"), {*parsed}, at);
             auto restored = Authorship::fromDump(history.dump());
-            QVERIFY(restored);
-            QCOMPARE(restored->links().first().toString(), input);
+            CTEST_CHECK(restored);
+            CTEST_COMPARE(restored->links().first().toString(), input);
         }
     }
-    void urlKinds_data()
+    void urlKinds_data(provider_test::CTestRunner& ctest_runner)
     {
-        QTest::addColumn<QString>("url");
-        QTest::newRow("society") << "society://container/Files/artwork.iisc?version=2#layer-1";
-        QTest::newRow("local-file") << "file:///Volumes/Storage/Workspace/Assets/my%20image.png";
-        QTest::newRow("windows-file") << "file:///C:/Users/Writer/Documents/artwork.iisc";
-        QTest::newRow("https") << "https://example.com/file?token=explicit-url-value&x=a+b%2Bc#preview";
-        QTest::newRow("http") << "http://localhost:8080/file";
-        QTest::newRow("smb") << "smb://writer@nas.local/shared/artwork.iisc";
-        QTest::newRow("ftp") << "ftp://writer:explicit-password@example.com/file";
-        QTest::newRow("sftp") << "sftp://example.com:2222/files/project";
-        QTest::newRow("ipfs") << "ipfs://bafyexample/assets/image.png";
-        QTest::newRow("urn") << "urn:uuid:12345678-1234-1234-1234-123456789012";
-        QTest::newRow("mailto") << "mailto:writer@example.com?subject=File%20review";
-        QTest::newRow("tel") << "tel:+821012345678";
-        QTest::newRow("data") << "data:text/plain;charset=utf-8,hello%20world%7Csample";
-        QTest::newRow("android-content") << "content://com.example.documents/document/primary%3ADocuments%2Fimage.png";
-        QTest::newRow("qt-resource") << "qrc:/templates/default.iisc";
-        QTest::newRow("custom-opaque") << "my.app+files-v2:workspace/project?id=42#item";
-        QTest::newRow("relative") << "../assets/reference.svg?scale=2#layer";
-        QTest::newRow("fragment") << "#layer-1";
-        QTest::newRow("network-path") << "//nas.local/shared/file.iisc";
-        QTest::newRow("ipv6-brackets") << "smb://[2001:db8::1]/share/file";
-        QTest::newRow("empty-query-fragment") << "society:document?#";
-        QTest::newRow("encoded-delimiters") << "society:files/a%7Cb%5D?q=a+b%2Bc";
-        QTest::newRow("inert-script-url") << "javascript:alert(1)";
+        const auto ctest_row = [&](const char* label, QString url) {
+            ctest_runner.run(std::string("urlKinds/") + label, [&] { urlKinds(url); });
+        };
+        ctest_row("society", "society://container/Files/artwork.iisc?version=2#layer-1");
+        ctest_row("local-file", "file:///Volumes/Storage/Workspace/Assets/my%20image.png");
+        ctest_row("windows-file", "file:///C:/Users/Writer/Documents/artwork.iisc");
+        ctest_row("https", "https://example.com/file?token=explicit-url-value&x=a+b%2Bc#preview");
+        ctest_row("http", "http://localhost:8080/file");
+        ctest_row("smb", "smb://writer@nas.local/shared/artwork.iisc");
+        ctest_row("ftp", "ftp://writer:explicit-password@example.com/file");
+        ctest_row("sftp", "sftp://example.com:2222/files/project");
+        ctest_row("ipfs", "ipfs://bafyexample/assets/image.png");
+        ctest_row("urn", "urn:uuid:12345678-1234-1234-1234-123456789012");
+        ctest_row("mailto", "mailto:writer@example.com?subject=File%20review");
+        ctest_row("tel", "tel:+821012345678");
+        ctest_row("data", "data:text/plain;charset=utf-8,hello%20world%7Csample");
+        ctest_row("android-content", "content://com.example.documents/document/primary%3ADocuments%2Fimage.png");
+        ctest_row("qt-resource", "qrc:/templates/default.iisc");
+        ctest_row("custom-opaque", "my.app+files-v2:workspace/project?id=42#item");
+        ctest_row("relative", "../assets/reference.svg?scale=2#layer");
+        ctest_row("fragment", "#layer-1");
+        ctest_row("network-path", "//nas.local/shared/file.iisc");
+        ctest_row("ipv6-brackets", "smb://[2001:db8::1]/share/file");
+        ctest_row("empty-query-fragment", "society:document?#");
+        ctest_row("encoded-delimiters", "society:files/a%7Cb%5D?q=a+b%2Bc");
+        ctest_row("inert-script-url", "javascript:alert(1)");
+
     }
-    void urlKinds()
+    void urlKinds(QString url)
     {
-        QFETCH(QString, url);
         const auto entry = QString("[자료|%1]").arg(url);
         QString error = "stale";
         const auto parsed = FileLink::fromString(entry, &error);
-        QVERIFY2(parsed, qPrintable(error));
-        QVERIFY(error.isEmpty());
-        QCOMPARE(parsed->name(), QString("자료"));
-        QCOMPARE(parsed->url().toString(QUrl::FullyEncoded), url);
-        QCOMPARE(parsed->toString(), entry);
+        CTEST_CHECK_MESSAGE(parsed, qPrintable(error));
+        CTEST_CHECK(error.isEmpty());
+        CTEST_COMPARE(parsed->name(), QString("자료"));
+        CTEST_COMPARE(parsed->url().toString(QUrl::FullyEncoded), url);
+        CTEST_COMPARE(parsed->toString(), entry);
         const auto restored = FileLink::fromJson(parsed->toJson());
-        QVERIFY(restored);
-        QVERIFY(*restored == *parsed);
+        CTEST_CHECK(restored);
+        CTEST_CHECK(*restored == *parsed);
         Authorship history;
-        QVERIFY(history.setLinks({*parsed}, at));
+        CTEST_CHECK(history.setLinks({*parsed}, at));
         auto loaded = Authorship::fromDump(history.dump());
-        QVERIFY(loaded);
-        QCOMPARE(loaded->links().size(), 1);
-        QCOMPARE(loaded->links().first().toString(), entry);
+        CTEST_CHECK(loaded);
+        CTEST_COMPARE(loaded->links().size(), 1);
+        CTEST_COMPARE(loaded->links().first().toString(), entry);
+
     }
     void unicodeAndLimits()
     {
         const auto local = QUrl::fromLocalFile("/Volumes/Storage/Workspace/Assets/그림 파일.png");
         auto value = FileLink::create("  원본 자료  ", local);
-        QVERIFY(value);
-        QCOMPARE(value->name(), QString("원본 자료"));
-        QCOMPARE(value->url().toLocalFile(), QString("/Volumes/Storage/Workspace/Assets/그림 파일.png"));
-        QVERIFY(value->toString().contains("%20"));
+        CTEST_CHECK(value);
+        CTEST_COMPARE(value->name(), QString("원본 자료"));
+        CTEST_COMPARE(value->url().toLocalFile(), QString("/Volumes/Storage/Workspace/Assets/그림 파일.png"));
+        CTEST_CHECK(value->toString().contains("%20"));
         auto restored = FileLink::fromString(value->toString());
-        QVERIFY(restored && *restored == *value);
+        CTEST_CHECK(restored && *restored == *value);
         const auto unicodeUrl = FileLink::fromString("[자료|society://files/원본/이미지.png]");
-        QVERIFY(unicodeUrl);
-        QCOMPARE(unicodeUrl->url().path(), QString("/원본/이미지.png"));
+        CTEST_CHECK(unicodeUrl);
+        CTEST_COMPARE(unicodeUrl->url().path(), QString("/원본/이미지.png"));
         const auto emoji = QString::fromUcs4(U"🚀");
-        QVERIFY(FileLink::create(emoji.repeated(FileLink::MaximumNameLength), local));
-        QVERIFY(!FileLink::create(emoji.repeated(FileLink::MaximumNameLength + 1), local));
+        CTEST_CHECK(FileLink::create(emoji.repeated(FileLink::MaximumNameLength), local));
+        CTEST_CHECK(!FileLink::create(emoji.repeated(FileLink::MaximumNameLength + 1), local));
         const QString maximumUrl = "society:" + QString(FileLink::MaximumUrlBytes - 8, 'a');
         auto maximum = FileLink::fromString("[자료|" + maximumUrl + ']');
-        QVERIFY(maximum);
-        QCOMPARE(maximum->url().toEncoded().size(), FileLink::MaximumUrlBytes);
-        QVERIFY(!FileLink::fromString("[자료|" + maximumUrl + "a]"));
-        QVERIFY(!FileLink::create("자료", QUrl("society:" + QString(3000, QChar(0xAC00)))));
-        QVERIFY(!FileLink::create("name|with-separator", local));
-        QVERIFY(!FileLink::create("자료", QUrl()));
+        CTEST_CHECK(maximum);
+        CTEST_COMPARE(maximum->url().toEncoded().size(), FileLink::MaximumUrlBytes);
+        CTEST_CHECK(!FileLink::fromString("[자료|" + maximumUrl + "a]"));
+        CTEST_CHECK(!FileLink::create("자료", QUrl("society:" + QString(3000, QChar(0xAC00)))));
+        CTEST_CHECK(!FileLink::create("name|with-separator", local));
+        CTEST_CHECK(!FileLink::create("자료", QUrl()));
     }
-    void invalidNotation_data()
+    void invalidNotation_data(provider_test::CTestRunner& ctest_runner)
     {
-        QTest::addColumn<QString>("entry");
-        QTest::newRow("no-brackets") << "자료|society:doc";
-        QTest::newRow("no-separator") << "[society:doc]";
-        QTest::newRow("empty-name") << "[|society:doc]";
-        QTest::newRow("blank-name") << "[   |society:doc]";
-        QTest::newRow("empty-url") << "[자료|]";
-        QTest::newRow("malformed-percent") << "[자료|society:doc%ZZ]";
-        QTest::newRow("truncated-percent") << "[자료|society:doc%2]";
-        QTest::newRow("bad-authority") << "[자료|https://[broken/file]";
-        QTest::newRow("bad-port") << "[자료|https://example.com:invalid/file]";
-        QTest::newRow("unencoded-space") << "[자료|file:///files/my file]";
-        QTest::newRow("url-newline") << "[자료|society:doc\nvalue]";
-        QTest::newRow("name-newline") << "[자\n료|society:doc]";
-        QTest::newRow("invalid-utf16") << (QString("[자료|society:") + QChar(0xD800) + ']');
+        const auto ctest_row = [&](const char* label, QString entry) {
+            ctest_runner.run(std::string("invalidNotation/") + label, [&] { invalidNotation(entry); });
+        };
+        ctest_row("no-brackets", "자료|society:doc");
+        ctest_row("no-separator", "[society:doc]");
+        ctest_row("empty-name", "[|society:doc]");
+        ctest_row("blank-name", "[   |society:doc]");
+        ctest_row("empty-url", "[자료|]");
+        ctest_row("malformed-percent", "[자료|society:doc%ZZ]");
+        ctest_row("truncated-percent", "[자료|society:doc%2]");
+        ctest_row("bad-authority", "[자료|https://[broken/file]");
+        ctest_row("bad-port", "[자료|https://example.com:invalid/file]");
+        ctest_row("unencoded-space", "[자료|file:///files/my file]");
+        ctest_row("url-newline", "[자료|society:doc\nvalue]");
+        ctest_row("name-newline", "[자\n료|society:doc]");
+        ctest_row("invalid-utf16", (QString("[자료|society:") + QChar(0xD800) + ']'));
+
     }
-    void invalidNotation()
+    void invalidNotation(QString entry)
     {
-        QFETCH(QString, entry);
         QString error;
-        QVERIFY(!FileLink::fromString(entry, &error));
-        QVERIFY(!error.isEmpty());
-        QVERIFY(!error.contains("example.com"));
+        CTEST_CHECK(!FileLink::fromString(entry, &error));
+        CTEST_CHECK(!error.isEmpty());
+        CTEST_CHECK(!error.contains("example.com"));
+
     }
     void authorAndLinksCommitOnce()
     {
@@ -147,52 +153,52 @@ private slots:
         const QList<FileLink> references{link("[Society|society://container/Files/artwork.iisc]"),
             link("[원본|file:///files/original.png]")};
         Authorship history;
-        QVERIFY(history.setAuthor(first, references, at));
-        QCOMPARE(history.revision(), quint64(1));
-        QCOMPARE(history.links().size(), 2);
-        QVERIFY(!history.setAuthor(first, references, at.addSecs(1)));
-        QCOMPARE(history.revision(), quint64(1));
-        QVERIFY(history.setAuthor(second, at.addSecs(2)));
-        QCOMPARE(history.revision(), quint64(2));
-        QCOMPARE(history.links().first().toString(), references.first().toString());
+        CTEST_CHECK(history.setAuthor(first, references, at));
+        CTEST_COMPARE(history.revision(), quint64(1));
+        CTEST_COMPARE(history.links().size(), 2);
+        CTEST_CHECK(!history.setAuthor(first, references, at.addSecs(1)));
+        CTEST_COMPARE(history.revision(), quint64(1));
+        CTEST_CHECK(history.setAuthor(second, at.addSecs(2)));
+        CTEST_COMPARE(history.revision(), quint64(2));
+        CTEST_COMPARE(history.links().first().toString(), references.first().toString());
         const auto roster = history.toJson();
-        QVERIFY(history.setAuthor(second, {link("[참고|ipfs://bafyexample/reference]")}, at.addSecs(3)));
-        QCOMPARE(history.revision(), quint64(3));
-        QCOMPARE(history.toJson()["firstEditor"], roster["firstEditor"]);
-        QCOMPARE(history.toJson()["participants"], roster["participants"]);
-        QCOMPARE(history.links().size(), 1);
+        CTEST_CHECK(history.setAuthor(second, {link("[참고|ipfs://bafyexample/reference]")}, at.addSecs(3)));
+        CTEST_COMPARE(history.revision(), quint64(3));
+        CTEST_COMPARE(history.toJson()["firstEditor"], roster["firstEditor"]);
+        CTEST_COMPARE(history.toJson()["participants"], roster["participants"]);
+        CTEST_COMPARE(history.links().size(), 1);
         auto copy = history.links();
         copy.clear();
-        QCOMPARE(history.links().size(), 1);
-        QVERIFY(history.setAuthor(second, QList<FileLink>{}, at.addSecs(4)));
-        QVERIFY(history.links().isEmpty());
-        QCOMPARE(history.participants().size(), 1);
-        QCOMPARE(history.firstEditor()->metadata().account.sub, QString("first"));
+        CTEST_COMPARE(history.links().size(), 1);
+        CTEST_CHECK(history.setAuthor(second, QList<FileLink>{}, at.addSecs(4)));
+        CTEST_CHECK(history.links().isEmpty());
+        CTEST_COMPARE(history.participants().size(), 1);
+        CTEST_COMPARE(history.firstEditor()->metadata().account.sub, QString("first"));
     }
     void fileRoundTripAndLinkUpdates()
     {
         Authorship history;
-        QVERIFY(history.setLinksFromStrings({"[Society|society:document-1]", "[원본|../original.png]"}, at));
-        QVERIFY(!history.firstEditor());
-        QCOMPARE(history.revision(), quint64(1));
+        CTEST_CHECK(history.setLinksFromStrings({"[Society|society:document-1]", "[원본|../original.png]"}, at));
+        CTEST_CHECK(!history.firstEditor());
+        CTEST_COMPARE(history.revision(), quint64(1));
         QTemporaryDir directory(QDir::currentPath() + "/named-url-XXXXXX");
-        QVERIFY(directory.isValid());
+        CTEST_CHECK(directory.isValid());
         iiFileProvider::FileDevice file(directory.filePath("metadata.json"));
-        QVERIFY(file.open(QIODevice::WriteOnly));
-        QCOMPARE(file.write(history.dump()), history.dump().size());
+        CTEST_CHECK(file.open(QIODevice::WriteOnly));
+        CTEST_COMPARE(file.write(history.dump()), history.dump().size());
         file.close();
-        QVERIFY(file.open(QIODevice::ReadOnly));
+        CTEST_CHECK(file.open(QIODevice::ReadOnly));
         auto restored = Authorship::fromDump(file.readAll());
-        QVERIFY(restored);
-        QCOMPARE(restored->dump(), history.dump());
-        QVERIFY(restored->setAuthor(author("first"), at.addSecs(1)));
-        QCOMPARE(restored->links().size(), 2);
+        CTEST_CHECK(restored);
+        CTEST_COMPARE(restored->dump(), history.dump());
+        CTEST_CHECK(restored->setAuthor(author("first"), at.addSecs(1)));
+        CTEST_COMPARE(restored->links().size(), 2);
         restored->clearActiveAuthor();
         restored->recordChange(at.addSecs(2));
-        QCOMPARE(restored->links().size(), 2);
-        QVERIFY(restored->setLinks({}, at.addSecs(3)));
-        QVERIFY(!restored->setLinks({}, at.addSecs(4)));
-        QCOMPARE(restored->firstEditor()->metadata().account.sub, QString("first"));
+        CTEST_COMPARE(restored->links().size(), 2);
+        CTEST_CHECK(restored->setLinks({}, at.addSecs(3)));
+        CTEST_CHECK(!restored->setLinks({}, at.addSecs(4)));
+        CTEST_COMPARE(restored->firstEditor()->metadata().account.sub, QString("first"));
     }
     void invalidBatchAndCapacityAreAtomic()
     {
@@ -200,43 +206,45 @@ private slots:
         const auto reference = link("[Society|society:doc]");
         history.setAuthor(author("first"), {reference}, at);
         const auto before = history.dump();
-        QVERIFY_THROWS_EXCEPTION(std::invalid_argument,
+        CTEST_THROWS(std::invalid_argument,
             history.setLinksFromStrings({"[유효|file:///files/item]", "[잘못됨|https://example.com/%ZZ]"}, at));
-        QVERIFY_THROWS_EXCEPTION(std::invalid_argument,
+        CTEST_THROWS(std::invalid_argument,
             history.setAuthor(author("second"), {reference, reference}, at));
-        QVERIFY_THROWS_EXCEPTION(std::invalid_argument,
+        CTEST_THROWS(std::invalid_argument,
             history.setAuthor(author("second"), QList<FileLink>{}, QDateTime()));
-        QCOMPARE(history.dump(), before);
-        QVERIFY(history.participants().isEmpty());
+        CTEST_COMPARE(history.dump(), before);
+        CTEST_CHECK(history.participants().isEmpty());
         history.recordChange(at.addSecs(1));
-        QCOMPARE(history.toJson()["lastAuthor"], history.toJson()["firstEditor"]);
+        CTEST_COMPARE(history.toJson()["lastAuthor"], history.toJson()["firstEditor"]);
         QList<FileLink> references;
         for (qsizetype index = 0; index < Authorship::MaximumLinks; ++index)
             references.append(link(QString("[자료|society:doc-%1]").arg(index)));
-        QVERIFY(history.setLinks(references, at.addSecs(2))); // Labels may repeat; complete pairs may not.
+        CTEST_CHECK(history.setLinks(references, at.addSecs(2))); // Labels may repeat; complete pairs may not.
         const auto full = history.dump();
         references.append(link("[추가|society:overflow]"));
-        QVERIFY_THROWS_EXCEPTION(std::length_error, history.setAuthor(author("second"), references, at));
-        QCOMPARE(history.dump(), full);
-        QVERIFY(history.participants().isEmpty());
+        CTEST_THROWS(std::length_error, history.setAuthor(author("second"), references, at));
+        CTEST_COMPARE(history.dump(), full);
+        CTEST_CHECK(history.participants().isEmpty());
         auto exhaustedJson = history.toJson();
         exhaustedJson["revision"] = QString::number(std::numeric_limits<quint64>::max());
         auto exhausted = Authorship::fromJson(exhaustedJson);
-        QVERIFY(exhausted);
+        CTEST_CHECK(exhausted);
         const auto exhaustedDump = exhausted->dump();
-        QVERIFY_THROWS_EXCEPTION(std::overflow_error, exhausted->setLinks({}, at));
-        QCOMPARE(exhausted->dump(), exhaustedDump);
+        CTEST_THROWS(std::overflow_error, exhausted->setLinks({}, at));
+        CTEST_COMPARE(exhausted->dump(), exhaustedDump);
     }
-    void malformedMetadata_data()
+    void malformedMetadata_data(provider_test::CTestRunner& ctest_runner)
     {
-        QTest::addColumn<QJsonObject>("json");
+        const auto ctest_row = [&](const char* label, QJsonObject json) {
+            ctest_runner.run(std::string("malformedMetadata/") + label, [&] { malformedMetadata(json); });
+        };
         Authorship history;
         history.setAuthor(author("first"), {link("[원본|society:document]")}, at);
         const auto valid = history.toJson();
         const auto changed = [&](const char* name, const QJsonValue& value) {
             auto json = valid;
             json["links"] = value;
-            QTest::newRow(name) << json;
+            ctest_row(name, json);
         };
         changed("missing-list", QJsonValue::Undefined);
         changed("null-list", QJsonValue::Null);
@@ -256,20 +264,34 @@ private slots:
         changed("too-many-links", tooMany);
         auto json = valid;
         json["schemaVersion"] = 2;
-        QTest::newRow("legacy-with-new-fields") << json;
+        ctest_row("legacy-with-new-fields", json);
         json = Authorship().toJson();
         json["links"] = valid["links"];
-        QTest::newRow("unrecorded-links") << json;
+        ctest_row("unrecorded-links", json);
+
     }
-    void malformedMetadata()
+    void malformedMetadata(QJsonObject json)
     {
-        QFETCH(QJsonObject, json);
         QString error;
-        QVERIFY(!Authorship::fromJson(json, &error));
-        QVERIFY(!error.isEmpty());
-        QVERIFY(!Authorship::fromDump(QJsonDocument(json).toJson(QJsonDocument::Compact)));
+        CTEST_CHECK(!Authorship::fromJson(json, &error));
+        CTEST_CHECK(!error.isEmpty());
+        CTEST_CHECK(!Authorship::fromDump(QJsonDocument(json).toJson(QJsonDocument::Compact)));
+
     }
 };
 
-QTEST_GUILESS_MAIN(FileLinksTest)
-#include "file_links.moc"
+int main(int argc, char** argv)
+{
+    QCoreApplication application(argc, argv);
+    provider_test::CTestRunner runner;
+    FileLinksTest tests;
+    runner.run("preserveCustomAndSignedUrlText", [&] { tests.preserveCustomAndSignedUrlText(); });
+    runner.run("urlKinds_data", [&] { tests.urlKinds_data(runner); });
+    runner.run("unicodeAndLimits", [&] { tests.unicodeAndLimits(); });
+    runner.run("invalidNotation_data", [&] { tests.invalidNotation_data(runner); });
+    runner.run("authorAndLinksCommitOnce", [&] { tests.authorAndLinksCommitOnce(); });
+    runner.run("fileRoundTripAndLinkUpdates", [&] { tests.fileRoundTripAndLinkUpdates(); });
+    runner.run("invalidBatchAndCapacityAreAtomic", [&] { tests.invalidBatchAndCapacityAreAtomic(); });
+    runner.run("malformedMetadata_data", [&] { tests.malformedMetadata_data(runner); });
+    return runner.result();
+}

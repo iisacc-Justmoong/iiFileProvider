@@ -10,8 +10,8 @@
   },
   "source": {
     "path": "README.md",
-    "sha256": "746fe9224b4261347a9b254de4356d337a5ad6c55ee0a3b52767291f2115f534",
-    "bytes": 25198,
+    "sha256": "267de1c12fc10ac6b42cdf6bf608397ce840f728971eba1143b8e1c1ae145a00",
+    "bytes": 25200,
     "line_count": 363,
     "encoding": "utf-8",
     "language": "ko"
@@ -698,7 +698,7 @@
       "kind": "paragraph",
       "start_line": 232,
       "end_line": 232,
-      "raw": "The script executes Release build and CTest from `build/`, installs to the default path `~/.local/SDK/iiFileProvider`, and builds and tests a separate executable that uses only the installed CMake package from `build/consumer/build/`. The bootstrap test checks return strings, C++23 compile settings, Qt 6.8.3 header version, and runtime version. The author contract test checks account mapping, detailed metadata round-trip, Unicode, invalid formats, session expiration, token binding, original exclusion, and atomic updates from both source and installed consumers. The `Authorship` test checks initial editor fixation, participant order, duplicate prevention, profile update, query copy, file restore after save, schema 1, 2 compatibility, invalid role reference, and record preservation on failure and limit exceedance from both sides. `FileLink` tests verify atomic recording of various schemes, relative addresses, string/JSON/file round-trips, encoding, additional arguments, link omission, clearing, and list preservation. Tests include native C++ executables, Python CLI/dependency checks and the existing Qt Test suites. The installer also verifies separate Catalog and Objects consumers without loading Qt.\n"
+      "raw": "The script executes Release build and CTest from `build/`, installs to the default path `~/.local/SDK/iiFileProvider`, and builds and tests a separate executable that uses only the installed CMake package from `build/consumer/build/`. The bootstrap test checks return strings, C++23 compile settings, Qt 6.8.3 header version, and runtime version. The author contract test checks account mapping, detailed metadata round-trip, Unicode, invalid formats, session expiration, token binding, original exclusion, and atomic updates from both source and installed consumers. The `Authorship` test checks initial editor fixation, participant order, duplicate prevention, profile update, query copy, file restore after save, schema 1, 2 compatibility, invalid role reference, and record preservation on failure and limit exceedance from both sides. `FileLink` tests verify atomic recording of various schemes, relative addresses, string/JSON/file round-trips, encoding, additional arguments, link omission, clearing, and list preservation. Tests include native C++ contract executables and Python CLI/dependency checks registered with CTest. The installer also verifies separate Catalog and Objects consumers without loading Qt.\n"
     },
     {
       "id": "b000094",
