@@ -270,9 +270,9 @@ Includes `CMAKE_PREFIX_PATH` installation path and SDK path at Qt. Provides only
 
 ## License
 
-SPDX-License-Identifier: MIT
+SPDX-License-Identifier: Apache-2.0
 
-Self-written code and documents of iiFileProvider are distributed under the MIT License. The full terms follow [LICENSE](LICENSE).
+Self-written code and documents of iiFileProvider are distributed under the Apache License 2.0. The full terms follow [LICENSE](LICENSE).
 
 External libraries including Qt and third-party code with separate notices maintain their own licenses. This project's license declaration does not replace the corresponding third-party license.
 

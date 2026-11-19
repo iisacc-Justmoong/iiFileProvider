@@ -10,8 +10,8 @@
   },
   "source": {
     "path": "README.md",
-    "sha256": "267de1c12fc10ac6b42cdf6bf608397ce840f728971eba1143b8e1c1ae145a00",
-    "bytes": 25200,
+    "sha256": "ac070dd966b0d46a4e1730e0c713baead41b3d997d943c6019a7e7975e992d27",
+    "bytes": 25214,
     "line_count": 363,
     "encoding": "utf-8",
     "language": "ko"
@@ -879,7 +879,7 @@
       "kind": "paragraph",
       "start_line": 273,
       "end_line": 273,
-      "raw": "SPDX-License-Identifier: MIT\n"
+      "raw": "SPDX-License-Identifier: Apache-2.0\n"
     },
     {
       "id": "b000118",
@@ -893,7 +893,7 @@
       "kind": "paragraph",
       "start_line": 275,
       "end_line": 275,
-      "raw": "Self-written code and documents of iiFileProvider are distributed under the MIT License. The full terms follow [LICENSE](LICENSE).\n"
+      "raw": "Self-written code and documents of iiFileProvider are distributed under the Apache License 2.0. The full terms follow [LICENSE](LICENSE).\n"
     },
     {
       "id": "b000120",
